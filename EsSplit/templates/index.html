@@ -7,6 +7,7 @@
     <title>Podziel Rachunek {% block title %}{% endblock %}</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'img/favv16.png' %}">
 </head>
 
 <body>
@@ -18,10 +19,11 @@
             <input type="search" placeholder="Szukaj">
             <button><img src="{% static 'img/search.png' %}" alt="szukanie"></button>
         </div>
-        <div class="user-profile">
+        <button class="user-profile">
             <img src="{% static 'img/profile.png' %}" alt="Profil">
             <p>Cześć, Rakib</p>
-        </div>
+        </button>
+
         <div class="switch-container">
             <label class="switch">
                 <input type="checkbox" id="theme-switch">
@@ -30,17 +32,6 @@
         </div>
     </header>
     <main>
-        <div class="side-nav">
-            <nav>
-                <ul>
-                    <li><a href="#">Panel</a></li>
-                    <li><a href="#">Moja Portmonetka</a></li>
-                    <li><a href="#">Przelewy</a></li>
-                    <li><a href="#">Znajomi w Pobliżu</a></li>
-                    <li><a href="#">Dodaj Nowych Znajomych</a></li>
-                </ul>
-            </nav>
-        </div>
         <section class="split-request">
             <div class="request-card">
                 <h3>Cześć Mike!</h3>

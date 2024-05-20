@@ -61,8 +61,15 @@ header {
 
 .user-profile {
     display: flex;
-    align-items: right;
+    align-items: center;
     margin-right: 20px;
+    background-color: #3F51B5;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    padding: 10px;
+    border-radius: 8px;
 }
 
 .user-profile img {
@@ -70,6 +77,15 @@ header {
     height: 40px;
     border-radius: 50%;
     margin-right: 10px;
+}
+
+.user-profile p {
+    margin: 0;
+}
+
+.user-profile:hover {
+    background-color: #303F9F;
+    transform: scale(1.05);
 }
 
 .switch-container {
@@ -135,7 +151,7 @@ input:checked+.slider:before {
 
 main {
     padding-top: 60px;
-    margin-top: 60px;
+    margin-top: 70px;
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
@@ -183,7 +199,6 @@ main {
     flex-direction: row;
     align-items: left;
     width: 100%;
-    padding-left: 200px;
 }
 
 .split-request2 {
@@ -282,7 +297,7 @@ main {
 .statistics {
     display: flex;
     justify-content: center;
-    margin-left: 400px;
+
 }
 
 .stat-card {
@@ -391,6 +406,13 @@ body.dark-theme header .search-bar input {
     color: #ddd;
 }
 
+body.dark-theme .user-profile {
+    background-color: #383838;
+}
+
+body.dark-theme .user-profile:hover {
+    background-color: #686868;
+}
 
 body.dark-theme main {
     background-color: #282828;
