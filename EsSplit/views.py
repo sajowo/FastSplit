@@ -26,4 +26,4 @@ def login_view(request):
 def logout_view(request):
     logger.info("Wylogowywanie użytkownika")
     logout(request)
-    return redirect('login')  # Przekieruj na stronę logowania
+    return redirect('login') 
