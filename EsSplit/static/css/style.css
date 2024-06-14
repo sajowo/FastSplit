@@ -35,6 +35,38 @@ header {
     object-fit: contain;
 }
 
+.user-profile {
+    position: relative;
+    display: inline-block;
+}
+
+.user-profile img {
+    cursor: pointer;
+}
+
+.user-profile .logout-link {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: white;
+    padding: 5px 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    white-space: nowrap;
+    width: 100%;
+    text-align: center;
+    text-decoration: none;
+    color: black;
+}
+
+.user-profile:hover .logout-link {
+    display: block;
+}
+
+
 .search-bar {
     display: flex;
     align-items: center;
