@@ -1,0 +1,555 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+/* Header Styles */
+
+header {
+    background-color: #3F51B5;
+    color: #fff;
+    padding: 1em;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 100;
+}
+
+.logo {
+    width: 50px;
+    height: 50px;
+}
+
+.logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.user-profile {
+    position: relative;
+    display: inline-block;
+}
+
+.user-profile img {
+    cursor: pointer;
+}
+
+.user-profile .logout-link {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: white;
+    padding: 5px 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    white-space: nowrap;
+    width: 100%;
+    text-align: center;
+    text-decoration: none;
+    color: black;
+}
+
+.user-profile:hover .logout-link {
+    display: block;
+}
+
+
+.search-bar {
+    display: flex;
+    align-items: center;
+    margin-right: 20px;
+}
+
+.search-bar input[type="search"] {
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    width: 200px;
+    background-color: #fff;
+    color: #3F51B5;
+}
+
+.search-bar button {
+    background-color: #3F51B5;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    margin-right: 20px;
+    background-color: #3F51B5;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.user-profile img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+.user-profile p {
+    margin: 0;
+}
+
+.user-profile:hover {
+    background-color: #303F9F;
+    transform: scale(1.05);
+}
+
+.switch-container {
+    margin-right: 20px;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: #fff;
+    transition: 0.4s;
+}
+
+input:checked+.slider {
+    background-color: #2196F3;
+}
+
+input:focus+.slider {
+    box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked+.slider:before {
+    transform: translateX(26px);
+}
+
+.slider.round {
+    border-radius: 34px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+
+/* Main Styles */
+
+main {
+    padding-top: 60px;
+    margin-top: 70px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 2em;
+}
+
+.side-nav {
+    width: 200px;
+    background-color: #F5F5F5;
+    padding: 1em;
+    border-right: 1px solid #ddd;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+}
+
+.side-nav nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.side-nav nav ul li {
+    margin-bottom: 1em;
+}
+
+.side-nav nav ul li a {
+    display: block;
+    padding: 1em;
+    background-color: #F5F5F5;
+    border-radius: 5px;
+    text-align: center;
+    text-decoration: none;
+    color: #3F51B5;
+    transition: background-color 0.3s ease;
+}
+
+.side-nav nav ul li a:hover {
+    background-color: #E0E0E0;
+}
+
+.split-request {
+    display: flex;
+    flex-direction: row;
+    align-items: left;
+    width: 100%;
+}
+
+.split-request2 {
+    color: white;
+    padding: 20px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.split-request2 .request-card {
+    margin-left: auto;
+}
+
+.request-card {
+    background-color: #3F51B5;
+    color: #fff;
+    padding: 1em;
+    border-radius: 10px;
+    width: 100%;
+    max-width: 300px;
+    text-align: center;
+}
+
+.request-card h3 {
+    margin-bottom: 1em;
+    color: #fff;
+}
+
+.request-card p {
+    margin-bottom: 1em;
+    color: #fff;
+}
+
+.request-card button {
+    background-color: #fff;
+    color: #3F51B5;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.recent-splits {
+    margin-left: auto;
+    width: 100%;
+    max-width: 600px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.recent-splits .split-item {
+    background-color: #F5F5F5;
+    padding: 1em;
+    border-radius: 10px;
+    margin-top: 10px;
+    width: calc(50% - 1em);
+    text-align: right;
+}
+
+.recent-splits ul {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    width: 100%;
+}
+
+.recent-splits li {
+    margin: 0 1em;
+    width: calc(50% - 1em);
+}
+
+.split-item {
+    background-color: #F5F5F5;
+    padding: 1em;
+    border-radius: 10px;
+    margin-top: 10px;
+    text-align: right;
+}
+
+.split-item h3 {
+    margin-bottom: 1em;
+    color: #3F51B5;
+}
+
+.split-item p {
+    margin-bottom: 1em;
+    color: #3F51B5;
+}
+
+
+.statistics {
+    display: flex;
+    justify-content: center;
+
+}
+
+.stat-card {
+    background-color: #F5F5F5;
+    color: #3F51B5;
+    padding: 1em;
+    border-radius: 10px;
+    margin: 0 1em;
+    text-align: center;
+    width: 100%;
+    max-width: 300px;
+}
+
+.stat-card h3 {
+    margin-bottom: 1em;
+}
+
+.stat-card p {
+    margin-bottom: 1em;
+}
+
+.create-spill {
+    background-color: #F5F5F5;
+    padding: 1em;
+    border-radius: 10px;
+    width: 100%;
+    max-width: 600px;
+    margin-left: 6px;
+    margin-right: 6px;
+
+}
+
+.create-spill h2 {
+    margin-top: 0;
+}
+
+.create-spill form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.create-spill .form-group {
+    margin-bottom: 1em;
+}
+
+.create-spill label {
+    display: block;
+    margin-bottom: 0.5em;
+}
+
+.create-spill input[type="number"] {
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    width: 100%;
+    max-width: 200px;
+}
+
+.create-spill .participant-list {
+    margin-top: 1em;
+}
+
+.create-spill .split-details {
+    margin-top: 2em;
+}
+
+.create-spill button[type="submit"] {
+    background-color: #3F51B5;
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.create-spill button[type="submit"]:hover {
+    background-color: #2196F3;
+}
+
+.create-spill #spill-results {
+    margin-top: 2em;
+}
+
+/*footer section*/
+
+
+/* Czarny Motyw */
+
+/* Dark Theme Styles */
+
+body.dark-theme {
+    background-color: #121212;
+    /* Darker background */
+    color: #ddd;
+    /* Lighter text color */
+}
+
+body.dark-theme header,
+body.dark-theme header .search-bar button {
+    background-color: #383838;
+}
+
+body.dark-theme header .search-bar input {
+    background-color: #484848;
+    color: #ddd;
+}
+
+body.dark-theme .user-profile {
+    background-color: #383838;
+}
+
+body.dark-theme .user-profile:hover {
+    background-color: #686868;
+}
+
+body.dark-theme main {
+    background-color: #282828;
+    /* Darker main background */
+}
+
+body.dark-theme main .side-nav {
+    background-color: #383838;
+    /* Darker side nav background */
+}
+
+
+body.dark-theme main .side-nav a:hover {
+    background-color: #585858;
+    /* Darker hover background */
+}
+
+body.dark-theme main .split-request .split-request2 .request-card {
+    background-color: #484848;
+    /* Darker request card background */
+    color: #ddd;
+    /* Lighter text color */
+}
+
+body.dark-theme main .split-request .split-request2 .request-card .title {
+    color: #ddd;
+    /* Lighter title color */
+}
+
+body.dark-theme main .split-request .split-request2 .request-card .amount {
+    color: #ddd;
+    /* Lighter amount color */
+}
+
+body.dark-theme main .split-request .split-request2 .request-card .split-actions .edit-btn {
+    background-color: #ddd;
+    /* Lighter edit button background */
+    color: #3F51B5;
+    /* Lighter text color */
+}
+
+body.dark-theme main .split-request .split-request2 .request-card .split-actions .delete-btn {
+    background-color: #ddd;
+    /* Lighter delete button background */
+    color: #3F51B5;
+    /* Lighter text color */
+}
+
+body.dark-theme main .split-request .split-request2 .request-card .split-actions .complete-btn {
+    background-color: #2196f3;
+    /* Same complete button background */
+    color: #ddd;
+    /* Lighter text color */
+}
+
+body.dark-theme main .split-request .split-request2 .request-card .split-actions .edit-btn:hover,
+body.dark-theme main .split-request .split-request2 .request-card .split-actions .delete-btn:hover,
+body.dark-theme main .split-request .split-request2 .request-card .split-actions .complete-btn:hover {
+    opacity: 0.7;
+    /* Same hover opacity */
+}
+
+body.dark-theme main .add-request {
+    background-color: #3f51b5;
+    /* Same add request background */
+}
+
+body.dark-theme main .add-request input,
+body.dark-theme main .add-request button {
+    background-color: #484848;
+    color: #ddd;
+}
+
+body.dark-theme main .add-request input:hover,
+body.dark-theme main .add-request button:hover {
+    background-color: #686868;
+}
+
+body.dark-theme main .split-actionsbutton {
+    background-color: #484848;
+    color: #ddd;
+}
+
+body.dark-theme main .split-actions button:hover {
+    background-color: #686868;
+
+}
+
+body.dark-theme main .create-spill {
+    color: #3F51B5;
+}
+
+body.dark-theme .recent-splits {
+    background-color: #282828;
+
+}
+
+body.dark-theme .recent-splits li {
+    background-color: #383838;
+}
+
+body.dark-theme .recent-splits .split-item {
+    color: #ddd;
+}
+
+/* body.dark-theme .statistics {
+    background-color: #282828;
+} */

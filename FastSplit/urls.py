@@ -8,4 +8,6 @@ urlpatterns = [
     path('main/', views.index, name='index'),  # Ścieżka dla strony głównej
     path('', views.login_view, name='login'),  # Ścieżka dla strony logowania, używając widoku login_view
     path('logout/', views.logout_view, name='logout'),  # Ścieżka dla wylogowywania
+    path('signup/', views.register, name='signup'),  # Ścieżka dla rejestracji
+
 ]

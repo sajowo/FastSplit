@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="utf-8">
+    <title>Podziel Rachunek {% block title %}{% endblock %}</title>
+    {% load static %}
+    <link rel="icon" type="image/x-icon" href="{% static 'img/favv16.png' %}">
+    <link rel="stylesheet" href="{% static 'css/test.css' %}">
+
+
+</head>
+
+<body>
+    <form>
+        <h2>Rejestracja użytkownika</h2>
+        <div class="txt_field">
+            <label for="name">Imię:</label>
+            <input type="text" id="name" name="name" required>
+        </div>
+        <div class="txt_field">
+            <label for="surname">Nazwisko:</label>
+            <input type="text" id="surname" name="surname" required>
+        </div>
+        <div class="txt_field">
+            <label for="email">Adres e-mail:</label>
+            <input type="email" id="email" name="email" required>
+        </div>
+
+        <div class="txt_field">
+            <label for="password">Hasło:</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+
+        <input type="submit" value="Zarejestruj się">
+    </form>
+
+    <script>
+        // Generate a unique user code based on the user's name and surname
+        const form = document.querySelector('form');
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.querySelector('#name').value;
+            const surname = document.querySelector('#surname').value;
+            const userCode = `${name.charAt(0)}${surname.charAt(0)}${Math.floor(Math.random() * 1000)}`;
+            console.log(`User code: ${userCode}`);
+            // Send the form data to the server or perform any other action
+        });
+    </script>
+</body>
+
+</html>
