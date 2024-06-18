@@ -5,6 +5,7 @@ from django.urls import reverse
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
 from .forms import RegisterForm
+from django.contrib.auth import get_user_model
 import logging
 import random
 from .models import Person
@@ -15,18 +16,23 @@ logger = logging.getLogger(__name__)
 def index(request):
     return render(request, 'index.html')
 
+
 def login_view(request):
     if request.method == 'POST':
-        username = request.POST.get('username')
+        email = request.POST.get('email')
         password = request.POST.get('password')
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
+        user_model = get_user_model()
+        try:
+            user = user_model.objects.get(email=email)
+        except user_model.DoesNotExist:
+            user = None
+
+        if user is not None and user.check_password(password):
             login(request, user)
             logger.info("Logowanie")
             return redirect(reverse('index'))  # Przekieruj na stronę główną
         else:
-            # Wyświetl komunikat o błędnych danych logowania
-            return render(request, 'login.html', {'error': 'Invalid username or password.'})
+            return render(request, 'login.html', {'error': 'Invalid email or password.'})
     else:
         return render(request, 'login.html')
 
