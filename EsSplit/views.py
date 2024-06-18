@@ -7,6 +7,7 @@ from django.contrib import messages
 from .forms import RegisterForm
 import logging
 import random
+from .models import Person
 
 
 logger = logging.getLogger(__name__)
@@ -50,6 +51,15 @@ def register(request):
             user.username = generate_username(user.first_name, user.last_name)
             user.set_password(form.cleaned_data['password'])
             user.save()
+
+            # Utwórz profil osoby i powiąż go z użytkownikiem
+            person = Person(
+                user=user, 
+                first_name=user.first_name, 
+                last_name=user.last_name 
+            )
+            person.save()
+
             login(request, user)
             return redirect('index')  # przekierowanie do strony głównej lub innej strony po rejestracji
     else:
