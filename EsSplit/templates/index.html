@@ -22,10 +22,13 @@
 
         <div class="user-profile">
             <img src="{% static 'img/profile.png' %}" alt="Profil">
-            <p>Cześć, Rakib</p>
-            <a href="{% url 'logout' %}" class="logout-link">Wyloguj się</a>
+            {% if request.user.is_authenticated %}
+                <p>Cześć, {{ request.user.first_name }}</p>
+                <a href="{% url 'logout' %}" class="logout-link">Wyloguj się</a>
+            {% else %}
+                <a href="{% url 'login' %}" class="login-link">Zaloguj się</a>
+            {% endif %}
         </div>
-
 
         <div class="switch-container">
             <label class="switch">
