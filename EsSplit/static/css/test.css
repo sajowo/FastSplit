@@ -1,3 +1,5 @@
+/* style.css */
+
 body {
     margin: 0;
     padding: 0;
@@ -10,8 +12,8 @@ body {
 }
 
 form {
-    width: 80%;
-    max-width: 500px;
+    width: 700px;
+    /* max-width: 900px; */
     background: white;
     border-radius: 15px;
     padding: 20px;
@@ -51,14 +53,17 @@ form h2 {
 }
 
 .txt_field label {
-    width: 120px;
-    text-align: right;
+    /* Etykiety na lewej stronie */
+    text-align: left;
+    width: auto;
+    /* Szerokość etykiet dostosowuje się do tekstu */
     margin-right: 10px;
     color: #333;
 }
 
 .txt_field input {
     flex: 1;
+    /* Pole tekstowe zajmuje pozostałą szerokość */
     padding: 10px;
     font-size: 16px;
     border: none;
@@ -75,7 +80,7 @@ form h2 {
     color: #999;
 }
 
-input[type="submit"] {
+button[type="submit"] {
     width: 100%;
     max-width: 200px;
     height: 50px;
@@ -91,7 +96,7 @@ input[type="submit"] {
     transition: background-color 0.3s, transform 0.2s;
 }
 
-input[type="submit"]:hover {
+button[type="submit"]:hover {
     background-color: #1e81ce;
     transform: scale(1.05);
 }

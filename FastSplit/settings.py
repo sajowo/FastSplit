@@ -66,9 +66,9 @@ WSGI_APPLICATION = 'FastSplit.wsgi.application'
 DATABASES = {  # Poprawienie literówki
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
-        'USER': 'postgres',
-        'PASSWORD': 'admin123',
+        'NAME': 'your_db_name',
+        'USER': 'your_db_user',
+        'PASSWORD': 'your_db_password',
         'HOST': 'localhost',
         'PORT': '5432',
     }

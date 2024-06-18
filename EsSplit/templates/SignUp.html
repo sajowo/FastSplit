@@ -2,17 +2,30 @@
 
 <!DOCTYPE html>
 <html lang="pl">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rejestracja</title>
+    <meta charset="utf-8">
+    <title>Podziel Rachunek {% block title %}{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/test.css' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'img/favv16.png' %}">
+
 </head>
+
+
 <body>
-    <h2>Rejestracja użytkownika</h2>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Zarejestruj się</button>
-    </form>
+    <section>
+        <div class="txt_field">
+            <form method="post">
+                <h2>Rejestracja użytkownika</h2>
+
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit">Zarejestruj się</button>
+            </form>
+        </div>
+
+    </section>
 </body>
+
 </html>
