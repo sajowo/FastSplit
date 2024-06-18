@@ -22,6 +22,20 @@ form {
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
 }
 
+@media (max-width: 768px) {
+    form {
+        width: 95%;
+        max-width: 500px;
+    }
+}
+
+@media (max-width: 480px) {
+    form {
+        width: 95%;
+        max-width: 400px;
+    }
+}
+
 form h2 {
     text-align: center;
     padding: 0 0 20px 0;

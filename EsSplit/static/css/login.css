@@ -5,34 +5,46 @@ body {
     background-color: #3F51B5;
     height: 100vh;
     overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .center {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -40%);
-    width: 500px;
-    height: 400px;
+    width: 90%;
+    max-width: 400px;
     background: white;
     border-radius: 15px;
+    padding: 30px;
+    box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+    .center {
+        width: 95%;
+        max-width: 350px;
+    }
+}
+
+@media (max-width: 480px) {
+    .center {
+        width: 98%;
+        max-width: 300px;
+    }
 }
 
 .center h1 {
     text-align: center;
-    padding: 0 0 20px 0;
-    border-bottom: 1px solid silver;
+    margin-bottom: 30px;
+    font-size: 2em;
+    color: black;
 }
 
-.center form {
-    padding: 0 60px;
-    box-sizing: border-box;
-}
 
 form .txt_field {
     position: relative;
     border-bottom: 2px solid #adadad;
-    margin: 30px 0;
+    margin: 20px 0;
 }
 
 .txt_field input {
@@ -53,6 +65,7 @@ form .txt_field {
     transform: translateY(-50%);
     font-size: 16px;
     pointer-events: none;
+    transition: top 0.2s ease, color 0.2s ease;
 }
 
 .txt_field span::before {
@@ -63,6 +76,7 @@ form .txt_field {
     width: 100%;
     height: 2px;
     background: #2691d9;
+    transition: width 0.2s ease;
 }
 
 .txt_field input:focus~label,
@@ -71,10 +85,16 @@ form .txt_field {
     color: #2691d9;
 }
 
+.txt_field input:focus~span::before {
+    width: 100%;
+}
+
 .forgot {
-    margin: -5px 0 20px 5px;
+    margin: 10px 0 20px 0;
     color: #a6a6a6;
     cursor: pointer;
+    text-align: right;
+    font-size: 14px;
 }
 
 .forgot:hover {
@@ -84,19 +104,19 @@ form .txt_field {
 input[type="submit"] {
     width: 100%;
     height: 50px;
-    border: 1px solid;
+    border: 1px solid #2691d9;
     background-color: #2691d9;
     border-radius: 15px;
     font-size: 16px;
-    color: #e9f4fb;
+    color: white;
     font-weight: 700;
     cursor: pointer;
     outline: none;
+    transition: background-color 0.2s ease;
 }
 
 input[type="submit"]:hover {
-    border-color: #2691d9;
-    transition: .5s;
+    background-color: #2196F3;
 }
 
 .users_signup {
@@ -104,4 +124,10 @@ input[type="submit"]:hover {
     text-align: center;
     font-size: 16px;
     color: #666666;
+}
+
+@media (max-width: 480px) {
+    .forgot {
+        text-align: center;
+    }
 }

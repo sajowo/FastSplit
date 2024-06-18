@@ -1,8 +1,25 @@
 const themeSwitch = document.getElementById('theme-switch');
+const body = document.body;
 
 themeSwitch.addEventListener('change', function () {
-    document.body.classList.toggle('dark-theme');
+    body.classList.toggle('dark-theme');
 });
+
+// Funkcja do automatycznego przełączania na ciemny motyw po godzinie 17
+function toggleThemeByTime() {
+    const currentHour = new Date().getHours();
+    if (currentHour >= 17) {
+        body.classList.add('dark-theme');
+    } else {
+        body.classList.remove('dark-theme');
+    }
+}
+
+// Uruchom funkcję po raz pierwszy, aby ustawić początkowy motyw
+toggleThemeByTime();
+
+// Uruchom funkcję co godzinę, aby aktualizować motyw
+setInterval(toggleThemeByTime, 3600000); // 3600000 milisekund = 1 godzina
 
 // Pobierz elementy formularza
 const form = document.querySelector('form');
@@ -126,3 +143,21 @@ function calculateTotal() {
 
 // Generuj suwaki na podstawie domyślnej liczby uczestników
 generateSliders();
+
+
+// heder zwijany
+document.addEventListener('DOMContentLoaded', function () {
+    const menuToggle = document.getElementById('menuToggle');
+    const menuContent = document.getElementById('menuContent');
+
+    menuToggle.addEventListener('click', function () {
+        menuContent.classList.toggle('show');
+    });
+
+    // Opcjonalnie zamknij rozwijane menu po kliknięciu poza nim
+    document.addEventListener('click', function (event) {
+        if (!menuToggle.contains(event.target) && !menuContent.contains(event.target)) {
+            menuContent.classList.remove('show');
+        }
+    });
+});
