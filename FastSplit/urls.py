@@ -9,5 +9,6 @@ urlpatterns = [
     path('', views.login_view, name='login'),  # Ścieżka dla strony logowania, używając widoku login_view
     path('logout/', views.logout_view, name='logout'),  # Ścieżka dla wylogowywania
     path('signup/', views.register, name='signup'),  # Ścieżka dla rejestracji
+    path('search_user/', views.search_user, name='search_user'),  # Dodanie nowej ścieżki
 
 ]

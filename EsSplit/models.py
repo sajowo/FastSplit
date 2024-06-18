@@ -16,3 +16,11 @@ class Membership(models.Model):
     person = models.ForeignKey(Person, on_delete=models.CASCADE)
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
     date_joined = models.DateField()
+
+
+class Friend(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='friends')
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return f"{self.name} (przyjaciel {self.user.username})"

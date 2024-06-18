@@ -15,18 +15,22 @@
         <div class="logo">
             <img src="{% static 'img/logo.png' %}" alt="Logo">
         </div>
-        <div class="search-bar">
-            <input type="search" placeholder="Szukaj">
-            <button><img src="{% static 'img/search.png' %}" alt="szukanie"></button>
-        </div>
+
+        <section class="search-friend">
+            <form method="POST" action="{% url 'search_user' %}">
+                {% csrf_token %}
+                <input type="text" name="username" placeholder="Nazwa użytkownika">
+                <button type="submit">Szukaj</button>
+            </form>
+        </section>
 
         <div class="user-profile">
             <img src="{% static 'img/profile.png' %}" alt="Profil">
             {% if request.user.is_authenticated %}
-                <p>Cześć, {{ request.user.first_name }}</p>
-                <a href="{% url 'logout' %}" class="logout-link">Wyloguj się</a>
+            <p>Cześć, {{ request.user.first_name }}</p>
+            <a href="{% url 'logout' %}" class="logout-link">Wyloguj się</a>
             {% else %}
-                <a href="{% url 'login' %}" class="login-link">Zaloguj się</a>
+            <a href="{% url 'login' %}" class="login-link">Zaloguj się</a>
             {% endif %}
         </div>
 
@@ -67,15 +71,20 @@
             <section class="friends-list">
                 <div class="friends-container">
                     <h2>Lista znajomych</h2>
-                    <ul id="friends-list">
-                        <!-- Lista znajomych zostanie wygenerowana tutaj -->
-                        <li>example</li>
-                        <li>example</li>
-                        <li>example</li>
-
-                    </ul>
+                    <div id="friends-list">
+                        {% if friends %}
+                        {% for friend in friends %}
+                        <div>{{ friend.name }}</div>
+                        {% endfor %}
+                        {% else %}
+                        <div>Brak znajomych.</div>
+                        {% endif %}
+                    </div>
                 </div>
             </section>
+
+
+
 
             <div class="recent-splits">
                 <h2>Ostatnie rozliczenia</h2>
@@ -93,10 +102,7 @@
                 </div>
             </div>
 
-
         </section>
-
-
 
         <section class="split-request2">
             <div class="statistics">
