@@ -66,7 +66,6 @@ header {
     display: block;
 }
 
-
 .search-bar {
     display: flex;
     align-items: center;
@@ -325,11 +324,9 @@ main {
     color: #3F51B5;
 }
 
-
 .statistics {
     display: flex;
     justify-content: center;
-
 }
 
 .stat-card {
@@ -359,7 +356,6 @@ main {
     max-width: 600px;
     margin-left: 6px;
     margin-right: 6px;
-
 }
 
 .create-spill h2 {
@@ -414,18 +410,44 @@ main {
     margin-top: 2em;
 }
 
-/*footer section*/
+.friends-list {
+    background-color: #F5F5F5;
+    padding: 1em;
+    border-radius: 10px;
+    width: 100%;
+    max-width: 300px;
+    margin-left: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
 
+.friends-list ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.friends-list li {
+    margin-bottom: 1em;
+}
+
+.friends-list a {
+    text-decoration: none;
+    color: #3F51B5;
+}
+
+.friends-list a:hover {
+    color: #2196F3;
+}
 
 /* Czarny Motyw */
 
 /* Dark Theme Styles */
 
 body.dark-theme {
-    background-color: #121212;
-    /* Darker background */
+    background-color: #282828;
     color: #ddd;
-    /* Lighter text color */
 }
 
 body.dark-theme header,
@@ -443,113 +465,92 @@ body.dark-theme .user-profile {
 }
 
 body.dark-theme .user-profile:hover {
-    background-color: #686868;
+    background-color: #282828;
+}
+
+body.dark-theme .user-profile .logout-link {
+    background-color: #484848;
+    color: #ddd;
 }
 
 body.dark-theme main {
     background-color: #282828;
-    /* Darker main background */
 }
 
-body.dark-theme main .side-nav {
+body.dark-theme .side-nav {
     background-color: #383838;
-    /* Darker side nav background */
 }
 
+body.dark-theme .side-nav nav ul li a {
+    background-color: #383838;
+}
 
-body.dark-theme main .side-nav a:hover {
+body.dark-theme .side-nav nav ul li a:hover {
     background-color: #585858;
-    /* Darker hover background */
 }
 
-body.dark-theme main .split-request .split-request2 .request-card {
-    background-color: #484848;
-    /* Darker request card background */
-    color: #ddd;
-    /* Lighter text color */
-}
-
-body.dark-theme main .split-request .split-request2 .request-card .title {
-    color: #ddd;
-    /* Lighter title color */
-}
-
-body.dark-theme main .split-request .split-request2 .request-card .amount {
-    color: #ddd;
-    /* Lighter amount color */
-}
-
-body.dark-theme main .split-request .split-request2 .request-card .split-actions .edit-btn {
-    background-color: #ddd;
-    /* Lighter edit button background */
-    color: #3F51B5;
-    /* Lighter text color */
-}
-
-body.dark-theme main .split-request .split-request2 .request-card .split-actions .delete-btn {
-    background-color: #ddd;
-    /* Lighter delete button background */
-    color: #3F51B5;
-    /* Lighter text color */
-}
-
-body.dark-theme main .split-request .split-request2 .request-card .split-actions .complete-btn {
-    background-color: #2196f3;
-    /* Same complete button background */
-    color: #ddd;
-    /* Lighter text color */
-}
-
-body.dark-theme main .split-request .split-request2 .request-card .split-actions .edit-btn:hover,
-body.dark-theme main .split-request .split-request2 .request-card .split-actions .delete-btn:hover,
-body.dark-theme main .split-request .split-request2 .request-card .split-actions .complete-btn:hover {
-    opacity: 0.7;
-    /* Same hover opacity */
-}
-
-body.dark-theme main .add-request {
-    background-color: #3f51b5;
-    /* Same add request background */
-}
-
-body.dark-theme main .add-request input,
-body.dark-theme main .add-request button {
-    background-color: #484848;
-    color: #ddd;
-}
-
-body.dark-theme main .add-request input:hover,
-body.dark-theme main .add-request button:hover {
-    background-color: #686868;
-}
-
-body.dark-theme main .split-actionsbutton {
-    background-color: #484848;
-    color: #ddd;
-}
-
-body.dark-theme main .split-actions button:hover {
-    background-color: #686868;
-
-}
-
-body.dark-theme main .create-spill {
-    color: #3F51B5;
-}
-
-body.dark-theme .recent-splits {
+body.dark-theme .split-request2 {
     background-color: #282828;
-
 }
 
-body.dark-theme .recent-splits li {
-    background-color: #383838;
+body.dark-theme .split-request2 .request-card {
+    background-color: #484848;
+    color: #ddd;
+}
+
+body.dark-theme .request-card h3,
+body.dark-theme .request-card p {
+    color: #ddd;
+}
+
+body.dark-theme .request-card button {
+    background-color: #ddd;
+    color: #3F51B5;
+}
+
+body.dark-theme .request-card button:hover {
+    background-color: #585858;
+    color: #ddd;
 }
 
 body.dark-theme .recent-splits .split-item {
+    background-color: #484848;
     color: #ddd;
 }
 
-/* body.dark-theme .statistics {
-    background-color: #282828;
-} */
+body.dark-theme .split-item h3,
+body.dark-theme .split-item p {
+    color: #ddd;
+}
+
+body.dark-theme .stat-card {
+    background-color: #484848;
+    color: #ddd;
+}
+
+body.dark-theme .create-spill {
+    background-color: #383838;
+    color: #ddd;
+}
+
+body.dark-theme .create-spill button[type="submit"] {
+    background-color: #3F51B5;
+    color: #ddd;
+}
+
+body.dark-theme .create-spill button[type="submit"]:hover {
+    background-color: #2196F3;
+}
+
+body.dark-theme .friends-list {
+    background-color: #383838;
+    color: #ddd;
+}
+
+body.dark-theme .friends-list a {
+    color: #ddd;
+}
+
+body.dark-theme .friends-list a:hover {
+    color: #2196F3;
+}
