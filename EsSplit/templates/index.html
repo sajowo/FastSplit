@@ -20,7 +20,7 @@
             <form method="POST" action="{% url 'search_user' %}">
                 {% csrf_token %}
                 <input type="text" name="username" placeholder="Nazwa użytkownika">
-                <button type="submit">Szukaj</button>
+                <button type="submit"><img src="{% static 'img/search.png' %}" alt="szukanie"></button>
             </form>
         </section>
 
@@ -28,6 +28,7 @@
             <img src="{% static 'img/profile.png' %}" alt="Profil">
             {% if request.user.is_authenticated %}
             <p>Cześć, {{ request.user.first_name }}</p>
+            <input type="hidden" id="logged-in-user" value="{{ request.user.first_name }}">
             <a href="{% url 'logout' %}" class="logout-link">Wyloguj się</a>
             {% else %}
             <a href="{% url 'login' %}" class="login-link">Zaloguj się</a>
@@ -51,18 +52,20 @@
 
             <div class="create-spill">
                 <h2>Create Spill</h2>
-                <form action="#">
+                <form id="split-form" action="#">
+                    <div id="selected-friends"></div>
                     <div class="form-group">
                         <label for="amount">Amount to Split:</label>
                         <input type="number" id="amount" name="amount" step="0.01" min="0" placeholder="Enter amount">
                     </div>
                     <div class="form-group">
-                        <label for="participants">Participants:</label>
-                        <div id="participant-list"></div>
+                        <label for="tip">Tip (%):</label>
+                        <input type="number" id="tip" name="tip" step="0.01" min="0" placeholder="Enter tip percentage">
                     </div>
                     <div id="split-details">
-                        <!-- Suwaki dla uczestników zostaną wygenerowane tutaj -->
+                        <!-- Sliders and input fields for participants will be generated here -->
                     </div>
+                    <button type="button" id="choose-friends-button">Wybierz znajomych</button>
                     <button type="submit">Create Spill</button>
                 </form>
                 <div id="spill-results"></div>
@@ -74,7 +77,7 @@
                     <div id="friends-list">
                         {% if friends %}
                         {% for friend in friends %}
-                        <div>{{ friend.name }}</div>
+                        <div draggable="true" id="friend-{{ friend.id }}">{{ friend.name }}</div>
                         {% endfor %}
                         {% else %}
                         <div>Brak znajomych.</div>
@@ -82,9 +85,6 @@
                     </div>
                 </div>
             </section>
-
-
-
 
             <div class="recent-splits">
                 <h2>Ostatnie rozliczenia</h2>
@@ -118,7 +118,30 @@
         </section>
     </main>
 
+    <div id="popup-container" style="display:none;">
+        <div id="popup-content">
+            <h2>Wybierz znajomych</h2>
+            <ul id="popup-friends-list">
+                {% if friends %}
+                {% for friend in friends %}
+                <li><input type="checkbox" name="friend" value="{{ friend.name }}"> {{ friend.name }}</li>
+                {% endfor %}
+                {% else %}
+                <li>Brak znajomych.</li>
+                {% endif %}
+            </ul>
+            <button id="close-popup">Zamknij</button>
+        </div>
+    </div>
+
     <script src="{% static 'js/scripts.js' %}"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            initializeEventListeners();
+        });
+    </script>
 </body>
 
 </html>

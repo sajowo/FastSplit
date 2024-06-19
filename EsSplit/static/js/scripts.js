@@ -1,163 +1,209 @@
-const themeSwitch = document.getElementById('theme-switch');
-const body = document.body;
+document.addEventListener('DOMContentLoaded', function () {
+    const themeSwitch = document.getElementById('theme-switch');
+    const body = document.body;
 
-themeSwitch.addEventListener('change', function () {
-    body.classList.toggle('dark-theme');
-});
-
-// Funkcja do automatycznego przełączania na ciemny motyw po godzinie 17
-function toggleThemeByTime() {
-    const currentHour = new Date().getHours();
-    if (currentHour >= 17) {
-        body.classList.add('dark-theme');
-    } else {
-        body.classList.remove('dark-theme');
-    }
-}
-
-// Uruchom funkcję po raz pierwszy, aby ustawić początkowy motyw
-toggleThemeByTime();
-
-// Uruchom funkcję co godzinę, aby aktualizować motyw
-setInterval(toggleThemeByTime, 3600000); // 3600000 milisekund = 1 godzina
-
-// Pobierz elementy formularza
-const form = document.querySelector('form');
-const participantList = document.getElementById('participant-list');
-const splitDetails = document.getElementById('split-details');
-const amountInput = document.getElementById('amount');
-const spillResults = document.getElementById('spill-results');
-
-// Dodaj obsługę zdarzeń dla zmiany liczby uczestników
-generateParticipantList();
-
-function generateParticipantList() {
-    participantList.innerHTML = '';
-    const selectedParticipants = [
-        'Person 1',
-        'Person 2',
-        'Person 3'
-        // Dodaj więcej uczestników według potrzeby
-    ];
-
-    selectedParticipants.forEach(participant => {
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.name = 'participant';
-        checkbox.value = participant;
-        checkbox.id = participant;
-
-        const label = document.createElement('label');
-        label.htmlFor = participant;
-        label.textContent = participant;
-
-        participantList.appendChild(checkbox);
-        participantList.appendChild(label);
-        participantList.appendChild(document.createElement('br'));
+    themeSwitch.addEventListener('change', function () {
+        body.classList.toggle('dark-theme');
     });
 
-    // Dodaj obsługę zdarzeń dla zmiany liczby uczestników
-    participantList.addEventListener('change', generateSliders);
-}
+    function toggleThemeByTime() {
+        const currentHour = new Date().getHours();
+        if (currentHour >= 17) {
+            body.classList.add('dark-theme');
+        } else {
+            body.classList.remove('dark-theme');
+        }
+    }
 
-// Funkcja do generowania suwaków dla uczestników
-function generateSliders() {
-    // Wyczyść poprzednie suwaki
-    splitDetails.innerHTML = '';
+    toggleThemeByTime();
+    setInterval(toggleThemeByTime, 3600000);
 
-    // Pobierz wybrane osoby
-    const selectedParticipants = Array.from(participantList.querySelectorAll('input[type="checkbox"]:checked')).map(checkbox => checkbox.value);
+    const form = document.getElementById('split-form');
+    const selectedFriendsContainer = document.getElementById('selected-friends');
+    const splitDetails = document.getElementById('split-details');
+    const amountInput = document.getElementById('amount');
+    const tipInput = document.getElementById('tip');
+    const spillResults = document.getElementById('spill-results');
 
-    let remainingAmount = parseFloat(amountInput.value);
+    function initializeEventListeners() {
+        document.getElementById('choose-friends-button').addEventListener('click', showPopup);
+        document.getElementById('close-popup').addEventListener('click', hidePopup);
+        form.addEventListener('submit', handleFormSubmit);
+    }
 
-    // Dla każdej wybranej osoby, wygeneruj suwak
-    selectedParticipants.forEach(participant => {
-        const sliderContainer = document.createElement('div');
-        sliderContainer.classList.add('slider-container');
+    function showPopup() {
+        document.getElementById('popup-container').style.display = 'block';
+    }
 
-        const nameLabel = document.createElement('label');
-        nameLabel.textContent = participant + ':';
-        sliderContainer.appendChild(nameLabel);
+    function hidePopup() {
+        document.getElementById('popup-container').style.display = 'none';
+        updateSelectedFriends();
+    }
 
-        const slider = document.createElement('input');
-        slider.type = 'range';
-        slider.min = 0;
-        slider.max = remainingAmount;
-        slider.step = 0.01;
-        slider.value = 0;
-        slider.dataset.max = remainingAmount; // Zachowaj początkowy maksymalny zakres
-        sliderContainer.appendChild(slider);
+    function updateSelectedFriends() {
+        selectedFriendsContainer.innerHTML = '';
+        const selectedFriends = Array.from(document.querySelectorAll('#popup-friends-list input[type="checkbox"]:checked')).map(checkbox => checkbox.value);
 
-        const amountLabel = document.createElement('span');
-        amountLabel.textContent = '$' + slider.value;
-        sliderContainer.appendChild(amountLabel);
+        const loggedInUser = document.getElementById('logged-in-user').value;
+        if (!selectedFriends.includes(loggedInUser)) {
+            selectedFriends.unshift(loggedInUser);
+        }
 
-        slider.addEventListener('input', function () {
-            amountLabel.textContent = '$' + slider.value;
-            updateSliders(slider);
+        if (selectedFriends.length > 0) {
+            const friendsList = document.createElement('ul');
+            selectedFriends.forEach(friend => {
+                const listItem = document.createElement('li');
+                listItem.textContent = friend;
+                friendsList.appendChild(listItem);
+            });
+            selectedFriendsContainer.appendChild(friendsList);
+        } else {
+            selectedFriendsContainer.innerHTML = '<p>Nie wybrano znajomych.</p>';
+        }
+
+        generateSliders(selectedFriends);
+    }
+
+    function generateSliders(friends) {
+        splitDetails.innerHTML = '';
+        let totalAmount = parseFloat(amountInput.value) + (parseFloat(amountInput.value) * (parseFloat(tipInput.value || 0) / 100));
+        const initialAmount = (totalAmount / friends.length).toFixed(2);
+
+        friends.forEach(friend => {
+            const sliderContainer = document.createElement('div');
+            sliderContainer.classList.add('slider-container');
+
+            const nameLabel = document.createElement('label');
+            nameLabel.textContent = friend + ':';
+            sliderContainer.appendChild(nameLabel);
+
+            const slider = document.createElement('input');
+            slider.type = 'range';
+            slider.min = 0;
+            slider.max = totalAmount;
+            slider.step = 0.01;
+            slider.value = initialAmount;
+            slider.classList.add('amount-slider');
+            slider.addEventListener('input', updateSliders);
+            sliderContainer.appendChild(slider);
+
+            const amountInputField = document.createElement('input');
+            amountInputField.type = 'number';
+            amountInputField.step = 0.01;
+            amountInputField.min = 0;
+            amountInputField.value = initialAmount;
+            amountInputField.classList.add('amount-input');
+            amountInputField.addEventListener('input', updateSlidersFromInput);
+            sliderContainer.appendChild(amountInputField);
+
+            splitDetails.appendChild(sliderContainer);
         });
 
-        splitDetails.appendChild(sliderContainer);
-    });
-}
-
-// Funkcja do aktualizacji zakresów suwaków
-function updateSliders(currentSlider) {
-    const sliders = Array.from(splitDetails.querySelectorAll('input[type="range"]'));
-    const currentIndex = sliders.indexOf(currentSlider);
-
-    let totalAssigned = 0;
-    for (let i = 0; i <= currentIndex; i++) {
-        totalAssigned += parseFloat(sliders[i].value);
+        updateSliders();
     }
 
-    const remainingAmount = parseFloat(amountInput.value) - totalAssigned;
-    for (let i = currentIndex + 1; i < sliders.length; i++) {
-        sliders[i].max = remainingAmount + parseFloat(sliders[i].value); // Dostosuj maksymalny zakres
-    }
-}
+    function updateSliders() {
+        const sliders = Array.from(document.querySelectorAll('.amount-slider'));
+        const inputs = Array.from(document.querySelectorAll('.amount-input'));
+        let total = 0;
+        let remainingAmount = parseFloat(amountInput.value) + (parseFloat(amountInput.value) * (parseFloat(tipInput.value || 0) / 100));
 
-// Dodaj obsługę zdarzenia dla przesyłania formularza
-form.addEventListener('submit', function (event) {
-    event.preventDefault();
+        sliders.forEach((slider, index) => {
+            const value = parseFloat(slider.value);
+            total += value;
+            inputs[index].value = value.toFixed(2);
+        });
 
-    // Oblicz sumę wszystkich wybranych kwot
-    const totalAmount = calculateTotal();
+        if (total > remainingAmount) {
+            const excess = total - remainingAmount;
+            const adjustPerSlider = excess / sliders.length;
 
-    // Wyświetl procentową kwotę dla każdego uczestnika
-    const selectedParticipants = Array.from(participantList.querySelectorAll('input[type="checkbox"]:checked')).map(checkbox => checkbox.value);
-    const sliders = splitDetails.querySelectorAll('input[type="range"]');
-    const results = selectedParticipants.map((participant, index) => {
-        const percentage = ((parseFloat(sliders[index].value) / parseFloat(amountInput.value)) * 100).toFixed(2);
-        return `${participant}: ${percentage}%`;
-    });
+            sliders.forEach((slider, index) => {
+                slider.value -= adjustPerSlider;
+                inputs[index].value = parseFloat(slider.value).toFixed(2);
+            });
 
-    spillResults.innerHTML = results.join('<br>');
-});
-
-// Funkcja do obliczania sumy wszystkich wybranych kwot
-function calculateTotal() {
-    const totalAmount = Array.from(splitDetails.querySelectorAll('input[type="range"]')).reduce((acc, slider) => acc + parseFloat(slider.value), 0);
-    return totalAmount;
-}
-
-// Generuj suwaki na podstawie domyślnej liczby uczestników
-generateSliders();
-
-
-// heder zwijany
-document.addEventListener('DOMContentLoaded', function () {
-    const menuToggle = document.getElementById('menuToggle');
-    const menuContent = document.getElementById('menuContent');
-
-    menuToggle.addEventListener('click', function () {
-        menuContent.classList.toggle('show');
-    });
-
-    // Opcjonalnie zamknij rozwijane menu po kliknięciu poza nim
-    document.addEventListener('click', function (event) {
-        if (!menuToggle.contains(event.target) && !menuContent.contains(event.target)) {
-            menuContent.classList.remove('show');
+            total = remainingAmount;
         }
-    });
+
+        sliders.forEach(slider => {
+            slider.nextElementSibling.value = slider.value;
+        });
+
+        displayResults();
+    }
+
+    function updateSlidersFromInput() {
+        const inputs = Array.from(document.querySelectorAll('.amount-input'));
+        const sliders = Array.from(document.querySelectorAll('.amount-slider'));
+        let total = 0;
+        let remainingAmount = parseFloat(amountInput.value) + (parseFloat(amountInput.value) * (parseFloat(tipInput.value || 0) / 100));
+
+        inputs.forEach((input, index) => {
+            const value = parseFloat(input.value);
+            total += value;
+            sliders[index].value = value;
+        });
+
+        if (total > remainingAmount) {
+            const excess = total - remainingAmount;
+            const adjustPerInput = excess / inputs.length;
+
+            inputs.forEach((input, index) => {
+                input.value -= adjustPerInput;
+                sliders[index].value = parseFloat(input.value).toFixed(2);
+            });
+
+            total = remainingAmount;
+        }
+
+        displayResults();
+    }
+
+    function displayResults() {
+        spillResults.innerHTML = '<h3>Rozliczenie:</h3>';
+        const resultList = document.createElement('ul');
+
+        const friends = Array.from(document.querySelectorAll('#popup-friends-list input[type="checkbox"]:checked')).map(checkbox => checkbox.value);
+        const loggedInUser = document.getElementById('logged-in-user').value;
+        if (!friends.includes(loggedInUser)) {
+            friends.unshift(loggedInUser);
+        }
+
+        const amounts = Array.from(document.querySelectorAll('.amount-input')).map(input => parseFloat(input.value));
+        const totalAmount = parseFloat(amountInput.value);
+        const totalTip = totalAmount * (parseFloat(tipInput.value || 0) / 100);
+
+        friends.forEach((friend, index) => {
+            const amount = amounts[index];
+            const tipShare = (amount / totalAmount) * totalTip;
+            const totalToPay = amount + tipShare;
+            const resultItem = document.createElement('li');
+            resultItem.textContent = `${friend}: $${totalToPay.toFixed(2)} (incl. tip $${tipShare.toFixed(2)})`;
+            resultList.appendChild(resultItem);
+        });
+
+        spillResults.appendChild(resultList);
+    }
+
+    function handleFormSubmit(event) {
+        event.preventDefault();
+        updateSelectedFriends();
+        alert('Split created successfully!');
+        resetForm();
+    }
+
+    function resetForm() {
+        selectedFriendsContainer.innerHTML = '';
+        splitDetails.innerHTML = '';
+        amountInput.value = '';
+        tipInput.value = '';
+        spillResults.innerHTML = '';
+        const checkboxes = document.querySelectorAll('#popup-friends-list input[type="checkbox"]');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = false;
+        });
+    }
+
+    initializeEventListeners();
 });
