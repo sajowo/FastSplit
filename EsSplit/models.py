@@ -24,3 +24,15 @@ class Friend(models.Model):
 
     def __str__(self):
         return f"{self.name} (przyjaciel {self.user.username})"
+
+class Bill(models.Model):
+    creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_bills')
+    participants = models.ManyToManyField(User, related_name='participated_bills')
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    date = models.DateTimeField(auto_now_add=True)
+    description = models.TextField()
+
+    def __str__(self):
+        return f'{self.description} - {self.amount}'
+    
+    

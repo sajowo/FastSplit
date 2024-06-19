@@ -8,8 +8,8 @@ from .forms import RegisterForm, FriendForm  # Dodaj FriendForm do importu
 from django.contrib.auth import get_user_model
 import logging
 import random
-from .models import Person, Friend  # Importuj model Friend
-from .models import Friend 
+from .models import Person, Friend, Bill # Importuj model Friend
+from django.http import JsonResponse
 
 
 logger = logging.getLogger(__name__)
@@ -114,3 +114,38 @@ def search_user(request):
         else:
             messages.error(request, "Proszę podać nazwę użytkownika.")
     return redirect('index') 
+
+def index(request):
+    if request.user.is_authenticated:
+        friends = Friend.objects.filter(user=request.user)
+        participated_bills = Bill.objects.filter(participants=request.user)
+        return render(request, 'index.html', {'friends': friends, 'participated_bills': participated_bills})
+    else:
+        return redirect('login')
+    
+def create_spill(request):
+    if request.method == 'POST':
+        amount = request.POST.get('amount')
+        tip = request.POST.get('tip')
+        friends_ids = request.POST.getlist('friends[]')
+        
+        # Calculate the total amount including the tip
+        total_amount = float(amount) * (1 + float(tip) / 100)
+        
+        # Create the bill object
+        bill = Bill.objects.create(
+            creator=request.user,
+            description='A new bill',
+            amount=total_amount
+        )
+        
+        # Add participants
+        for friend_id in friends_ids:
+            friend = User.objects.get(id=friend_id)
+            bill.participants.add(friend)
+        
+        bill.save()
+        
+        return JsonResponse({'message': 'Spill created successfully!'})
+    else:
+        return JsonResponse({'message': 'Invalid request method'}, status=400)

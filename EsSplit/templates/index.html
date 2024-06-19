@@ -43,6 +43,44 @@
         </div>
     </header>
     <main>
+        <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        initializeEventListeners();
+    });
+
+    function initializeEventListeners() {
+        $('#split-form').on('submit', function(event) {
+            event.preventDefault();
+            createSpill();
+        });
+    }
+
+    function createSpill() {
+        const amount = $('#amount').val();
+        const tip = $('#tip').val();
+        const selectedFriends = $('#selected-friends').children().map(function() {
+            return $(this).data('id');
+        }).get();
+
+        $.ajax({
+            url: '{% url "create_spill" %}',  // Make sure this URL matches your URLconf
+            type: 'POST',
+            data: {
+                'amount': amount,
+                'tip': tip,
+                'friends': selectedFriends,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+                $('#spill-results').html(response);
+            },
+            error: function(response) {
+                alert('Error creating spill');
+            }
+        });
+    }
+</script>
+
         <section class="split-request">
             <div class="request-card">
                 <h3>Cześć Mike!</h3>
@@ -52,7 +90,8 @@
 
             <div class="create-spill">
                 <h2>Create Spill</h2>
-                <form id="split-form" action="#">
+                <form id="split-form" action="#" method="POST">
+                {% csrf_token %}
                     <div id="selected-friends"></div>
                     <div class="form-group">
                         <label for="amount">Amount to Split:</label>
@@ -88,18 +127,18 @@
 
             <div class="recent-splits">
                 <h2>Ostatnie rozliczenia</h2>
-                <div class="split-item">
-                    <h3>Tommy Gun</h3>
-                    <p>Bar Kasturi, Sushi & Japońskie</p>
-                    <p>55%</p>
-                    <p>28,20 $</p>
-                </div>
-                <div class="split-item">
-                    <h3>Harper Seven</h3>
-                    <p>Bar i Grill</p>
-                    <p>75%</p>
-                    <p>28,20 $</p>
-                </div>
+                {% if participated_bills %}
+                    {% for bill in participated_bills %}
+                        <div class="split-item">
+                            <h3>{{ bill.creator.username }}</h3>
+                            <p>{{ bill.description }}</p>
+                            <p>{{ bill.date }}</p>
+                            <p>{{ bill.amount }}</p>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div>Brak rozliczeń.</div>
+                {% endif %}
             </div>
 
         </section>
