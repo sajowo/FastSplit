@@ -63,7 +63,7 @@ WSGI_APPLICATION = 'FastSplit.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-DATABASES = {  # Poprawienie literówki
+DATABASES = {  
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'your_db_name',
