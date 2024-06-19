@@ -4,28 +4,24 @@ from django.contrib.auth import authenticate, login, logout
 from django.urls import reverse
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
-from .forms import RegisterForm, FriendForm  # Dodaj FriendForm do importu
+from .forms import RegisterForm, FriendForm
 from django.contrib.auth import get_user_model
 import logging
 import random
-from .models import Person, Friend, Bill # Importuj model Friend
+from .models import Person, Friend, Bill
 from django.http import JsonResponse
-
+from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
-
 def index(request):
     if request.user.is_authenticated:
-        # Dodaj print statement do debugowania
         print("Zalogowany użytkownik:", request.user)
-        friends = Friend.objects.filter(user=request.user)  # Pobieramy znajomych dla aktualnego użytkownika
+        friends = Friend.objects.filter(user=request.user)
         print("Znajomi:", friends)
-        # Wstawienie tutaj kodu, który wyświetla formularz do dodania znajomego
         return render(request, 'index.html', {'friends': friends})
     else:
         return redirect('login')
-
 
 def login_view(request):
     if request.method == 'POST':
@@ -40,7 +36,7 @@ def login_view(request):
         if user is not None and user.check_password(password):
             login(request, user)
             logger.info("Logowanie")
-            return redirect(reverse('index'))  # Przekieruj na stronę główną
+            return redirect(reverse('index'))
         else:
             return render(request, 'login.html', {'error': 'Invalid email or password.'})
     else:
@@ -49,7 +45,7 @@ def login_view(request):
 def logout_view(request):
     logger.info("Wylogowywanie użytkownika")
     logout(request)
-    return redirect('login') 
+    return redirect('login')
 
 def generate_username(first_name, last_name):
     base_username = f"{first_name.lower()}{last_name.lower()}"
@@ -57,7 +53,6 @@ def generate_username(first_name, last_name):
     while User.objects.filter(username=username).exists():
         username = f"{base_username}{random.randint(1000, 9999)}"
     return username
-
 
 def register(request):
     if request.method == 'POST':
@@ -68,7 +63,6 @@ def register(request):
             user.set_password(form.cleaned_data['password'])
             user.save()
 
-            # Utwórz profil osoby i powiąż go z użytkownikiem
             person = Person(
                 user=user, 
                 first_name=user.first_name, 
@@ -77,7 +71,7 @@ def register(request):
             person.save()
 
             login(request, user)
-            return redirect('index')  # przekierowanie do strony głównej lub innej strony po rejestracji
+            return redirect('index')
     else:
         form = RegisterForm()
     return render(request, 'SignUp.html', {'form': form})
@@ -100,7 +94,6 @@ def search_user(request):
             try:
                 user_to_add = User.objects.get(username=username)
                 if user_to_add != request.user:
-                    # Sprawdź, czy ten użytkownik już nie jest znajomym
                     if not request.user.friends.filter(name=user_to_add.username).exists():
                         new_friend = Friend(user=request.user, name=user_to_add.username)
                         new_friend.save()
@@ -113,39 +106,41 @@ def search_user(request):
                 messages.error(request, f"Użytkownik o nazwie '{username}' nie istnieje.")
         else:
             messages.error(request, "Proszę podać nazwę użytkownika.")
-    return redirect('index') 
+    return redirect('index')
 
-def index(request):
-    if request.user.is_authenticated:
-        friends = Friend.objects.filter(user=request.user)
-        participated_bills = Bill.objects.filter(participants=request.user)
-        return render(request, 'index.html', {'friends': friends, 'participated_bills': participated_bills})
-    else:
-        return redirect('login')
-    
 def create_spill(request):
     if request.method == 'POST':
         amount = request.POST.get('amount')
         tip = request.POST.get('tip')
-        friends_ids = request.POST.getlist('friends[]')
+        friends = request.POST.getlist('friends[]')
         
-        # Calculate the total amount including the tip
-        total_amount = float(amount) * (1 + float(tip) / 100)
-        
-        # Create the bill object
-        bill = Bill.objects.create(
-            creator=request.user,
-            description='A new bill',
-            amount=total_amount
-        )
-        
-        # Add participants
-        for friend_id in friends_ids:
-            friend = User.objects.get(id=friend_id)
-            bill.participants.add(friend)
-        
-        bill.save()
-        
-        return JsonResponse({'message': 'Spill created successfully!'})
+        if not amount or not tip or not friends:
+            return JsonResponse({'status': 'error', 'message': 'Wszystkie pola są wymagane'})
+
+        try:
+            total_amount = float(amount) + (float(amount) * (float(tip) / 100))
+            description = f'Spill for friends: {", ".join(friends)}'
+            Bill.objects.create(
+                amount=total_amount,
+                description=description,
+                creator_id=request.user.id,
+                date=timezone.now()
+            )
+            return JsonResponse({'status': 'success'})
+        except ValueError as e:
+            logger.error(f"Błąd przy przetwarzaniu wartości: {e}")
+            return JsonResponse({'status': 'error', 'message': 'Nieprawidłowe dane wejściowe'})
     else:
-        return JsonResponse({'message': 'Invalid request method'}, status=400)
+        return JsonResponse({'status': 'error', 'message': 'Nieprawidłowa metoda'})
+
+def index(request):
+    if request.user.is_authenticated:
+        participated_bills = Bill.objects.filter(creator_id=request.user.id)
+        friends = Friend.objects.filter(user=request.user)
+        context = {
+            'participated_bills': participated_bills,
+            'friends': friends
+        }
+        return render(request, 'index.html', context)
+    else:
+        return redirect('login')

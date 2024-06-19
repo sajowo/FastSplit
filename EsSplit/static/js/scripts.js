@@ -54,6 +54,7 @@ document.addEventListener('DOMContentLoaded', function () {
             selectedFriends.forEach(friend => {
                 const listItem = document.createElement('li');
                 listItem.textContent = friend;
+                listItem.dataset.id = friend; // Dodanie atrybutu data-id
                 friendsList.appendChild(listItem);
             });
             selectedFriendsContainer.appendChild(friendsList);
@@ -83,125 +84,66 @@ document.addEventListener('DOMContentLoaded', function () {
             slider.max = totalAmount;
             slider.step = 0.01;
             slider.value = initialAmount;
-            slider.classList.add('amount-slider');
-            slider.addEventListener('input', updateSliders);
+            slider.dataset.friend = friend;
             sliderContainer.appendChild(slider);
 
-            const amountInputField = document.createElement('input');
-            amountInputField.type = 'number';
-            amountInputField.step = 0.01;
-            amountInputField.min = 0;
-            amountInputField.value = initialAmount;
-            amountInputField.classList.add('amount-input');
-            amountInputField.addEventListener('input', updateSlidersFromInput);
-            sliderContainer.appendChild(amountInputField);
+            const sliderValue = document.createElement('span');
+            sliderValue.textContent = initialAmount;
+            sliderContainer.appendChild(sliderValue);
+
+            slider.addEventListener('input', () => {
+                sliderValue.textContent = slider.value;
+                updateSliderValues();
+            });
 
             splitDetails.appendChild(sliderContainer);
         });
-
-        updateSliders();
     }
 
-    function updateSliders() {
-        const sliders = Array.from(document.querySelectorAll('.amount-slider'));
-        const inputs = Array.from(document.querySelectorAll('.amount-input'));
-        let total = 0;
-        let remainingAmount = parseFloat(amountInput.value) + (parseFloat(amountInput.value) * (parseFloat(tipInput.value || 0) / 100));
+    function updateSliderValues() {
+        const sliders = Array.from(document.querySelectorAll('#split-details input[type="range"]'));
+        let totalAmount = parseFloat(amountInput.value) + (parseFloat(amountInput.value) * (parseFloat(tipInput.value || 0) / 100));
+        let totalSelected = sliders.reduce((total, slider) => total + parseFloat(slider.value), 0);
 
-        sliders.forEach((slider, index) => {
-            const value = parseFloat(slider.value);
-            total += value;
-            inputs[index].value = value.toFixed(2);
-        });
-
-        if (total > remainingAmount) {
-            const excess = total - remainingAmount;
-            const adjustPerSlider = excess / sliders.length;
-
-            sliders.forEach((slider, index) => {
-                slider.value -= adjustPerSlider;
-                inputs[index].value = parseFloat(slider.value).toFixed(2);
+        if (totalSelected > totalAmount) {
+            let excess = totalSelected - totalAmount;
+            sliders.forEach(slider => {
+                let value = parseFloat(slider.value);
+                if (value > 0 && excess > 0) {
+                    let reduction = Math.min(value, excess);
+                    slider.value = (value - reduction).toFixed(2);
+                    slider.nextSibling.textContent = slider.value;
+                    excess -= reduction;
+                }
             });
-
-            total = remainingAmount;
         }
-
-        sliders.forEach(slider => {
-            slider.nextElementSibling.value = slider.value;
-        });
-
-        displayResults();
-    }
-
-    function updateSlidersFromInput() {
-        const inputs = Array.from(document.querySelectorAll('.amount-input'));
-        const sliders = Array.from(document.querySelectorAll('.amount-slider'));
-        let total = 0;
-        let remainingAmount = parseFloat(amountInput.value) + (parseFloat(amountInput.value) * (parseFloat(tipInput.value || 0) / 100));
-
-        inputs.forEach((input, index) => {
-            const value = parseFloat(input.value);
-            total += value;
-            sliders[index].value = value;
-        });
-
-        if (total > remainingAmount) {
-            const excess = total - remainingAmount;
-            const adjustPerInput = excess / inputs.length;
-
-            inputs.forEach((input, index) => {
-                input.value -= adjustPerInput;
-                sliders[index].value = parseFloat(input.value).toFixed(2);
-            });
-
-            total = remainingAmount;
-        }
-
-        displayResults();
-    }
-
-    function displayResults() {
-        spillResults.innerHTML = '<h3>Rozliczenie:</h3>';
-        const resultList = document.createElement('ul');
-
-        const friends = Array.from(document.querySelectorAll('#popup-friends-list input[type="checkbox"]:checked')).map(checkbox => checkbox.value);
-        const loggedInUser = document.getElementById('logged-in-user').value;
-        if (!friends.includes(loggedInUser)) {
-            friends.unshift(loggedInUser);
-        }
-
-        const amounts = Array.from(document.querySelectorAll('.amount-input')).map(input => parseFloat(input.value));
-        const totalAmount = parseFloat(amountInput.value);
-        const totalTip = totalAmount * (parseFloat(tipInput.value || 0) / 100);
-
-        friends.forEach((friend, index) => {
-            const amount = amounts[index];
-            const tipShare = (amount / totalAmount) * totalTip;
-            const totalToPay = amount + tipShare;
-            const resultItem = document.createElement('li');
-            resultItem.textContent = `${friend}: $${totalToPay.toFixed(2)} (incl. tip $${tipShare.toFixed(2)})`;
-            resultList.appendChild(resultItem);
-        });
-
-        spillResults.appendChild(resultList);
     }
 
     function handleFormSubmit(event) {
         event.preventDefault();
-        updateSelectedFriends();
-        alert('Split created successfully!');
-        resetForm();
+        createSpill();
     }
 
-    function resetForm() {
-        selectedFriendsContainer.innerHTML = '';
-        splitDetails.innerHTML = '';
-        amountInput.value = '';
-        tipInput.value = '';
-        spillResults.innerHTML = '';
-        const checkboxes = document.querySelectorAll('#popup-friends-list input[type="checkbox"]');
-        checkboxes.forEach(checkbox => {
-            checkbox.checked = false;
+    function createSpill() {
+        const amount = amountInput.value;
+        const tip = tipInput.value;
+        const selectedFriends = Array.from(selectedFriendsContainer.querySelectorAll('li')).map(li => li.dataset.id); // Użycie data-id
+
+        $.ajax({
+            url: '{% url "create_spill" %}',
+            type: 'POST',
+            data: {
+                'amount': amount,
+                'tip': tip,
+                'friends': selectedFriends,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function (response) {
+                spillResults.innerHTML = response;
+            },
+            error: function (response) {
+                alert('Error creating spill');
+            }
         });
     }
 
