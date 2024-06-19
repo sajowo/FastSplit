@@ -44,42 +44,42 @@
     </header>
     <main>
         <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        initializeEventListeners();
-    });
+            document.addEventListener('DOMContentLoaded', function () {
+                initializeEventListeners();
+            });
 
-    function initializeEventListeners() {
-        $('#split-form').on('submit', function(event) {
-            event.preventDefault();
-            createSpill();
-        });
-    }
-
-    function createSpill() {
-        const amount = $('#amount').val();
-        const tip = $('#tip').val();
-        const selectedFriends = $('#selected-friends').children().map(function() {
-            return $(this).data('id');
-        }).get();
-
-        $.ajax({
-            url: '{% url "create_spill" %}',  // Make sure this URL matches your URLconf
-            type: 'POST',
-            data: {
-                'amount': amount,
-                'tip': tip,
-                'friends': selectedFriends,
-                'csrfmiddlewaretoken': '{{ csrf_token }}'
-            },
-            success: function(response) {
-                $('#spill-results').html(response);
-            },
-            error: function(response) {
-                alert('Error creating spill');
+            function initializeEventListeners() {
+                $('#split-form').on('submit', function (event) {
+                    event.preventDefault();
+                    createSpill();
+                });
             }
-        });
-    }
-</script>
+
+            function createSpill() {
+                const amount = $('#amount').val();
+                const tip = $('#tip').val();
+                const selectedFriends = $('#selected-friends').children().map(function () {
+                    return $(this).data('id');
+                }).get();
+
+                $.ajax({
+                    url: '{% url "create_spill" %}',  // Make sure this URL matches your URLconf
+                    type: 'POST',
+                    data: {
+                        'amount': amount,
+                        'tip': tip,
+                        'friends': selectedFriends,
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    },
+                    success: function (response) {
+                        $('#spill-results').html(response);
+                    },
+                    error: function (response) {
+                        alert('Error creating spill');
+                    }
+                });
+            }
+        </script>
 
         <section class="split-request">
             <div class="request-card">
@@ -91,7 +91,7 @@
             <div class="create-spill">
                 <h2>Create Spill</h2>
                 <form id="split-form" action="#" method="POST">
-                {% csrf_token %}
+                    {% csrf_token %}
                     <div id="selected-friends"></div>
                     <div class="form-group">
                         <label for="amount">Amount to Split:</label>
@@ -128,22 +128,22 @@
             <div class="recent-splits">
                 <h2>Ostatnie rozliczenia</h2>
                 {% if participated_bills %}
-                    {% for bill in participated_bills %}
-                        <div class="split-item">
-                            <h3>{{ bill.creator.username }}</h3>
-                            <p>{{ bill.description }}</p>
-                            <p>{{ bill.date }}</p>
-                            <p>{{ bill.amount }}</p>
-                        </div>
-                    {% endfor %}
+                {% for bill in participated_bills %}
+                <div class="split-item">
+                    <h3>{{ bill.creator.username }}</h3>
+                    <p>{{ bill.description }}</p>
+                    <p>{{ bill.date }}</p>
+                    <p>{{ bill.amount }}</p>
+                </div>
+                {% endfor %}
                 {% else %}
-                    <div>Brak rozliczeń.</div>
+                <div>Brak rozliczeń.</div>
                 {% endif %}
             </div>
 
         </section>
 
-        <section class="split-request2">
+        <!-- <section class="split-request2">
             <div class="statistics">
                 <div class="stat-card">
                     <h3>Łączna Płatność</h3>
@@ -154,7 +154,7 @@
                     <p>28,20 $</p>
                 </div>
             </div>
-        </section>
+        </section> -->
     </main>
 
     <div id="popup-container" style="display:none;">
@@ -180,6 +180,43 @@
         document.addEventListener('DOMContentLoaded', function () {
             initializeEventListeners();
         });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            initializeEventListeners();
+        });
+
+        function initializeEventListeners() {
+            $('#split-form').on('submit', function (event) {
+                event.preventDefault();
+                createSpill();
+            });
+        }
+
+        function createSpill() {
+            const amount = $('#amount').val();
+            const tip = $('#tip').val();
+            const selectedFriends = $('#selected-friends').children().map(function () {
+                return $(this).data('id');
+            }).get();
+
+            $.ajax({
+                url: '{% url "create_spill" %}',  // Make sure this URL matches your URLconf
+                type: 'POST',
+                data: {
+                    'amount': amount,
+                    'tip': tip,
+                    'friends': selectedFriends,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function (response) {
+                    $('#spill-results').html(response);
+                },
+                error: function (response) {
+                    alert('Error creating spill');
+                }
+            });
+        }
     </script>
 </body>
 

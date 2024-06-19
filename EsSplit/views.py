@@ -8,12 +8,11 @@ from .forms import RegisterForm, FriendForm  # Dodaj FriendForm do importu
 from django.contrib.auth import get_user_model
 import logging
 import random
-from .models import Person, Friend, Bill # Importuj model Friend
+from .models import Person, Friend, Bill
 from django.http import JsonResponse
-
+from django.utils import timezone
 
 logger = logging.getLogger(__name__)
-
 
 def index(request):
     if request.user.is_authenticated:
@@ -21,11 +20,15 @@ def index(request):
         print("Zalogowany użytkownik:", request.user)
         friends = Friend.objects.filter(user=request.user)  # Pobieramy znajomych dla aktualnego użytkownika
         print("Znajomi:", friends)
-        # Wstawienie tutaj kodu, który wyświetla formularz do dodania znajomego
-        return render(request, 'index.html', {'friends': friends})
+        # Pobieramy rozliczenia, w których użytkownik uczestniczy
+        participated_bills = Bill.objects.filter(creator_id=request.user.id).order_by('-date')[:2]
+        context = {
+            'friends': friends,
+            'participated_bills': participated_bills
+        }
+        return render(request, 'index.html', context)
     else:
         return redirect('login')
-
 
 def login_view(request):
     if request.method == 'POST':
@@ -49,7 +52,7 @@ def login_view(request):
 def logout_view(request):
     logger.info("Wylogowywanie użytkownika")
     logout(request)
-    return redirect('login') 
+    return redirect('login')
 
 def generate_username(first_name, last_name):
     base_username = f"{first_name.lower()}{last_name.lower()}"
@@ -57,7 +60,6 @@ def generate_username(first_name, last_name):
     while User.objects.filter(username=username).exists():
         username = f"{base_username}{random.randint(1000, 9999)}"
     return username
-
 
 def register(request):
     if request.method == 'POST':
@@ -70,9 +72,9 @@ def register(request):
 
             # Utwórz profil osoby i powiąż go z użytkownikiem
             person = Person(
-                user=user, 
-                first_name=user.first_name, 
-                last_name=user.last_name 
+                user=user,
+                first_name=user.first_name,
+                last_name=user.last_name
             )
             person.save()
 
@@ -113,24 +115,40 @@ def search_user(request):
                 messages.error(request, f"Użytkownik o nazwie '{username}' nie istnieje.")
         else:
             messages.error(request, "Proszę podać nazwę użytkownika.")
-    return redirect('index') 
+    return redirect('index')
+
 
 def index(request):
     if request.user.is_authenticated:
         friends = Friend.objects.filter(user=request.user)
-        participated_bills = Bill.objects.filter(participants=request.user)
-        return render(request, 'index.html', {'friends': friends, 'participated_bills': participated_bills})
+        participated_bills = Bill.objects.filter(creator_id=request.user.id).order_by('-date')[:1]
+        context = {
+            'friends': friends,
+            'participated_bills': participated_bills
+        }
+        return render(request, 'index.html', context)
     else:
         return redirect('login')
+
     
 def create_spill(request):
     if request.method == 'POST':
         amount = request.POST.get('amount')
         tip = request.POST.get('tip')
         friends_ids = request.POST.getlist('friends[]')
+
+        # Validate amount and tip
+        if not amount or not tip:
+            return JsonResponse({'message': 'Amount and tip are required'}, status=400)
         
+        try:
+            amount = float(amount)
+            tip = float(tip)
+        except ValueError:
+            return JsonResponse({'message': 'Invalid amount or tip'}, status=400)
+
         # Calculate the total amount including the tip
-        total_amount = float(amount) * (1 + float(tip) / 100)
+        total_amount = amount * (1 + tip / 100)
         
         # Create the bill object
         bill = Bill.objects.create(

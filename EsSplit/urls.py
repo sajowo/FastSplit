@@ -12,4 +12,5 @@ urlpatterns = [
     path('add_friend/', views.add_friend, name='add_friend'),
     path('search_user/', views.search_user, name='search_user'),  # Dodanie nowej ścieżki
     path('create_spill/', views.create_spill, name='create_spill'),
+     path('get_latest_transactions/', views.get_latest_transactions, name='get_latest_transactions'),
 ]
