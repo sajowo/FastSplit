@@ -19,7 +19,13 @@ def index(request):
         print("Zalogowany użytkownik:", request.user)
         friends = Friend.objects.filter(user=request.user)
         print("Znajomi:", friends)
-        return render(request, 'index.html', {'friends': friends})
+        # Pobieramy rozliczenia, w których użytkownik uczestniczy
+        participated_bills = Bill.objects.filter(creator_id=request.user.id).order_by('-date')[:2]
+        context = {
+            'friends': friends,
+            'participated_bills': participated_bills
+        }
+        return render(request, 'index.html', context)
     else:
         return redirect('login')
 
@@ -64,9 +70,9 @@ def register(request):
             user.save()
 
             person = Person(
-                user=user, 
-                first_name=user.first_name, 
-                last_name=user.last_name 
+                user=user,
+                first_name=user.first_name,
+                last_name=user.last_name
             )
             person.save()
 
@@ -108,39 +114,53 @@ def search_user(request):
             messages.error(request, "Proszę podać nazwę użytkownika.")
     return redirect('index')
 
-def create_spill(request):
-    if request.method == 'POST':
-        amount = request.POST.get('amount')
-        tip = request.POST.get('tip')
-        friends = request.POST.getlist('friends[]')
-        
-        if not amount or not tip or not friends:
-            return JsonResponse({'status': 'error', 'message': 'Wszystkie pola są wymagane'})
-
-        try:
-            total_amount = float(amount) + (float(amount) * (float(tip) / 100))
-            description = f'Spill for friends: {", ".join(friends)}'
-            Bill.objects.create(
-                amount=total_amount,
-                description=description,
-                creator_id=request.user.id,
-                date=timezone.now()
-            )
-            return JsonResponse({'status': 'success'})
-        except ValueError as e:
-            logger.error(f"Błąd przy przetwarzaniu wartości: {e}")
-            return JsonResponse({'status': 'error', 'message': 'Nieprawidłowe dane wejściowe'})
-    else:
-        return JsonResponse({'status': 'error', 'message': 'Nieprawidłowa metoda'})
 
 def index(request):
     if request.user.is_authenticated:
-        participated_bills = Bill.objects.filter(creator_id=request.user.id)
         friends = Friend.objects.filter(user=request.user)
+        participated_bills = Bill.objects.filter(creator_id=request.user.id).order_by('-date')[:1]
         context = {
-            'participated_bills': participated_bills,
-            'friends': friends
+            'friends': friends,
+            'participated_bills': participated_bills
         }
         return render(request, 'index.html', context)
     else:
         return redirect('login')
+
+    
+def create_spill(request):
+    if request.method == 'POST':
+        amount = request.POST.get('amount')
+        tip = request.POST.get('tip')
+        friends_ids = request.POST.getlist('friends[]')
+
+        # Validate amount and tip
+        if not amount or not tip:
+            return JsonResponse({'message': 'Amount and tip are required'}, status=400)
+        
+        try:
+            amount = float(amount)
+            tip = float(tip)
+        except ValueError:
+            return JsonResponse({'message': 'Invalid amount or tip'}, status=400)
+
+        # Calculate the total amount including the tip
+        total_amount = amount * (1 + tip / 100)
+        
+        # Create the bill object
+        bill = Bill.objects.create(
+            creator=request.user,
+            description='A new bill',
+            amount=total_amount
+        )
+        
+        # Add participants
+        for friend_id in friends_ids:
+            friend = User.objects.get(id=friend_id)
+            bill.participants.add(friend)
+        
+        bill.save()
+        
+        return JsonResponse({'message': 'Spill created successfully!'})
+    else:
+        return JsonResponse({'message': 'Invalid request method'}, status=400)
