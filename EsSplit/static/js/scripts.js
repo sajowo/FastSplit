@@ -1,10 +1,19 @@
 document.addEventListener('DOMContentLoaded', function () {
+    
+    // --- ZABEZPIECZENIE PRZED PODWÓJNYM ŁADOWANIEM ---
+    // Jeśli skrypt załaduje się 2 razy, ta linijka go zatrzyma za drugim razem.
+    if (window.scriptHasRun) return;
+    window.scriptHasRun = true;
+
+    // --- SEKCJA 1: MOTYWY ---
     const themeSwitch = document.getElementById('theme-switch');
     const body = document.body;
 
-    themeSwitch.addEventListener('change', function () {
-        body.classList.toggle('dark-theme');
-    });
+    if (themeSwitch) {
+        themeSwitch.addEventListener('change', function () {
+            body.classList.toggle('dark-theme');
+        });
+    }
 
     function toggleThemeByTime() {
         const currentHour = new Date().getHours();
@@ -18,6 +27,7 @@ document.addEventListener('DOMContentLoaded', function () {
     toggleThemeByTime();
     setInterval(toggleThemeByTime, 3600000);
 
+    // --- SEKCJA 2: ZMIENNE FORMULARZA ---
     const form = document.getElementById('split-form');
     const selectedFriendsContainer = document.getElementById('selected-friends');
     const splitDetails = document.getElementById('split-details');
@@ -25,12 +35,19 @@ document.addEventListener('DOMContentLoaded', function () {
     const tipInput = document.getElementById('tip');
     const spillResults = document.getElementById('spill-results');
 
+    // --- SEKCJA 3: EVENT LISTENERY ---
     function initializeEventListeners() {
-        document.getElementById('choose-friends-button').addEventListener('click', showPopup);
-        document.getElementById('close-popup').addEventListener('click', hidePopup);
-        form.addEventListener('submit', handleFormSubmit);
+        const chooseBtn = document.getElementById('choose-friends-button');
+        const closePopupBtn = document.getElementById('close-popup');
+        
+        if (chooseBtn) chooseBtn.addEventListener('click', showPopup);
+        if (closePopupBtn) closePopupBtn.addEventListener('click', hidePopup);
+        
+        // Tutaj podpinamy wysyłanie formularza
+        if (form) form.addEventListener('submit', handleFormSubmit);
     }
 
+    // --- SEKCJA 4: LOGIKA POPUPÓW I SLIDERÓW ---
     function showPopup() {
         document.getElementById('popup-container').style.display = 'block';
     }
@@ -44,9 +61,12 @@ document.addEventListener('DOMContentLoaded', function () {
         selectedFriendsContainer.innerHTML = '';
         const selectedFriends = Array.from(document.querySelectorAll('#popup-friends-list input[type="checkbox"]:checked')).map(checkbox => checkbox.value);
 
-        const loggedInUser = document.getElementById('logged-in-user').value;
-        if (!selectedFriends.includes(loggedInUser)) {
-            selectedFriends.unshift(loggedInUser);
+        const loggedInUserInput = document.getElementById('logged-in-user');
+        if (loggedInUserInput) {
+             const loggedInUser = loggedInUserInput.value;
+             if (!selectedFriends.includes(loggedInUser)) {
+                selectedFriends.unshift(loggedInUser);
+            }
         }
 
         if (selectedFriends.length > 0) {
@@ -54,7 +74,8 @@ document.addEventListener('DOMContentLoaded', function () {
             selectedFriends.forEach(friend => {
                 const listItem = document.createElement('li');
                 listItem.textContent = friend;
-                listItem.dataset.id = friend; // Dodanie atrybutu data-id
+                // friend to nazwa użytkownika (np. "admin")
+                listItem.dataset.id = friend; 
                 friendsList.appendChild(listItem);
             });
             selectedFriendsContainer.appendChild(friendsList);
@@ -67,7 +88,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function generateSliders(friends) {
         splitDetails.innerHTML = '';
-        let totalAmount = parseFloat(amountInput.value) + (parseFloat(amountInput.value) * (parseFloat(tipInput.value || 0) / 100));
+        let baseAmount = parseFloat(amountInput.value) || 0;
+        let tipPercent = parseFloat(tipInput.value) || 0;
+        let totalAmount = baseAmount + (baseAmount * (tipPercent / 100));
+        
+        if (friends.length === 0) return;
+        
         const initialAmount = (totalAmount / friends.length).toFixed(2);
 
         friends.forEach(friend => {
@@ -81,7 +107,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const slider = document.createElement('input');
             slider.type = 'range';
             slider.min = 0;
-            slider.max = totalAmount;
+            slider.max = totalAmount + 1;
             slider.step = 0.01;
             slider.value = initialAmount;
             slider.dataset.friend = friend;
@@ -102,7 +128,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function updateSliderValues() {
         const sliders = Array.from(document.querySelectorAll('#split-details input[type="range"]'));
-        let totalAmount = parseFloat(amountInput.value) + (parseFloat(amountInput.value) * (parseFloat(tipInput.value || 0) / 100));
+        let baseAmount = parseFloat(amountInput.value) || 0;
+        let tipPercent = parseFloat(tipInput.value) || 0;
+        let totalAmount = baseAmount + (baseAmount * (tipPercent / 100));
+        
         let totalSelected = sliders.reduce((total, slider) => total + parseFloat(slider.value), 0);
 
         if (totalSelected > totalAmount) {
@@ -119,35 +148,71 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    // --- SEKCJA 5: NAPRAWIONE ZABEZPIECZENIE PRZED DUPLIKATAMI ---
     function handleFormSubmit(event) {
         event.preventDefault();
-        createSpill();
+
+        // 1. Znajdujemy przycisk, który wysyła formularz
+        const submitBtn = form.querySelector('button, input[type="submit"]');
+
+        // 2. Jeśli przycisk jest już zablokowany, to znaczy, że ktoś klika jak szalony -> przerywamy
+        if (submitBtn && submitBtn.disabled) {
+            return; 
+        }
+
+        // 3. Blokujemy przycisk, żeby nie dało się kliknąć drugi raz
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            // Opcjonalnie: zmieniamy tekst, żeby user widział reakcję
+            // submitBtn.innerText = "Przetwarzanie..."; 
+        }
+
+        // 4. Dopiero teraz wywołujemy funkcję tworzącą
+        createSpill(submitBtn);
     }
 
-    function createSpill() {
+    function createSpill(submitBtn) {
         const amount = amountInput.value;
         const tip = tipInput.value;
-        const selectedFriends = Array.from(selectedFriendsContainer.querySelectorAll('li')).map(li => li.dataset.id); // Użycie data-id
+        
+        // Pobieranie nazw użytkowników (np. "admin", "testowy")
+        const selectedFriends = Array.from(selectedFriendsContainer.querySelectorAll('li')).map(li => li.dataset.id);
+
+        // Pobieranie tokena CSRF z HTML
+        const csrftoken = $('input[name="csrfmiddlewaretoken"]').val();
+
+        if (!csrftoken) {
+            alert("Błąd: Nie znaleziono tokena CSRF. Odśwież stronę.");
+            if (submitBtn) submitBtn.disabled = false; // Odblokuj przycisk w razie błędu
+            return;
+        }
 
         $.ajax({
-            url: '{% url "create_spill" %}',
+            url: '/create_spill/',
             type: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken
+            },
+            mode: 'same-origin',
             data: {
                 'amount': amount,
                 'tip': tip,
-                'friends': selectedFriends,
-                'csrfmiddlewaretoken': '{{ csrf_token }}'
+                'friends[]': selectedFriends
             },
             success: function (response) {
-                spillResults.innerHTML = response;
+                if(spillResults) spillResults.innerHTML = "Udało się stworzyć rachunek!";
+                location.reload(); // Odświeżenie strony (to też odblokuje przycisk)
             },
-            error: function (response) {
-                alert('Error creating spill');
+            error: function (xhr, status, error) {
+                alert('Error creating spill: ' + xhr.status + ' ' + xhr.responseText);
+                // Jeśli wystąpił błąd, musimy odblokować przycisk, żeby user mógł spróbować ponownie
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    // submitBtn.innerText = "Create Spill";
+                }
             }
         });
     }
-
-
 
     initializeEventListeners();
 });

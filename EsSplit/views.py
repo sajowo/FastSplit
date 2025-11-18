@@ -14,13 +14,14 @@ from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
+# --- POPRAWIONY INDEX (USUNĄŁEM DUPLIKAT Z DOŁU PLIKU) ---
 def index(request):
     if request.user.is_authenticated:
         print("Zalogowany użytkownik:", request.user)
         friends = Friend.objects.filter(user=request.user)
-        print("Znajomi:", friends)
-        # Pobieramy rozliczenia, w których użytkownik uczestniczy
-        participated_bills = Bill.objects.filter(creator_id=request.user.id).order_by('-date')[:2]
+        # Scaliłem logikę: pobiera ostatnie 5 rachunków (lepiej widzieć więcej niż 1 czy 2)
+        participated_bills = Bill.objects.filter(creator_id=request.user.id).order_by('-date')[:5]
+        
         context = {
             'friends': friends,
             'participated_bills': participated_bills
@@ -29,6 +30,7 @@ def index(request):
     else:
         return redirect('login')
 
+# --- NAPRAWIONE LOGOWANIE ---
 def login_view(request):
     if request.method == 'POST':
         email = request.POST.get('email')
@@ -41,10 +43,12 @@ def login_view(request):
 
         if user is not None and user.check_password(password):
             login(request, user)
-            logger.info("Logowanie")
+            logger.info("Logowanie udane")
             return redirect(reverse('index'))
         else:
-            return render(request, 'login.html', {'error': 'Invalid email or password.'})
+            # ZMIANA: Zamiast context={'error': ...}, używamy messages
+            messages.error(request, 'Nieprawidłowy email lub hasło.')
+            return render(request, 'login.html')
     else:
         return render(request, 'login.html')
 
@@ -77,7 +81,11 @@ def register(request):
             person.save()
 
             login(request, user)
+            messages.success(request, 'Konto zostało utworzone pomyślnie!')
             return redirect('index')
+        else:
+            # Tutaj też warto dodać komunikaty o błędach formularza
+            messages.error(request, 'Błąd rejestracji. Sprawdź poprawność danych.')
     else:
         form = RegisterForm()
     return render(request, 'SignUp.html', {'form': form})
@@ -114,50 +122,55 @@ def search_user(request):
             messages.error(request, "Proszę podać nazwę użytkownika.")
     return redirect('index')
 
-
-def index(request):
-    if request.user.is_authenticated:
-        friends = Friend.objects.filter(user=request.user)
-        participated_bills = Bill.objects.filter(creator_id=request.user.id).order_by('-date')[:1]
-        context = {
-            'friends': friends,
-            'participated_bills': participated_bills
-        }
-        return render(request, 'index.html', context)
-    else:
-        return redirect('login')
-
-    
 def create_spill(request):
     if request.method == 'POST':
+        # 1. Pobieramy dane
         amount = request.POST.get('amount')
         tip = request.POST.get('tip')
-        friends_ids = request.POST.getlist('friends[]')
+        friends_data = request.POST.getlist('friends[]') # Zmieniłem nazwę zmiennej dla jasności
 
-        # Validate amount and tip
-        if not amount or not tip:
-            return JsonResponse({'message': 'Amount and tip are required'}, status=400)
+        # 2. Walidacja liczb (Zabezpieczenie przed pustymi polami)
+        if not amount:
+            return JsonResponse({'message': 'Amount is required'}, status=400)
         
+        # Domyślnie napiwek 0 jeśli pusty
+        if not tip:
+            tip = '0' 
+
         try:
             amount = float(amount)
             tip = float(tip)
         except ValueError:
-            return JsonResponse({'message': 'Invalid amount or tip'}, status=400)
+            return JsonResponse({'message': 'Invalid amount or tip format'}, status=400)
 
-        # Calculate the total amount including the tip
+        # 3. Obliczenia
         total_amount = amount * (1 + tip / 100)
         
-        # Create the bill object
+        # 4. Tworzenie rachunku
         bill = Bill.objects.create(
             creator=request.user,
             description='A new bill',
             amount=total_amount
         )
         
-        # Add participants
-        for friend_id in friends_ids:
-            friend = User.objects.get(id=friend_id)
-            bill.participants.add(friend)
+        # 5. Dodawanie uczestników (TUTAJ BYŁ BŁĄD)
+        for identifier in friends_data:
+            try:
+                # Najpierw próbujemy znaleźć po nazwie użytkownika (bo to wysyła Twój JS)
+                friend = User.objects.get(username=identifier)
+                bill.participants.add(friend)
+            except User.DoesNotExist:
+                # Jeśli nie znajdzie po nazwie, sprawdźmy czy to może jednak ID (liczba)
+                if str(identifier).isdigit():
+                    try:
+                        friend = User.objects.get(id=int(identifier))
+                        bill.participants.add(friend)
+                    except User.DoesNotExist:
+                        print(f"Nie znaleziono użytkownika: {identifier}")
+                        continue
+                else:
+                    print(f"Błędne dane uczestnika: {identifier}")
+                    continue
         
         bill.save()
         

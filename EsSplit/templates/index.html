@@ -43,51 +43,7 @@
         </div>
     </header>
     <main>
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                initializeEventListeners();
-            });
-
-            function initializeEventListeners() {
-                $('#split-form').on('submit', function (event) {
-                    event.preventDefault();
-                    createSpill();
-                });
-            }
-
-            function createSpill() {
-                const amount = $('#amount').val();
-                const tip = $('#tip').val();
-                const selectedFriends = $('#selected-friends').children().map(function () {
-                    return $(this).data('id');
-                }).get();
-
-                $.ajax({
-                    url: '{% url "create_spill" %}',  // Make sure this URL matches your URLconf
-                    type: 'POST',
-                    data: {
-                        'amount': amount,
-                        'tip': tip,
-                        'friends': selectedFriends,
-                        'csrfmiddlewaretoken': '{{ csrf_token }}'
-                    },
-                    success: function (response) {
-                        $('#spill-results').html(response);
-                    },
-                    error: function (response) {
-                        alert('Error creating spill');
-                    }
-                });
-            }
-        </script>
-
         <section class="split-request">
-            <!-- <div class="request-card">
-                <h3>Cześć Mike!</h3>
-                <p>Rakib poprosił cię o płatność rachunku w wysokości 72,80 $ z Sushi & bar</p>
-                <button>Uczestnicz</button>
-            </div> -->
-
             <div class="create-spill">
                 <h2>Create Spill</h2>
                 <form id="split-form" action="#" method="POST">
@@ -102,8 +58,7 @@
                         <input type="number" id="tip" name="tip" step="0.01" min="0" placeholder="Enter tip percentage">
                     </div>
                     <div id="split-details">
-                        <!-- Sliders and input fields for participants will be generated here -->
-                    </div>
+                        </div>
                     <button type="button" id="choose-friends-button">Wybierz znajomych</button>
                     <button type="submit">Create Spill</button>
                 </form>
@@ -142,19 +97,6 @@
             </div>
 
         </section>
-
-        <!-- <section class="split-request2">
-            <div class="statistics">
-                <div class="stat-card">
-                    <h3>Łączna Płatność</h3>
-                    <p>440,00 $</p>
-                </div>
-                <div class="stat-card">
-                    <h3>Zapłacone</h3>
-                    <p>28,20 $</p>
-                </div>
-            </div>
-        </section> -->
     </main>
 
     <div id="popup-container" style="display:none;">
@@ -173,84 +115,11 @@
         </div>
     </div>
 
-    <script src="{% static 'js/scripts.js' %}"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    
+    <script src="{% static 'js/scripts.js' %}"></script>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            initializeEventListeners();
-        });
-
-        function initializeEventListeners() {
-            $('#split-form').on('submit', function (event) {
-                event.preventDefault();
-                createSpill();
-            });
-        }
-
-        function createSpill() {
-            const amount = $('#amount').val();
-            const tip = $('#tip').val();
-            const selectedFriends = $('#selected-friends').children().map(function () {
-                return $(this).data('id');
-            }).get();
-
-            $.ajax({
-                url: '{% url "create_spill" %}',  // Make sure this URL matches your URLconf
-                type: 'POST',
-                data: {
-                    'amount': amount,
-                    'tip': tip,
-                    'friends': selectedFriends,
-                    'csrfmiddlewaretoken': '{{ csrf_token }}'
-                },
-                success: function (response) {
-                    $('#spill-results').html(response);
-                },
-                error: function (response) {
-                    alert('Error creating spill');
-                }
-            });
-        }
-    </script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            initializeEventListeners();
-        });
-
-        function initializeEventListeners() {
-            $('#split-form').on('submit', function (event) {
-                event.preventDefault();
-                createSpill();
-            });
-        }
-
-        function createSpill() {
-            const amount = $('#amount').val();
-            const tip = $('#tip').val();
-            const selectedFriends = $('#selected-friends').children().map(function () {
-                return $(this).data('id');
-            }).get();
-
-            $.ajax({
-                url: '{% url "create_spill" %}',  // Make sure this URL matches your URLconf
-                type: 'POST',
-                data: {
-                    'amount': amount,
-                    'tip': tip,
-                    'friends': selectedFriends,
-                    'csrfmiddlewaretoken': '{{ csrf_token }}'
-                },
-                success: function (response) {
-                    $('#spill-results').html(response);
-                },
-                error: function (response) {
-                    alert('Error creating spill');
-                }
-            });
-        }
-    </script>
-</body>
+    </body>
 
 </html>
