@@ -106,74 +106,56 @@ def search_user(request):
         username = request.POST.get('username')
         if username:
             try:
+                # 1. Szukamy prawdziwego użytkownika
                 user_to_add = User.objects.get(username=username)
+                
                 if user_to_add != request.user:
-                    if not request.user.friends.filter(name=user_to_add.username).exists():
-                        new_friend = Friend(user=request.user, name=user_to_add.username)
-                        new_friend.save()
+                    # 2. Sprawdzamy czy relacja już istnieje (teraz po ID, a nie po nazwie)
+                    if not Friend.objects.filter(user=request.user, friend_account=user_to_add).exists():
+                        # 3. Tworzymy relację
+                        Friend.objects.create(user=request.user, friend_account=user_to_add)
                         messages.success(request, f'Dodano znajomego: {user_to_add.username}')
                     else:
                         messages.info(request, f"Użytkownik {user_to_add.username} jest już Twoim znajomym.")
                 else:
-                    messages.error(request, "Nie możesz dodać samego siebie do znajomych!")
+                    messages.error(request, "Nie możesz dodać samego siebie!")
             except User.DoesNotExist:
-                messages.error(request, f"Użytkownik o nazwie '{username}' nie istnieje.")
+                messages.error(request, f"Użytkownik '{username}' nie istnieje.")
         else:
-            messages.error(request, "Proszę podać nazwę użytkownika.")
+            messages.error(request, "Podaj nazwę użytkownika.")
     return redirect('index')
 
 def create_spill(request):
     if request.method == 'POST':
-        # 1. Pobieramy dane
         amount = request.POST.get('amount')
         tip = request.POST.get('tip')
-        friends_data = request.POST.getlist('friends[]') # Zmieniłem nazwę zmiennej dla jasności
+        # JS wyśle nam teraz listę ID (np. ['1', '4']), a nie nazwy
+        friend_ids = request.POST.getlist('friends[]') 
 
-        # 2. Walidacja liczb (Zabezpieczenie przed pustymi polami)
-        if not amount:
-            return JsonResponse({'message': 'Amount is required'}, status=400)
-        
-        # Domyślnie napiwek 0 jeśli pusty
-        if not tip:
-            tip = '0' 
+        # Walidacja (skrócona dla czytelności)
+        if not amount: return JsonResponse({'message': 'Amount required'}, status=400)
+        if not tip: tip = '0'
 
         try:
-            amount = float(amount)
-            tip = float(tip)
+            total_amount = float(amount) * (1 + float(tip) / 100)
+            
+            bill = Bill.objects.create(
+                creator=request.user,
+                description='Rachunek', # Możesz dodać pole description do formularza w HTML
+                amount=total_amount
+            )
+            
+            # CZYSTA LOGIKA:
+            for fid in friend_ids:
+                # Teraz po prostu bierzemy ID. Jeśli JS wysłał ID, to musi być User.
+                # Ewentualnie dodajemy try/except na wypadek gdyby user został usunięty w międzyczasie
+                if fid:
+                    bill.participants.add(int(fid))
+            
+            bill.save()
+            return JsonResponse({'message': 'Success'})
+            
         except ValueError:
-            return JsonResponse({'message': 'Invalid amount or tip format'}, status=400)
-
-        # 3. Obliczenia
-        total_amount = amount * (1 + tip / 100)
-        
-        # 4. Tworzenie rachunku
-        bill = Bill.objects.create(
-            creator=request.user,
-            description='A new bill',
-            amount=total_amount
-        )
-        
-        # 5. Dodawanie uczestników (TUTAJ BYŁ BŁĄD)
-        for identifier in friends_data:
-            try:
-                # Najpierw próbujemy znaleźć po nazwie użytkownika (bo to wysyła Twój JS)
-                friend = User.objects.get(username=identifier)
-                bill.participants.add(friend)
-            except User.DoesNotExist:
-                # Jeśli nie znajdzie po nazwie, sprawdźmy czy to może jednak ID (liczba)
-                if str(identifier).isdigit():
-                    try:
-                        friend = User.objects.get(id=int(identifier))
-                        bill.participants.add(friend)
-                    except User.DoesNotExist:
-                        print(f"Nie znaleziono użytkownika: {identifier}")
-                        continue
-                else:
-                    print(f"Błędne dane uczestnika: {identifier}")
-                    continue
-        
-        bill.save()
-        
-        return JsonResponse({'message': 'Spill created successfully!'})
-    else:
-        return JsonResponse({'message': 'Invalid request method'}, status=400)
+             return JsonResponse({'message': 'Invalid data'}, status=400)
+    
+    return JsonResponse({'message': 'Bad method'}, status=400)

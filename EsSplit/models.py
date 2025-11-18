@@ -1,10 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 
-# Create your models here.
-
 class Person(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE,default=None)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, default=None)
     first_name = models.CharField(max_length=30)
     last_name = models.CharField(max_length=30)
     
@@ -17,20 +15,30 @@ class Membership(models.Model):
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
     date_joined = models.DateField()
 
-
+# --- ZMIANA TUTAJ ---
 class Friend(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='friends')
-    name = models.CharField(max_length=255)
+    # Kto dodaje (Ty)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='friends_added')
+    
+    # Kogo dodano (Link do konta kolegi)
+    friend_account = models.ForeignKey(User, on_delete=models.CASCADE, related_name='added_by_others')
+    
+    # Data dodania (opcjonalnie)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        # Zabezpieczenie: nie możesz dodać tej samej osoby dwa razy
+        unique_together = ('user', 'friend_account')
 
     def __str__(self):
-        return f"{self.name} (przyjaciel {self.user.username})"
+        return f"{self.user.username} -> {self.friend_account.username}"
 
 class Bill(models.Model):
     creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_bills')
     participants = models.ManyToManyField(User, related_name='participated_bills')
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     date = models.DateTimeField(auto_now_add=True)
-    description = models.TextField()
+    description = models.TextField(default="Rachunek") # Dodałem default
 
     def __str__(self):
         return f'{self.description} - {self.amount}'

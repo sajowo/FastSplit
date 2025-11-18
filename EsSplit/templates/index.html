@@ -28,7 +28,8 @@
             <img src="{% static 'img/profile.png' %}" alt="Profil">
             {% if request.user.is_authenticated %}
             <p>Cześć, {{ request.user.first_name }}</p>
-            <input type="hidden" id="logged-in-user" value="{{ request.user.first_name }}">
+            <input type="hidden" id="logged-in-user-id" value="{{ request.user.id }}">
+            <input type="hidden" id="logged-in-user-name" value="{{ request.user.username }}">
             <a href="{% url 'logout' %}" class="logout-link">Wyloguj się</a>
             {% else %}
             <a href="{% url 'login' %}" class="login-link">Zaloguj się</a>
@@ -69,13 +70,15 @@
                 <div class="friends-container">
                     <h2>Lista znajomych</h2>
                     <div id="friends-list">
-                        {% if friends %}
-                        {% for friend in friends %}
-                        <div draggable="true" id="friend-{{ friend.id }}">{{ friend.name }}</div>
-                        {% endfor %}
-                        {% else %}
-                        <div>Brak znajomych.</div>
-                        {% endif %}
+                    {% if friends %}
+                    {% for friend in friends %}
+                    <div draggable="true" id="friend-{{ friend.id }}">
+                        {{ friend.friend_account.username }}
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div>Brak znajomych.</div>
+                    {% endif %}
                     </div>
                 </div>
             </section>
@@ -105,12 +108,15 @@
             <ul id="popup-friends-list">
                 {% if friends %}
                 {% for friend in friends %}
-                <li><input type="checkbox" name="friend" value="{{ friend.name }}"> {{ friend.name }}</li>
+                <li>
+                    <input type="checkbox" name="friend" value="{{ friend.friend_account.id }}" data-name="{{ friend.friend_account.username }}"> 
+                    {{ friend.friend_account.username }}
+                </li>
                 {% endfor %}
                 {% else %}
                 <li>Brak znajomych.</li>
                 {% endif %}
-            </ul>
+                </ul>
             <button id="close-popup">Zamknij</button>
         </div>
     </div>
