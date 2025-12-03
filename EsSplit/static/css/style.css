@@ -776,3 +776,22 @@ body.dark-theme #friends-list div {
         border-bottom: none;
     }
 }
+
+/* Styl dla inputu kwoty obok suwaka */
+.slider-container input[type="number"] {
+    width: 80px;
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    text-align: center;
+    font-weight: bold;
+    margin-left: 10px;
+    -moz-appearance: textfield; /* Ukrywa strzałki w Firefox */
+}
+
+/* Ukrywa strzałki góra/dół w Chrome/Safari */
+.slider-container input[type="number"]::-webkit-outer-spin-button,
+.slider-container input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}

@@ -8,6 +8,11 @@
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <link rel="icon" type="image/x-icon" href="{% static 'img/favv16.png' %}">
+    <style>
+    .bill-paid { border-left: 5px solid green !important; }
+    .bill-rejected { border-left: 5px solid red !important; }
+    .bill-pending { border-left: 5px solid orange !important; }
+</style>
 </head>
 
 <body>
@@ -84,20 +89,49 @@
             </section>
 
             <div class="recent-splits">
-                <h2>Ostatnie rozliczenia</h2>
-                {% if participated_bills %}
-                {% for bill in participated_bills %}
-                <div class="split-item">
-                    <h3>{{ bill.creator.username }}</h3>
-                    <p>{{ bill.description }}</p>
-                    <p>{{ bill.date }}</p>
-                    <p>{{ bill.amount }}</p>
-                </div>
-                {% endfor %}
-                {% else %}
-                <div>Brak rozliczeń.</div>
+    <h2>Ostatnie rozliczenia</h2>
+    {% if participated_bills %}
+    {% for bill in participated_bills %}
+    <div class="split-item 
+    {% if bill.status == 'PAID' %}bill-paid
+    {% elif bill.status == 'REJECTED' %}bill-rejected
+    {% else %}bill-pending{% endif %}" 
+    style="padding-left: 10px; margin-bottom: 10px;">
+        
+        <h3>{{ bill.creator.username }} 
+            <small style="font-size: 0.6em; color: grey;">
+                ({{ bill.get_status_display }})
+            </small>
+        </h3>
+        <p>{{ bill.description }} - <strong>{{ bill.amount }} PLN</strong></p>
+        <p style="font-size: 0.8em;">{{ bill.date|date:"d M Y, H:i" }}</p>
+
+        <div class="actions" style="margin-top: 5px;">
+            
+            {% if bill.status == 'PENDING' %}
+                
+                {% if request.user == bill.creator %}
+                    <a href="{% url 'update_bill' bill.id 'PAID' %}" style="color: green; margin-right: 10px;">✅ Sfinalizuj</a>
                 {% endif %}
-            </div>
+
+                <a href="{% url 'update_bill' bill.id 'REJECTED' %}" style="color: red;">❌ Odrzuć</a>
+            
+            {% elif bill.status == 'REJECTED' %}
+                 <span style="color: red;">Rachunek odrzucony</span>
+                 {% if request.user == bill.creator %}
+                    <a href="{% url 'update_bill' bill.id 'PENDING' %}" style="margin-left: 10px;">↺ Przywróć</a>
+                 {% endif %}
+            
+            {% elif bill.status == 'PAID' %}
+                <span style="color: green; font-weight: bold;">Sfinalizowano</span>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div>Brak rozliczeń.</div>
+    {% endif %}
+</div>
 
         </section>
     </main>

@@ -11,16 +11,22 @@ import random
 from .models import Person, Friend, Bill
 from django.http import JsonResponse
 from django.utils import timezone
+from django.shortcuts import get_object_or_404
+from django.db.models import Q
 
 logger = logging.getLogger(__name__)
 
 # --- POPRAWIONY INDEX (USUNĄŁEM DUPLIKAT Z DOŁU PLIKU) ---
 def index(request):
     if request.user.is_authenticated:
-        print("Zalogowany użytkownik:", request.user)
+        # Pobieramy znajomych (Tu na razie bez zmian - widzisz kogo dodałeś)
         friends = Friend.objects.filter(user=request.user)
-        # Scaliłem logikę: pobiera ostatnie 5 rachunków (lepiej widzieć więcej niż 1 czy 2)
-        participated_bills = Bill.objects.filter(creator_id=request.user.id).order_by('-date')[:5]
+        
+        # POPRAWKA: Pobieramy rachunki gdzie jesteś twórcą LUB uczestnikiem
+        # distinct() jest ważne, żeby nie pokazało tego samego rachunku 2 razy
+        participated_bills = Bill.objects.filter(
+            Q(creator=request.user) | Q(participants=request.user)
+        ).distinct().order_by('-date')[:5]
         
         context = {
             'friends': friends,
@@ -106,17 +112,27 @@ def search_user(request):
         username = request.POST.get('username')
         if username:
             try:
-                # 1. Szukamy prawdziwego użytkownika
                 user_to_add = User.objects.get(username=username)
                 
                 if user_to_add != request.user:
-                    # 2. Sprawdzamy czy relacja już istnieje (teraz po ID, a nie po nazwie)
-                    if not Friend.objects.filter(user=request.user, friend_account=user_to_add).exists():
-                        # 3. Tworzymy relację
-                        Friend.objects.create(user=request.user, friend_account=user_to_add)
+                    # KROK 1: Sprawdź/Stwórz relację: Ty -> On
+                    # get_or_create zwraca krotkę (obiekt, czy_utworzono)
+                    obj, created = Friend.objects.get_or_create(
+                        user=request.user, 
+                        friend_account=user_to_add
+                    )
+                    
+                    # KROK 2: ZAWSZE sprawdzaj/twórz relację: On -> Ty (Naprawa wzajemności)
+                    Friend.objects.get_or_create(
+                        user=user_to_add, 
+                        friend_account=request.user
+                    )
+
+                    if created:
                         messages.success(request, f'Dodano znajomego: {user_to_add.username}')
                     else:
-                        messages.info(request, f"Użytkownik {user_to_add.username} jest już Twoim znajomym.")
+                        # Jeśli relacja już istniała, ale np. brakowało zwrotnej, to teraz jest naprawiona
+                        messages.info(request, f"Zaktualizowano relację z {user_to_add.username} (teraz widzi Cię na liście).")
                 else:
                     messages.error(request, "Nie możesz dodać samego siebie!")
             except User.DoesNotExist:
@@ -159,3 +175,38 @@ def create_spill(request):
              return JsonResponse({'message': 'Invalid data'}, status=400)
     
     return JsonResponse({'message': 'Bad method'}, status=400)
+
+def update_bill_status(request, bill_id, new_status):
+    # 1. Pobieramy rachunek (lub błąd 404 jak nie istnieje)
+    bill = get_object_or_404(Bill, id=bill_id)
+    
+    # 2. Zabezpieczenie: Kto może zmieniać status?
+    is_creator = request.user == bill.creator
+    is_participant = request.user in bill.participants.all()
+    
+    if not (is_creator or is_participant):
+        messages.error(request, "Nie masz uprawnień do tego rachunku.")
+        return redirect('index')
+
+    # 3. Logika statusów
+    if new_status == 'REJECTED':
+        # Odrzucić może każdy uczestnik
+        bill.status = Bill.Status.REJECTED
+        bill.save()
+        messages.info(request, "Rachunek został odrzucony.")
+        
+    elif new_status == 'PAID':
+        # Sfinalizować może TYLKO twórca (bo to on dostaje kasę)
+        if is_creator:
+            bill.status = Bill.Status.PAID
+            bill.save()
+            messages.success(request, "Rachunek oznaczono jako sfinalizowany!")
+        else:
+            messages.error(request, "Tylko twórca rachunku może go sfinalizować.")
+
+    elif new_status == 'PENDING':
+         # Np. przywrócenie do życia
+         bill.status = Bill.Status.PENDING
+         bill.save()
+
+    return redirect('index')

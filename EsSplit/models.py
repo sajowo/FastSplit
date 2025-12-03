@@ -34,11 +34,24 @@ class Friend(models.Model):
         return f"{self.user.username} -> {self.friend_account.username}"
 
 class Bill(models.Model):
+    # Definiujemy możliwe opcje (dla bazy danych i dla wyświetlania)
+    class Status(models.TextChoices):
+        PENDING = 'PENDING', 'Oczekujący'
+        REJECTED = 'REJECTED', 'Odrzucony'
+        PAID = 'PAID', 'Sfinalizowany'
+
     creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_bills')
     participants = models.ManyToManyField(User, related_name='participated_bills')
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     date = models.DateTimeField(auto_now_add=True)
-    description = models.TextField(default="Rachunek") # Dodałem default
+    description = models.TextField(default="Rachunek")
+    
+    # NOWE POLE:
+    status = models.CharField(
+        max_length=10,
+        choices=Status.choices,
+        default=Status.PENDING
+    )
 
     def __str__(self):
-        return f'{self.description} - {self.amount}'
+        return f'{self.description} - {self.amount} ({self.get_status_display()})'
