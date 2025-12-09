@@ -7,41 +7,57 @@ from .forms import RegisterForm
 from django.contrib.auth import get_user_model
 import logging
 import random
+import json  # <--- 1. NOWY IMPORT (Niezbędny do odczytania danych z JS)
 from django.http import JsonResponse
-from django.db.models import Q # Do zapytań złożonych
-# Importujemy wszystkie modele
-from .models import Person, Friend, Bill, FriendRequest, Group 
+from django.db.models import Q 
+# 2. DODAJ BillShare do importów!
+from .models import Person, Friend, Bill, FriendRequest, Group, BillShare 
 
 logger = logging.getLogger(__name__)
 
 # --- WIDOK GŁÓWNY (DASHBOARD) ---
 def index(request):
     if request.user.is_authenticated:
-        # 1. Znajomi
         friends = Friend.objects.filter(user=request.user)
-        
-        # 2. Zaproszenia oczekujące (Ktoś -> Ja)
         friend_requests = FriendRequest.objects.filter(to_user=request.user)
-        
-        # 3. Moje grupy
         my_groups = Group.objects.filter(creator=request.user)
 
-        # 4. Rachunki (Jako twórca LUB uczestnik)
         participated_bills = Bill.objects.filter(
             Q(creator=request.user) | Q(participants=request.user)
         ).distinct().order_by('-date')[:5]
         
+        # Logika wyświetlania kwot (To miałeś dobrze, ale zostawiam dla pewności)
+        for bill in participated_bills:
+            if request.user == bill.creator:
+                # 1. Główny tekst
+                bill.display_amount = f"{bill.amount} PLN (Całość)"
+                
+                # 2. NOWOŚĆ: Doklejamy listę dłużników, żeby wyświetlić ją w HTML
+                # Pobieramy wszystkich, którzy mają coś do oddania (>0)
+                bill.debtors_list = bill.shares.filter(amount_owed__gt=0)
+                
+            else:
+                # Uczestnik widzi tylko swoje
+                try:
+                    share = bill.shares.get(user=request.user)
+                    bill.display_amount = f"{share.amount_owed} PLN (Twój udział)"
+                except:
+                    bill.display_amount = "0.00 PLN"
+                
+                # Uczestnik nie potrzebuje pełnej listy dłużników
+                bill.debtors_list = None
+
         context = {
             'friends': friends,
-            'friend_requests': friend_requests, # Ważne dla HTML
-            'my_groups': my_groups,             # Ważne dla HTML
+            'friend_requests': friend_requests,
+            'my_groups': my_groups,
             'participated_bills': participated_bills
         }
         return render(request, 'index.html', context)
     else:
         return redirect('login')
 
-# --- LOGOWANIE I REJESTRACJA ---
+# --- LOGOWANIE I REJESTRACJA (BEZ ZMIAN) ---
 def login_view(request):
     if request.method == 'POST':
         email = request.POST.get('email')
@@ -94,7 +110,7 @@ def register(request):
         form = RegisterForm()
     return render(request, 'SignUp.html', {'form': form})
 
-# --- WYSZUKIWANIE I ZAPROSZENIA ---
+# --- WYSZUKIWANIE I ZAPROSZENIA (BEZ ZMIAN) ---
 def search_user(request):
     if request.method == 'POST':
         username = request.POST.get('username')
@@ -106,23 +122,17 @@ def search_user(request):
                     messages.error(request, "Nie możesz dodać samego siebie!")
                     return redirect('index')
 
-                # 1. Czy już są znajomymi?
                 if Friend.objects.filter(user=request.user, friend_account=target_user).exists():
                     messages.info(request, "Już jesteście znajomymi.")
                 
-                # 2. Czy zaproszenie już wysłano?
                 elif FriendRequest.objects.filter(from_user=request.user, to_user=target_user).exists():
                     messages.warning(request, "Zaproszenie już czeka na akceptację.")
                 
-                # 3. Czy ON wysłał zaproszenie do MNIE? (Akceptuj automatycznie)
                 elif FriendRequest.objects.filter(from_user=target_user, to_user=request.user).exists():
-                     # Wywołujemy logikę akceptacji
                      req = FriendRequest.objects.get(from_user=target_user, to_user=request.user)
                      handle_friend_request(request, req.id, 'accept')
-                     # handle_friend_request zrobi redirect, więc tu returnujemy
                      return redirect('index')
 
-                # 4. Wyślij nowe zaproszenie
                 else:
                     FriendRequest.objects.create(from_user=request.user, to_user=target_user)
                     messages.success(request, f"Wysłano zaproszenie do {target_user.username}.")
@@ -131,28 +141,23 @@ def search_user(request):
                 messages.error(request, f"Użytkownik '{username}' nie istnieje.")
     return redirect('index')
 
-# --- OBSŁUGA ZAPROSZEŃ (TEGO BRAKOWAŁO!) ---
 def handle_friend_request(request, request_id, action):
     f_request = get_object_or_404(FriendRequest, id=request_id)
     
-    # Zabezpieczenie: czy to zaproszenie do mnie?
     if f_request.to_user != request.user:
         messages.error(request, "Brak uprawnień.")
         return redirect('index')
 
     if action == 'accept':
-        # Tworzymy relację W OBIE STRONY
         Friend.objects.get_or_create(user=f_request.to_user, friend_account=f_request.from_user)
         Friend.objects.get_or_create(user=f_request.from_user, friend_account=f_request.to_user)
         messages.success(request, f"Jesteś teraz znajomym z {f_request.from_user.username}!")
     elif action == 'reject':
         messages.info(request, "Odrzucono zaproszenie.")
     
-    # Usuwamy zaproszenie z bazy
     f_request.delete()
     return redirect('index')
 
-# --- GRUPY (TEGO TEŻ BRAKOWAŁO!) ---
 def create_group(request):
     if request.method == 'POST':
         group_name = request.POST.get('group_name')
@@ -169,12 +174,13 @@ def create_group(request):
             
     return redirect('index')
 
-# --- RACHUNKI ---
+# --- RACHUNKI - TU BYŁ BŁĄD, POPRAWIONA WERSJA ---
 def create_spill(request):
     if request.method == 'POST':
         amount = request.POST.get('amount')
         tip = request.POST.get('tip')
-        friend_ids = request.POST.getlist('friends[]')
+        # Odbieramy JSON-a z JS (Custom Splits)
+        custom_splits_json = request.POST.get('custom_splits')
 
         if not amount: return JsonResponse({'message': 'Brak kwoty'}, status=400)
         if not tip: tip = '0'
@@ -182,24 +188,47 @@ def create_spill(request):
         try:
             total_amount = float(amount) * (1 + float(tip) / 100)
             
+            # 1. Tworzymy rachunek
             bill = Bill.objects.create(
                 creator=request.user,
                 description='Nowy rachunek',
                 amount=total_amount
             )
             
-            for fid in friend_ids:
-                if fid:
-                    bill.participants.add(int(fid))
+            # 2. Przetwarzamy JSON-a z dokładnymi kwotami
+            if custom_splits_json:
+                splits_data = json.loads(custom_splits_json)
+                
+                for item in splits_data:
+                    user_id = item.get('id')
+                    user_amount = item.get('amount')
+                    
+                    if user_id and user_amount:
+                        user = User.objects.get(id=int(user_id))
+                        
+                        # A. Dodajemy do uczestników (żeby działało wyszukiwanie)
+                        bill.participants.add(user)
+                        
+                        # B. Zapisujemy dokładną kwotę w BillShare
+                        BillShare.objects.create(
+                            bill=bill,
+                            user=user,
+                            amount_owed=float(user_amount)
+                        )
             
             bill.save()
             return JsonResponse({'message': 'Success'})
             
         except ValueError:
              return JsonResponse({'message': 'Błąd danych'}, status=400)
+        except Exception as e:
+             # Warto wypisać błąd w konsoli serwera, żebyś widział co się dzieje
+             print(f"Błąd create_spill: {e}")
+             return JsonResponse({'message': str(e)}, status=500)
     
     return JsonResponse({'message': 'Zła metoda'}, status=400)
 
+# --- STATUSY (BEZ ZMIAN) ---
 def update_bill_status(request, bill_id, new_status):
     bill = get_object_or_404(Bill, id=bill_id)
     

@@ -127,6 +127,8 @@
           <h2>Create Spill</h2>
           <form id="split-form" action="#" method="POST">
             {% csrf_token %}
+            <input type="hidden" id="logged-in-user-id" value="{{ request.user.id }}">
+            <input type="hidden" id="logged-in-user-name" value="{{ request.user.username }}">
             <div id="selected-friends"></div>
             <div class="form-group">
               <label for="amount">Amount to Split:</label>
@@ -251,16 +253,22 @@
                 ({{ bill.get_status_display }})
             </small>
         </h3>
-        <p>
-    {{ bill.description }} - 
-    
-    {% if request.user == bill.creator %}
-        <strong>{{ bill.amount }} PLN</strong> (Całość)
-    
-    {% else %}
-        <strong>{{ bill.amount_per_person }} PLN</strong> (Twój udział)
-    {% endif %}
-</p>
+       <p>
+            {{ bill.description }} - <strong>{{ bill.display_amount }}</strong>
+        </p>
+
+        {% if bill.debtors_list %}
+        <div style="font-size: 0.85em; background: #f9f9f9; padding: 8px; border-radius: 4px; margin-top: 5px; margin-bottom: 5px; color: #555;">
+            <strong>Szczegóły podziału:</strong>
+            <ul style="margin: 5px 0 0 0; padding-left: 20px;">
+                {% for share in bill.debtors_list %}
+                <li>
+                    {{ share.user.username }}: <strong>{{ share.amount_owed }} PLN</strong>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
         <p style="font-size: 0.8em">{{ bill.date|date:"d M Y, H:i" }}</p>
 
         <div class="actions" style="margin-top: 5px">

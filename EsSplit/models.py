@@ -1,13 +1,11 @@
 from django.db import models
 from django.contrib.auth.models import User
 
-# --- Modele pomocnicze (można usunąć Person/Membership jeśli ich nie używasz, ale zostawiam dla bezpieczeństwa) ---
+# --- Modele pomocnicze ---
 class Person(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, default=None)
     first_name = models.CharField(max_length=30)
     last_name = models.CharField(max_length=30)
-
-# --- NOWE MODELE ---
 
 class FriendRequest(models.Model):
     from_user = models.ForeignKey(User, related_name='sent_requests', on_delete=models.CASCADE)
@@ -15,13 +13,13 @@ class FriendRequest(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('from_user', 'to_user') # Nie można wysłać 2 zaproszeń do tej samej osoby
+        unique_together = ('from_user', 'to_user')
 
     def __str__(self):
         return f"{self.from_user.username} -> {self.to_user.username}"
 
 class Group(models.Model):
-    creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_groups')
+    creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_groups', default=1)
     name = models.CharField(max_length=50)
     members = models.ManyToManyField(User, related_name='user_groups')
 
@@ -54,10 +52,31 @@ class Bill(models.Model):
 
     def __str__(self):
         return f'{self.description} - {self.amount}'
-    
+
+    # Metoda pomocnicza dla starych rachunków (zabezpieczenie)
+    @property
     def amount_per_person(self):
-        """Zwraca kwotę przypadającą na jednego uczestnika (równy podział)"""
         count = self.participants.count()
         if count == 0:
             return 0
         return round(self.amount / count, 2)
+
+    # Metoda do pobierania dokładnej kwoty z nowej tabeli
+    def get_user_share(self, user):
+        try:
+            share = self.shares.get(user=user)
+            return share.amount_owed
+        except: # BillShare.DoesNotExist i inne błędy
+            return 0
+
+# --- TO MUSI BYĆ NA ZEWNĄTRZ (Równo z lewej strony) ---
+class BillShare(models.Model):
+    bill = models.ForeignKey(Bill, on_delete=models.CASCADE, related_name='shares')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    amount_owed = models.DecimalField(max_digits=10, decimal_places=2)
+
+    class Meta:
+        unique_together = ('bill', 'user')
+
+    def __str__(self):
+        return f"{self.user.username} wisi {self.amount_owed} za {self.bill.description}"
