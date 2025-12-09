@@ -179,19 +179,25 @@ def create_spill(request):
     if request.method == 'POST':
         amount = request.POST.get('amount')
         tip = request.POST.get('tip')
-        # Odbieramy JSON-a z JS (Custom Splits)
         custom_splits_json = request.POST.get('custom_splits')
+        
+        # 1. ODBIERAMY OPIS
+        description = request.POST.get('description') 
 
         if not amount: return JsonResponse({'message': 'Brak kwoty'}, status=400)
         if not tip: tip = '0'
+        
+        # Zabezpieczenie, gdyby opis był pusty
+        if not description: 
+            description = "Rachunek"
 
         try:
             total_amount = float(amount) * (1 + float(tip) / 100)
             
-            # 1. Tworzymy rachunek
+            # 2. ZAPISUJEMY W BAZIE
             bill = Bill.objects.create(
                 creator=request.user,
-                description='Nowy rachunek',
+                description=description, # <--- TU WKLEJAMY ZMIENNĄ
                 amount=total_amount
             )
             

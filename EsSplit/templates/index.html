@@ -7,20 +7,11 @@
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/style.css' %}" />
     <link rel="icon" type="image/x-icon" href="{% static 'img/favv16.png' %}" />
-    <style>
-      .bill-paid {
-        border-left: 5px solid green !important;
-      }
-      .bill-rejected {
-        border-left: 5px solid red !important;
-      }
-      .bill-pending {
-        border-left: 5px solid orange !important;
-      }
-    </style>
   </head>
 
   <body>
+    <div id="toast-container"></div>
+
     <header>
       <div class="logo">
         <img src="{% static 'img/logo.png' %}" alt="Logo" />
@@ -40,16 +31,8 @@
         <img src="{% static 'img/profile.png' %}" alt="Profil" />
         {% if request.user.is_authenticated %}
         <p>Cześć, {{ request.user.first_name }}</p>
-        <input
-          type="hidden"
-          id="logged-in-user-id"
-          value="{{ request.user.id }}"
-        />
-        <input
-          type="hidden"
-          id="logged-in-user-name"
-          value="{{ request.user.username }}"
-        />
+        <input type="hidden" id="logged-in-user-id" value="{{ request.user.id }}" />
+        <input type="hidden" id="logged-in-user-name" value="{{ request.user.username }}" />
         <a href="{% url 'logout' %}" class="logout-link">Wyloguj się</a>
         {% else %}
         <a href="{% url 'login' %}" class="login-link">Zaloguj się</a>
@@ -63,99 +46,48 @@
         </label>
       </div>
     </header>
+
     <main>
       {% if friend_requests %}
-      <div
-        style="
-          background-color: #e8f5e9;
-          border: 1px solid #4caf50;
-          padding: 15px;
-          margin: 20px;
-          border-radius: 5px;
-        "
-      >
+      <div class="notification-box">
         <h3 style="margin-top: 0">📬 Masz nowe zaproszenia!</h3>
-        <ul style="list-style: none; padding: 0">
+        <ul class="notification-list">
           {% for req in friend_requests %}
-          <li
-            style="
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              margin-bottom: 10px;
-              background: white;
-              padding: 10px;
-              border-radius: 5px;
-            "
-          >
-            <span
-              >Użytkownik <strong>{{ req.from_user.username }}</strong> chce Cię
-              dodać do znajomych.</span
-            >
+          <li class="notification-item">
+            <span>Użytkownik <strong>{{ req.from_user.username }}</strong> chce Cię dodać do znajomych.</span>
             <div>
-              <a
-                href="{% url 'handle_request' req.id 'accept' %}"
-                style="
-                  text-decoration: none;
-                  color: white;
-                  background: green;
-                  padding: 5px 10px;
-                  border-radius: 3px;
-                  margin-right: 5px;
-                "
-                >Akceptuj</a
-              >
-              <a
-                href="{% url 'handle_request' req.id 'reject' %}"
-                style="
-                  text-decoration: none;
-                  color: white;
-                  background: red;
-                  padding: 5px 10px;
-                  border-radius: 3px;
-                "
-                >Odrzuć</a
-              >
+              <a href="{% url 'handle_request' req.id 'accept' %}" class="btn-accept">Akceptuj</a>
+              <a href="{% url 'handle_request' req.id 'reject' %}" class="btn-reject">Odrzuć</a>
             </div>
           </li>
           {% endfor %}
         </ul>
       </div>
       {% endif %}
+
       <section class="split-request">
+        
         <div class="create-spill">
           <h2>Create Spill</h2>
           <form id="split-form" action="#" method="POST">
             {% csrf_token %}
-            <input type="hidden" id="logged-in-user-id" value="{{ request.user.id }}">
-            <input type="hidden" id="logged-in-user-name" value="{{ request.user.username }}">
             <div id="selected-friends"></div>
+            
+            <div class="form-group">
+                <label for="bill-name">Nazwa rachunku:</label>
+                <input type="text" id="bill-name" name="bill_name" placeholder="np. Pizza, Paliwo" required />
+            </div>
+            
             <div class="form-group">
               <label for="amount">Amount to Split:</label>
-              <input
-                type="number"
-                id="amount"
-                name="amount"
-                step="0.01"
-                min="0"
-                placeholder="Enter amount"
-              />
+              <input type="number" id="amount" name="amount" step="0.01" min="0" placeholder="Enter amount" />
             </div>
             <div class="form-group">
               <label for="tip">Tip (%):</label>
-              <input
-                type="number"
-                id="tip"
-                name="tip"
-                step="0.01"
-                min="0"
-                placeholder="Enter tip percentage"
-              />
+              <input type="number" id="tip" name="tip" step="0.01" min="0" placeholder="Enter tip percentage" />
             </div>
             <div id="split-details"></div>
-            <button type="button" id="choose-friends-button">
-              Wybierz znajomych
-            </button>
+            <button type="button" id="choose-friends-button">Wybierz znajomych</button>
             <button type="submit">Create Spill</button>
           </form>
           <div id="spill-results"></div>
@@ -165,143 +97,92 @@
           <div class="friends-container">
             <h2>Lista znajomych</h2>
             <div id="friends-list">
-              {% if friends %} {% for friend in friends %}
-              <div draggable="true" id="friend-{{ friend.id }}">
-                {{ friend.friend_account.username }}
-              </div>
-              {% endfor %} {% else %}
+              {% if friends %} 
+                {% for friend in friends %}
+                <div draggable="true" id="friend-{{ friend.id }}">
+                  {{ friend.friend_account.username }}
+                </div>
+                {% endfor %} 
+              {% else %}
               <div>Brak znajomych.</div>
               {% endif %}
             </div>
           </div>
 
-          <div
-            class="create-group-container"
-            style="
-              margin-top: 30px;
-              border-top: 2px solid #eee;
-              padding-top: 20px;
-            "
-          >
+          <div class="create-group-container">
             <h3>Stwórz nową grupę</h3>
             <form action="{% url 'create_group' %}" method="POST">
               {% csrf_token %}
-              <input
-                type="text"
-                name="group_name"
-                placeholder="Nazwa grupy (np. Wakacje)"
-                required
-                style="padding: 8px; width: 70%; margin-bottom: 10px"
-              />
-
-              <div
-                style="
-                  max-height: 150px;
-                  overflow-y: auto;
-                  border: 1px solid #ddd;
-                  padding: 10px;
-                  margin-bottom: 10px;
-                  background: #fafafa;
-                "
-              >
-                <p style="margin-top: 0; font-size: 0.9em; color: grey">
-                  Wybierz członków:
-                </p>
-                {% if friends %} {% for friend in friends %}
-                <label
-                  style="display: block; margin-bottom: 5px; cursor: pointer"
-                >
-                  <input
-                    type="checkbox"
-                    name="group_members"
-                    value="{{ friend.friend_account.id }}"
-                  />
-                  {{ friend.friend_account.username }}
-                </label>
-                {% endfor %} {% else %}
-                <p>Brak znajomych do dodania.</p>
+              <input type="text" name="group_name" placeholder="Nazwa grupy (np. Wakacje)" required />
+              <div class="group-members-list">
+                <p style="margin-top: 0; font-size: 0.9em; color: grey">Wybierz członków:</p>
+                {% if friends %} 
+                    {% for friend in friends %}
+                    <label style="display: block; margin-bottom: 5px; cursor: pointer">
+                      <input type="checkbox" name="group_members" value="{{ friend.friend_account.id }}" />
+                      {{ friend.friend_account.username }}
+                    </label>
+                    {% endfor %} 
+                {% else %}
+                    <p>Brak znajomych do dodania.</p>
                 {% endif %}
               </div>
-              <button
-                type="submit"
-                style="
-                  background: #333;
-                  color: white;
-                  border: none;
-                  padding: 8px 15px;
-                  cursor: pointer;
-                  border-radius: 5px;
-                "
-              >
-                Utwórz grupę
-              </button>
+              <button type="submit" class="btn-create-group">Utwórz grupę</button>
             </form>
           </div>
         </section>
 
         <div class="recent-splits">
-    <h2>Ostatnie rozliczenia</h2>
-    {% if participated_bills %}
-    {% for bill in participated_bills %}
+          <h2>Ostatnie rozliczenia</h2>
+          {% if participated_bills %}
+          {% for bill in participated_bills %}
+          <div class="split-item {% if bill.status == 'PAID' %}bill-paid{% elif bill.status == 'REJECTED' %}bill-rejected{% else %}bill-pending{% endif %}">
+              <h3>
+                  {{ bill.creator.username }}
+                  <small style="font-size: 0.6em; color: grey">({{ bill.get_status_display }})</small>
+              </h3>
+              <p>{{ bill.description }} - <strong>{{ bill.display_amount|default:bill.amount_per_person }}</strong></p>
 
-    <div class="split-item {% if bill.status == 'PAID' %}bill-paid{% elif bill.status == 'REJECTED' %}bill-rejected{% else %}bill-pending{% endif %}" 
-         style="padding-left: 10px; margin-bottom: 10px; border-left: 5px solid gray;">
-        
-        <h3>
-            {{ bill.creator.username }}
-            <small style="font-size: 0.6em; color: grey">
-                ({{ bill.get_status_display }})
-            </small>
-        </h3>
-       <p>
-            {{ bill.description }} - <strong>{{ bill.display_amount }}</strong>
-        </p>
+              {% if bill.debtors_list %}
+              <div style="font-size: 0.85em; background: #f9f9f9; padding: 8px; border-radius: 4px; margin-top: 5px; margin-bottom: 5px; color: #555;">
+                  <strong>Szczegóły podziału:</strong>
+                  <ul style="margin: 5px 0 0 0; padding-left: 20px;">
+                      {% for share in bill.debtors_list %}
+                      <li>{{ share.user.username }}: <strong>{{ share.amount_owed }} PLN</strong></li>
+                      {% endfor %}
+                  </ul>
+              </div>
+              {% endif %}
+              
+              <p style="font-size: 0.8em">{{ bill.date|date:"d M Y, H:i" }}</p>
 
-        {% if bill.debtors_list %}
-        <div style="font-size: 0.85em; background: #f9f9f9; padding: 8px; border-radius: 4px; margin-top: 5px; margin-bottom: 5px; color: #555;">
-            <strong>Szczegóły podziału:</strong>
-            <ul style="margin: 5px 0 0 0; padding-left: 20px;">
-                {% for share in bill.debtors_list %}
-                <li>
-                    {{ share.user.username }}: <strong>{{ share.amount_owed }} PLN</strong>
-                </li>
-                {% endfor %}
-            </ul>
+              <div class="actions" style="margin-top: 5px">
+                  {% if bill.status == 'PENDING' %}
+                      {% if request.user == bill.creator %}
+                          <a href="{% url 'update_bill' bill.id 'PAID' %}" style="color: green; margin-right: 10px">✅ Sfinalizuj</a>
+                      {% endif %}
+                      <a href="{% url 'update_bill' bill.id 'REJECTED' %}" style="color: red">❌ Odrzuć</a>
+                  {% elif bill.status == 'REJECTED' %}
+                      <span style="color: red">Rachunek odrzucony</span>
+                      {% if request.user == bill.creator %}
+                          <a href="{% url 'update_bill' bill.id 'PENDING' %}" style="margin-left: 10px">↺ Przywróć</a>
+                      {% endif %}
+                  {% elif bill.status == 'PAID' %}
+                      <span style="color: green; font-weight: bold">Sfinalizowano</span>
+                  {% endif %} 
+              </div>
+          </div>
+          {% endfor %}
+          {% else %}
+          <div>Brak rozliczeń.</div>
+          {% endif %}
         </div>
-        {% endif %}
-        <p style="font-size: 0.8em">{{ bill.date|date:"d M Y, H:i" }}</p>
-
-        <div class="actions" style="margin-top: 5px">
-            
-            {% if bill.status == 'PENDING' %}
-                {% if request.user == bill.creator %}
-                    <a href="{% url 'update_bill' bill.id 'PAID' %}" style="color: green; margin-right: 10px">✅ Sfinalizuj</a>
-                {% endif %}
-                <a href="{% url 'update_bill' bill.id 'REJECTED' %}" style="color: red">❌ Odrzuć</a>
-
-            {% elif bill.status == 'REJECTED' %}
-                <span style="color: red">Rachunek odrzucony</span>
-                {% if request.user == bill.creator %}
-                    <a href="{% url 'update_bill' bill.id 'PENDING' %}" style="margin-left: 10px">↺ Przywróć</a>
-                {% endif %}
-
-            {% elif bill.status == 'PAID' %}
-                <span style="color: green; font-weight: bold">Sfinalizowano</span>
-
-            {% endif %} </div>
-    </div>
-    {% endfor %}
-    {% else %}
-    <div>Brak rozliczeń.</div>
-    {% endif %}
-</div>
       </section>
     </main>
 
     <div id="popup-container" style="display:none;">
         <div id="popup-content">
             <h2>Wybierz znajomych</h2>
-            
             {% if my_groups %}
             <div style="margin-bottom: 15px; background: #f9f9f9; padding: 10px; border-radius: 5px; border: 1px solid #eee;">
                 <label for="group-selector" style="font-weight: bold; display: block; margin-bottom: 5px;">Szybki wybór (Grupa):</label>
@@ -320,9 +201,7 @@
                 {% if friends %}
                     {% for friend in friends %}
                     <li>
-                        <input type="checkbox" name="friend" 
-                               value="{{ friend.friend_account.id }}" 
-                               data-name="{{ friend.friend_account.username }}"> 
+                        <input type="checkbox" name="friend" value="{{ friend.friend_account.id }}" data-name="{{ friend.friend_account.username }}"> 
                         {{ friend.friend_account.username }}
                     </li>
                     {% endfor %}
@@ -336,7 +215,6 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
-
     <script src="{% static 'js/scripts.js' %}"></script>
   </body>
 </html>

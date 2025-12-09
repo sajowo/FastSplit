@@ -2,8 +2,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (window.scriptHasRun) return;
     window.scriptHasRun = true;
 
-    // --- 1. ZMIENNE POMOCNICZE ---
-    // Zbiór ID użytkowników, którzy byli edytowani ręcznie (Auto-Lock)
+    // --- ZMIENNE POMOCNICZE ---
     let touchedUserIds = new Set(); 
 
     const themeSwitch = document.getElementById('theme-switch');
@@ -22,9 +21,9 @@ document.addEventListener('DOMContentLoaded', function () {
     if (closePopupBtn) closePopupBtn.addEventListener('click', hidePopup);
     if (form) form.addEventListener('submit', handleFormSubmit);
 
-    // Resetujemy logikę auto-locka przy zmianie kwoty całkowitej
+    // Reset auto-locka przy zmianie kwot
     if (amountInput) amountInput.addEventListener('input', () => {
-        touchedUserIds.clear(); // Nowa kwota = resetujemy "pamięć" blokad
+        touchedUserIds.clear(); 
         refreshSlidersLimit();
     });
     if (tipInput) tipInput.addEventListener('input', () => {
@@ -37,38 +36,34 @@ document.addEventListener('DOMContentLoaded', function () {
         updateSelectedFriends();
     }
 
-    // --- 2. WYBÓR ZNAJOMYCH ---
+    // --- WYBÓR ZNAJOMYCH ---
     function updateSelectedFriends() {
         selectedFriendsContainer.innerHTML = '';
         const checkedBoxes = document.querySelectorAll('#popup-friends-list input[type="checkbox"]:checked');
         
-        // 1. Pobieramy znajomych z checkboxów
         let selectedList = Array.from(checkedBoxes).map(checkbox => ({
             id: checkbox.value,
             name: checkbox.dataset.name
         }));
 
-        // 2. NOWOŚĆ: Dodajemy SIEBIE na początek listy
+        // Dodajemy SIEBIE
         const myIdInput = document.getElementById('logged-in-user-id');
         const myNameInput = document.getElementById('logged-in-user-name');
 
         if (myIdInput && myNameInput) {
-            // Unshift dodaje element na początek tablicy
-            selectedList.unshift({
-                id: myIdInput.value,
-                name: myNameInput.value + " (Ja)" // Dodajemy dopisek, żebyś wiedział, że to Ty
-            });
+            if (!selectedList.some(p => p.id === myIdInput.value)) {
+                selectedList.unshift({
+                    id: myIdInput.value,
+                    name: myNameInput.value + " (Ja)" 
+                });
+            }
         }
 
-        // Resetujemy pamięć blokad (bo zmieniła się liczba osób)
-        if (typeof touchedUserIds !== 'undefined') touchedUserIds.clear();
+        touchedUserIds.clear();
 
-        // 3. Generujemy listę (HTML) i suwaki
         if (selectedList.length > 0) {
             const ul = document.createElement('ul');
             selectedList.forEach(person => {
-                // Opcjonalnie: Nie wyświetlaj siebie na liście tekstowej "Wybrani:", 
-                // ale suwak musi być. Tutaj wyświetlamy wszystkich.
                 const li = document.createElement('li');
                 li.textContent = person.name;
                 li.dataset.id = person.id;
@@ -76,14 +71,13 @@ document.addEventListener('DOMContentLoaded', function () {
             });
             selectedFriendsContainer.appendChild(ul);
         } else {
-            // Jeśli jakimś cudem lista jest pusta (nawet bez Ciebie)
             selectedFriendsContainer.innerHTML = '<p>Nie wybrano nikogo.</p>';
         }
 
         generateSliders(selectedList);
     }
 
-    // --- 3. GENEROWANIE SLIDERÓW (LOGIKA REVOLUTA) ---
+    // --- SLIDERY ---
     function generateSliders(friendsList) {
         splitDetails.innerHTML = '';
         let totalAmount = calculateTotal();
@@ -98,13 +92,11 @@ document.addEventListener('DOMContentLoaded', function () {
             container.classList.add('slider-container');
             container.style.cssText = "display: flex; align-items: center; margin-bottom: 10px;";
 
-            // 1. Nazwa
             const label = document.createElement('label');
             label.textContent = person.name;
             label.style.cssText = "width: 100px; margin-right: 10px; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;";
             container.appendChild(label);
 
-            // 2. Suwak
             const slider = document.createElement('input');
             slider.type = 'range';
             slider.min = 0;
@@ -115,7 +107,6 @@ document.addEventListener('DOMContentLoaded', function () {
             slider.style.flexGrow = "1";
             container.appendChild(slider);
 
-            // 3. Input liczbowy
             const numberInput = document.createElement('input');
             numberInput.type = 'number';
             numberInput.step = '0.01';
@@ -125,7 +116,6 @@ document.addEventListener('DOMContentLoaded', function () {
             numberInput.style.cssText = "width: 70px; margin-left: 10px; text-align: center;";
             container.appendChild(numberInput);
 
-            // 4. Procenty
             const percentSpan = document.createElement('span');
             percentSpan.style.cssText = "width: 45px; margin-left: 5px; font-size: 0.8em; color: grey; text-align: right;";
             
@@ -137,31 +127,19 @@ document.addEventListener('DOMContentLoaded', function () {
             container.appendChild(percentSpan);
             numberInput.percentDisplay = percentSpan; 
 
-            // --- EVENTY (AUTO LOCK) ---
-            
             const handleInput = (val) => {
-                // 1. Dodajemy aktualną osobę do listy "dotkniętych" (zablokowanych)
                 touchedUserIds.add(person.id);
-
-                // 2. Sprawdźmy, czy nie zablokowaliśmy WSZYSTKICH
-                // Jeśli ruszam ostatnią niezablokowaną osobą, to system musi "odblokować" resztę,
-                // żeby mieć skąd brać pieniądze. (Revolut Soft Reset)
                 if (touchedUserIds.size === friendsList.length) {
                     touchedUserIds.clear();
-                    touchedUserIds.add(person.id); // Zostawiamy tylko tę, którą teraz trzymam
+                    touchedUserIds.add(person.id);
                 }
-
-                // 3. Aktualizacja UI
                 numberInput.value = val;
                 slider.value = val;
                 updatePercent(val);
-
-                // 4. Balansowanie reszty
                 balanceRevolutStyle(slider, friendsList);
             };
 
             slider.addEventListener('input', () => handleInput(slider.value));
-            
             numberInput.addEventListener('input', () => {
                 let val = parseFloat(numberInput.value);
                 if (val > sliderMax) val = sliderMax;
@@ -171,8 +149,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
             splitDetails.appendChild(container);
         });
-        
-        // Nie wywołujemy balanceAmounts na starcie, bo start jest równy
     }
 
     function calculateTotal() {
@@ -199,54 +175,36 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // --- LOGIKA REVOLUTA (BALANSER) ---
     function balanceRevolutStyle(activeSlider, friendsList) {
         const sliders = Array.from(document.querySelectorAll('#split-details input[type="range"]'));
         const inputs = Array.from(document.querySelectorAll('#split-details input[type="number"]'));
         let totalAmount = calculateTotal();
 
-        // 1. Obliczamy sumę zablokowanych (tych w touchedUserIds), ale BEZ aktywnego slidera
-        // (Aktywny slider traktujemy jako "Master", a reszta touched to "Locked")
         let lockedSum = 0;
         let activeValue = parseFloat(activeSlider.value);
         let unlockedSliders = [];
         let unlockedInputs = [];
 
         sliders.forEach((s, index) => {
-            // Jeśli to ten suwak, którym ruszam - pomiń w sumowaniu (już mamy activeValue)
             if (s === activeSlider) return;
-
             let fId = s.dataset.friendId;
-
-            // Jeśli jest na liście dotkniętych -> jest ZABLOKOWANY (nie zmieniaj go)
             if (touchedUserIds.has(fId)) {
                 lockedSum += parseFloat(s.value);
             } else {
-                // Jeśli nie był dotykany -> to on przyjmie zmianę
                 unlockedSliders.push(s);
                 unlockedInputs.push(inputs[index]);
             }
         });
 
-        // 2. Ile zostało do rozdania dla "dziewiczych" (niedotykanych) suwaków?
-        // Reszta = Total - (To co trzymam) - (To co zablokowane u innych)
         let remainingForUntouched = totalAmount - activeValue - lockedSum;
-
-        // Jeśli nie ma komu oddać (wszyscy zablokowani) - logika wyżej (Soft Reset) powinna była zadziałać.
-        // Ale dla bezpieczeństwa:
         if (unlockedSliders.length === 0) return;
 
-        // 3. Dzielimy resztę po równo
         let share = remainingForUntouched / unlockedSliders.length;
-        
-        // Zabezpieczenie matematyczne (żeby nie wyszło -0.01)
         if (share < 0) share = 0;
 
-        // 4. Aplikujemy zmiany
         unlockedSliders.forEach((s, i) => {
             s.value = share.toFixed(2);
             unlockedInputs[i].value = share.toFixed(2);
-
             if(unlockedInputs[i].percentDisplay) {
                 let p = totalAmount > 0 ? ((share / totalAmount) * 100).toFixed(0) : 0;
                 unlockedInputs[i].percentDisplay.textContent = `${p}%`;
@@ -254,7 +212,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // --- 4. WYSYŁANIE ---
+    // --- WYSYŁANIE ---
     function handleFormSubmit(event) {
         event.preventDefault();
         const submitBtn = form.querySelector('button, input[type="submit"]');
@@ -264,8 +222,8 @@ document.addEventListener('DOMContentLoaded', function () {
         let currentSum = inputs.reduce((sum, i) => sum + parseFloat(i.value), 0);
         let total = calculateTotal();
         
-        if (Math.abs(currentSum - total) > 0.5) { // Tolerancja 50gr
-            alert(`Suma podziału (${currentSum.toFixed(2)}) nie zgadza się z kwotą rachunku (${total.toFixed(2)})!`);
+        if (Math.abs(currentSum - total) > 0.5) {
+            showToast(`Suma (${currentSum.toFixed(2)}) nie zgadza się z rachunkiem (${total.toFixed(2)})!`, "error");
             return;
         }
 
@@ -276,6 +234,9 @@ document.addEventListener('DOMContentLoaded', function () {
     function createSpill(submitBtn) {
         const amount = amountInput.value;
         const tip = tipInput.value;
+        // 1. POBIERAMY NAZWĘ Z INPUTA (który przywróciłem w HTML)
+        const descriptionInput = document.getElementById('bill-name');
+        const description = descriptionInput ? descriptionInput.value : "Rachunek";
         
         let customSplits = [];
         const sliders = document.querySelectorAll('#split-details input[type="range"]');
@@ -290,7 +251,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const csrftoken = $('input[name="csrfmiddlewaretoken"]').val();
 
         if (!csrftoken) {
-            alert("Błąd CSRF.");
+            showToast("Błąd CSRF!", "error");
             if (submitBtn) submitBtn.disabled = false;
             return;
         }
@@ -303,20 +264,43 @@ document.addEventListener('DOMContentLoaded', function () {
             data: {
                 'amount': amount,
                 'tip': tip,
+                'description': description, // 2. Wysyłamy nazwę
                 'friends[]': selectedFriendsIds,
                 'custom_splits': JSON.stringify(customSplits)
             },
             success: function (response) {
-                location.reload();
+                showToast("✅ Rachunek utworzony pomyślnie!", "success");
+                
+                // Czyścimy wszystko
+                if(descriptionInput) descriptionInput.value = '';
+                amountInput.value = '';
+                tipInput.value = '';
+                splitDetails.innerHTML = '';
+                selectedFriendsContainer.innerHTML = '';
+                if (submitBtn) submitBtn.disabled = false;
             },
             error: function (xhr) {
-                alert('Błąd: ' + xhr.status + ' ' + xhr.responseText);
+                showToast("❌ Błąd: " + xhr.status + " " + xhr.responseText, "error");
                 if (submitBtn) submitBtn.disabled = false;
             }
         });
     }
 
 });
+
+// --- FUNKCJE GLOBALNE ---
+function showToast(message, type = 'info') {
+    const container = document.getElementById('toast-container');
+    if (!container) {
+        alert(message);
+        return;
+    }
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(() => { toast.remove(); }, 3000);
+}
 
 function selectGroupMembers(selectElement) {
     const checkboxes = document.querySelectorAll('#popup-friends-list input[type="checkbox"]');
