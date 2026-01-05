@@ -1,265 +1,325 @@
-const themeSwitch = document.getElementById('theme-switch');
-const body = document.body;
-
-themeSwitch.addEventListener('change', function () {
-    body.classList.toggle('dark-theme');
-});
-
-// Funkcja do automatycznego przełączania na ciemny motyw po godzinie 17
-function toggleThemeByTime() {
-    const currentHour = new Date().getHours();
-    if (currentHour >= 17) {
-        body.classList.add('dark-theme');
-    } else {
-        body.classList.remove('dark-theme');
-    }
-}
-
-// Uruchom funkcję po raz pierwszy, aby ustawić początkowy motyw
-toggleThemeByTime();
-
-// Uruchom funkcję co godzinę, aby aktualizować motyw
-setInterval(toggleThemeByTime, 3600000); // 3600000 milisekund = 1 godzina
-
-// Pobierz elementy formularza
-const form = document.querySelector('form');
-const participantList = document.getElementById('participant-list');
-const splitDetails = document.getElementById('split-details');
-const amountInput = document.getElementById('amount');
-const spillResults = document.getElementById('spill-results');
-
-// Dodaj obsługę zdarzeń dla zmiany liczby uczestników
-generateParticipantList();
-
-function generateParticipantList() {
-    participantList.innerHTML = '';
-    const selectedParticipants = [
-        'Person 1',
-        'Person 2',
-        'Person 3'
-        // Dodaj więcej uczestników według potrzeby
-    ];
-
-    selectedParticipants.forEach(participant => {
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.name = 'participant';
-        checkbox.value = participant;
-        checkbox.id = participant;
-
-        const label = document.createElement('label');
-        label.htmlFor = participant;
-        label.textContent = participant;
-
-        participantList.appendChild(checkbox);
-        participantList.appendChild(label);
-        participantList.appendChild(document.createElement('br'));
-    });
-
-    // Dodaj obsługę zdarzeń dla zmiany liczby uczestników
-    participantList.addEventListener('change', generateSliders);
-}
-
-// Funkcja do generowania suwaków dla uczestników
-function generateSliders() {
-    // Wyczyść poprzednie suwaki
-    splitDetails.innerHTML = '';
-
-    // Pobierz wybrane osoby
-    const selectedParticipants = Array.from(participantList.querySelectorAll('input[type="checkbox"]:checked')).map(checkbox => checkbox.value);
-
-    let remainingAmount = parseFloat(amountInput.value);
-
-    // Dla każdej wybranej osoby, wygeneruj suwak
-    selectedParticipants.forEach(participant => {
-        const sliderContainer = document.createElement('div');
-        sliderContainer.classList.add('slider-container');
-
-        const nameLabel = document.createElement('label');
-        nameLabel.textContent = participant + ':';
-        sliderContainer.appendChild(nameLabel);
-
-        const slider = document.createElement('input');
-        slider.type = 'range';
-        slider.min = 0;
-        slider.max = remainingAmount;
-        slider.step = 0.01;
-        slider.value = 0;
-        slider.dataset.max = remainingAmount; // Zachowaj początkowy maksymalny zakres
-        sliderContainer.appendChild(slider);
-
-        const amountLabel = document.createElement('span');
-        amountLabel.textContent = '$' + slider.value;
-        sliderContainer.appendChild(amountLabel);
-
-<<<<<<< Updated upstream
-        slider.addEventListener('input', function () {
-            amountLabel.textContent = '$' + slider.value;
-            updateSliders(slider);
-        });
-
-        splitDetails.appendChild(sliderContainer);
-    });
-}
-
-// Funkcja do aktualizacji zakresów suwaków
-function updateSliders(currentSlider) {
-    const sliders = Array.from(splitDetails.querySelectorAll('input[type="range"]'));
-    const currentIndex = sliders.indexOf(currentSlider);
-
-    let totalAssigned = 0;
-    for (let i = 0; i <= currentIndex; i++) {
-        totalAssigned += parseFloat(sliders[i].value);
-    }
-
-    const remainingAmount = parseFloat(amountInput.value) - totalAssigned;
-    for (let i = currentIndex + 1; i < sliders.length; i++) {
-        sliders[i].max = remainingAmount + parseFloat(sliders[i].value); // Dostosuj maksymalny zakres
-    }
-}
-
-// Dodaj obsługę zdarzenia dla przesyłania formularza
-form.addEventListener('submit', function (event) {
-    event.preventDefault();
-
-    // Oblicz sumę wszystkich wybranych kwot
-    const totalAmount = calculateTotal();
-
-    // Wyświetl procentową kwotę dla każdego uczestnika
-    const selectedParticipants = Array.from(participantList.querySelectorAll('input[type="checkbox"]:checked')).map(checkbox => checkbox.value);
-    const sliders = splitDetails.querySelectorAll('input[type="range"]');
-    const results = selectedParticipants.map((participant, index) => {
-        const percentage = ((parseFloat(sliders[index].value) / parseFloat(amountInput.value)) * 100).toFixed(2);
-        return `${participant}: ${percentage}%`;
-    });
-
-    spillResults.innerHTML = results.join('<br>');
-});
-
-// Funkcja do obliczania sumy wszystkich wybranych kwot
-function calculateTotal() {
-    const totalAmount = Array.from(splitDetails.querySelectorAll('input[type="range"]')).reduce((acc, slider) => acc + parseFloat(slider.value), 0);
-    return totalAmount;
-}
-
-// Generuj suwaki na podstawie domyślnej liczby uczestników
-generateSliders();
-
-
-// heder zwijany
 document.addEventListener('DOMContentLoaded', function () {
-    const menuToggle = document.getElementById('menuToggle');
-    const menuContent = document.getElementById('menuContent');
+    if (window.scriptHasRun) return;
+    window.scriptHasRun = true;
 
-    menuToggle.addEventListener('click', function () {
-        menuContent.classList.toggle('show');
+    // --- ZMIENNE POMOCNICZE ---
+    let touchedUserIds = new Set();
+
+    const themeSwitch = document.getElementById('theme-switch');
+    const body = document.body;
+    if (themeSwitch) themeSwitch.addEventListener('change', () => body.classList.toggle('dark-theme'));
+
+    const form = document.getElementById('split-form');
+    const selectedFriendsContainer = document.getElementById('selected-friends');
+    const splitDetails = document.getElementById('split-details');
+    const amountInput = document.getElementById('amount');
+    const tipInput = document.getElementById('tip');
+    const chooseBtn = document.getElementById('choose-friends-button');
+    const closePopupBtn = document.getElementById('close-popup');
+
+    if (chooseBtn) chooseBtn.addEventListener('click', () => document.getElementById('popup-container').style.display = 'block');
+    if (closePopupBtn) closePopupBtn.addEventListener('click', hidePopup);
+    if (form) form.addEventListener('submit', handleFormSubmit);
+
+    // Reset auto-locka przy zmianie kwot
+    if (amountInput) amountInput.addEventListener('input', () => {
+        touchedUserIds.clear();
+        refreshSlidersLimit();
+    });
+    if (tipInput) tipInput.addEventListener('input', () => {
+        touchedUserIds.clear();
+        refreshSlidersLimit();
     });
 
-    // Opcjonalnie zamknij rozwijane menu po kliknięciu poza nim
-    document.addEventListener('click', function (event) {
-        if (!menuToggle.contains(event.target) && !menuContent.contains(event.target)) {
-            menuContent.classList.remove('show');
-        }
-    });
-=======
-        if (selectedFriends.length > 0) {
-            const friendsList = document.createElement('ul');
-            selectedFriends.forEach(friend => {
-                const listItem = document.createElement('li');
-                listItem.textContent = friend;
-                listItem.dataset.id = friend; // Dodanie atrybutu data-id
-                friendsList.appendChild(listItem);
-            });
-            selectedFriendsContainer.appendChild(friendsList);
-        } else {
-            selectedFriendsContainer.innerHTML = '<p>Nie wybrano znajomych.</p>';
-        }
-
-        generateSliders(selectedFriends);
+    function hidePopup() {
+        document.getElementById('popup-container').style.display = 'none';
+        updateSelectedFriends();
     }
 
-    function generateSliders(friends) {
+    // --- WYBÓR ZNAJOMYCH ---
+    function updateSelectedFriends() {
+        selectedFriendsContainer.innerHTML = '';
+        const checkedBoxes = document.querySelectorAll('#popup-friends-list input[type="checkbox"]:checked');
+
+        let selectedList = Array.from(checkedBoxes).map(checkbox => ({
+            id: checkbox.value,
+            name: checkbox.dataset.name
+        }));
+
+        // Dodajemy SIEBIE
+        const myIdInput = document.getElementById('logged-in-user-id');
+        const myNameInput = document.getElementById('logged-in-user-name');
+
+        if (myIdInput && myNameInput) {
+            if (!selectedList.some(p => p.id === myIdInput.value)) {
+                selectedList.unshift({
+                    id: myIdInput.value,
+                    name: myNameInput.value + " (Ja)"
+                });
+            }
+        }
+
+        touchedUserIds.clear();
+
+        if (selectedList.length > 0) {
+            const ul = document.createElement('ul');
+            selectedList.forEach(person => {
+                const li = document.createElement('li');
+                li.textContent = person.name;
+                li.dataset.id = person.id;
+                ul.appendChild(li);
+            });
+            selectedFriendsContainer.appendChild(ul);
+        } else {
+            selectedFriendsContainer.innerHTML = '<p>Nie wybrano nikogo.</p>';
+        }
+
+        generateSliders(selectedList);
+    }
+
+    // --- SLIDERY ---
+    function generateSliders(friendsList) {
         splitDetails.innerHTML = '';
-        let totalAmount = parseFloat(amountInput.value) + (parseFloat(amountInput.value) * (parseFloat(tipInput.value || 0) / 100));
-        const initialAmount = (totalAmount / friends.length).toFixed(2);
+        let totalAmount = calculateTotal();
+        let sliderMax = totalAmount > 0 ? totalAmount : 100;
 
-        friends.forEach(friend => {
-            const sliderContainer = document.createElement('div');
-            sliderContainer.classList.add('slider-container');
+        if (friendsList.length === 0) return;
 
-            const nameLabel = document.createElement('label');
-            nameLabel.textContent = friend + ':';
-            sliderContainer.appendChild(nameLabel);
+        const initialAmount = totalAmount > 0 ? (totalAmount / friendsList.length).toFixed(2) : 0;
+
+        friendsList.forEach(person => {
+            const container = document.createElement('div');
+            container.classList.add('slider-container');
+            container.style.cssText = "display: flex; align-items: center; margin-bottom: 10px;";
+
+            const label = document.createElement('label');
+            label.textContent = person.name;
+            label.style.cssText = "width: 100px; margin-right: 10px; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;";
+            container.appendChild(label);
 
             const slider = document.createElement('input');
             slider.type = 'range';
             slider.min = 0;
-            slider.max = totalAmount;
+            slider.max = sliderMax;
             slider.step = 0.01;
             slider.value = initialAmount;
-            slider.dataset.friend = friend;
-            sliderContainer.appendChild(slider);
+            slider.dataset.friendId = person.id;
+            slider.style.flexGrow = "1";
+            container.appendChild(slider);
 
-            const sliderValue = document.createElement('span');
-            sliderValue.textContent = initialAmount;
-            sliderContainer.appendChild(sliderValue);
+            const numberInput = document.createElement('input');
+            numberInput.type = 'number';
+            numberInput.step = '0.01';
+            numberInput.min = '0';
+            numberInput.max = sliderMax;
+            numberInput.value = initialAmount;
+            numberInput.style.cssText = "width: 70px; margin-left: 10px; text-align: center;";
+            container.appendChild(numberInput);
 
-            slider.addEventListener('input', () => {
-                sliderValue.textContent = slider.value;
-                updateSliderValues();
+            const percentSpan = document.createElement('span');
+            percentSpan.style.cssText = "width: 45px; margin-left: 5px; font-size: 0.8em; color: grey; text-align: right;";
+
+            const updatePercent = (val) => {
+                let p = totalAmount > 0 ? ((val / totalAmount) * 100).toFixed(0) : 0;
+                percentSpan.textContent = `${p}%`;
+            };
+            updatePercent(initialAmount);
+            container.appendChild(percentSpan);
+            numberInput.percentDisplay = percentSpan;
+
+            const handleInput = (val) => {
+                touchedUserIds.add(person.id);
+                if (touchedUserIds.size === friendsList.length) {
+                    touchedUserIds.clear();
+                    touchedUserIds.add(person.id);
+                }
+                numberInput.value = val;
+                slider.value = val;
+                updatePercent(val);
+                balanceRevolutStyle(slider, friendsList);
+            };
+
+            slider.addEventListener('input', () => handleInput(slider.value));
+            numberInput.addEventListener('input', () => {
+                let val = parseFloat(numberInput.value);
+                if (val > sliderMax) val = sliderMax;
+                if (isNaN(val) || val < 0) val = 0;
+                handleInput(val);
             });
 
-            splitDetails.appendChild(sliderContainer);
+            splitDetails.appendChild(container);
         });
     }
 
-    function updateSliderValues() {
+    function calculateTotal() {
+        let base = parseFloat(amountInput.value) || 0;
+        let tip = parseFloat(tipInput.value) || 0;
+        return base + (base * (tip / 100));
+    }
+
+    function refreshSlidersLimit() {
+        let newTotal = calculateTotal();
         const sliders = Array.from(document.querySelectorAll('#split-details input[type="range"]'));
-        let totalAmount = parseFloat(amountInput.value) + (parseFloat(amountInput.value) * (parseFloat(tipInput.value || 0) / 100));
-        let totalSelected = sliders.reduce((total, slider) => total + parseFloat(slider.value), 0);
+        const inputs = Array.from(document.querySelectorAll('#split-details input[type="number"]'));
 
-        if (totalSelected > totalAmount) {
-            let excess = totalSelected - totalAmount;
-            sliders.forEach(slider => {
-                let value = parseFloat(slider.value);
-                if (value > 0 && excess > 0) {
-                    let reduction = Math.min(value, excess);
-                    slider.value = (value - reduction).toFixed(2);
-                    slider.nextSibling.textContent = slider.value;
-                    excess -= reduction;
-                }
-            });
-        }
+        if (sliders.length === 0) return;
+
+        let newShare = (newTotal / sliders.length).toFixed(2);
+
+        sliders.forEach((slider, index) => {
+            slider.max = newTotal > 0 ? newTotal : 100;
+            slider.value = newShare;
+            inputs[index].max = slider.max;
+            inputs[index].value = newShare;
+            if (inputs[index].percentDisplay) inputs[index].percentDisplay.textContent = newTotal > 0 ? ((newShare / newTotal) * 100).toFixed(0) + '%' : '0%';
+        });
     }
 
-    function handleFormSubmit(event) {
-        event.preventDefault();
-        createSpill();
-    }
+    function balanceRevolutStyle(activeSlider, friendsList) {
+        const sliders = Array.from(document.querySelectorAll('#split-details input[type="range"]'));
+        const inputs = Array.from(document.querySelectorAll('#split-details input[type="number"]'));
+        let totalAmount = calculateTotal();
 
-    function createSpill() {
-        const amount = amountInput.value;
-        const tip = tipInput.value;
-        const selectedFriends = Array.from(selectedFriendsContainer.querySelectorAll('li')).map(li => li.dataset.id); // Użycie data-id
+        let lockedSum = 0;
+        let activeValue = parseFloat(activeSlider.value);
+        let unlockedSliders = [];
+        let unlockedInputs = [];
 
-        $.ajax({
-            url: '{% url "create_spill" %}',
-            type: 'POST',
-            data: {
-                'amount': amount,
-                'tip': tip,
-                'friends': selectedFriends,
-                'csrfmiddlewaretoken': '{{ csrf_token }}'
-            },
-            success: function (response) {
-                spillResults.innerHTML = response;
-            },
-            error: function (response) {
-                alert('Error creating spill');
+        sliders.forEach((s, index) => {
+            if (s === activeSlider) return;
+            let fId = s.dataset.friendId;
+            if (touchedUserIds.has(fId)) {
+                lockedSum += parseFloat(s.value);
+            } else {
+                unlockedSliders.push(s);
+                unlockedInputs.push(inputs[index]);
+            }
+        });
+
+        let remainingForUntouched = totalAmount - activeValue - lockedSum;
+        if (unlockedSliders.length === 0) return;
+
+        let share = remainingForUntouched / unlockedSliders.length;
+        if (share < 0) share = 0;
+
+        unlockedSliders.forEach((s, i) => {
+            s.value = share.toFixed(2);
+            unlockedInputs[i].value = share.toFixed(2);
+            if (unlockedInputs[i].percentDisplay) {
+                let p = totalAmount > 0 ? ((share / totalAmount) * 100).toFixed(0) : 0;
+                unlockedInputs[i].percentDisplay.textContent = `${p}%`;
             }
         });
     }
 
-    initializeEventListeners();
->>>>>>> Stashed changes
+    // --- WYSYŁANIE ---
+    function handleFormSubmit(event) {
+        event.preventDefault();
+        const submitBtn = form.querySelector('button, input[type="submit"]');
+        if (submitBtn && submitBtn.disabled) return;
+
+        const inputs = Array.from(document.querySelectorAll('#split-details input[type="number"]'));
+        let currentSum = inputs.reduce((sum, i) => sum + parseFloat(i.value), 0);
+        let total = calculateTotal();
+
+        if (Math.abs(currentSum - total) > 0.5) {
+            showToast(`Suma (${currentSum.toFixed(2)}) nie zgadza się z rachunkiem (${total.toFixed(2)})!`, "error");
+            return;
+        }
+
+        if (submitBtn) submitBtn.disabled = true;
+        createSpill(submitBtn);
+    }
+
+    function createSpill(submitBtn) {
+        const amount = amountInput.value;
+        const tip = tipInput.value;
+        // 1. POBIERAMY NAZWĘ Z INPUTA (który przywróciłem w HTML)
+        const descriptionInput = document.getElementById('bill-name');
+        const description = descriptionInput ? descriptionInput.value : "Rachunek";
+
+        let customSplits = [];
+        const sliders = document.querySelectorAll('#split-details input[type="range"]');
+        sliders.forEach(s => {
+            customSplits.push({
+                id: s.dataset.friendId,
+                amount: s.value
+            });
+        });
+
+        const selectedFriendsIds = Array.from(document.querySelectorAll('#selected-friends li')).map(li => li.dataset.id);
+        const csrftoken = $('input[name="csrfmiddlewaretoken"]').val();
+
+        if (!csrftoken) {
+            showToast("Błąd CSRF!", "error");
+            if (submitBtn) submitBtn.disabled = false;
+            return;
+        }
+
+        $.ajax({
+            url: '/create_spill/',
+            type: 'POST',
+            headers: { 'X-CSRFToken': csrftoken },
+            mode: 'same-origin',
+            data: {
+                'amount': amount,
+                'tip': tip,
+                'description': description, // 2. Wysyłamy nazwę
+                'friends[]': selectedFriendsIds,
+                'custom_splits': JSON.stringify(customSplits)
+            },
+            success: function (response) {
+                showToast("✅ Rachunek utworzony pomyślnie!", "success");
+
+                // Czyścimy wszystko
+                if (descriptionInput) descriptionInput.value = '';
+                amountInput.value = '';
+                tipInput.value = '';
+                splitDetails.innerHTML = '';
+                selectedFriendsContainer.innerHTML = '';
+                if (submitBtn) submitBtn.disabled = false;
+            },
+            error: function (xhr) {
+                showToast("❌ Błąd: " + xhr.status + " " + xhr.responseText, "error");
+                if (submitBtn) submitBtn.disabled = false;
+            }
+        });
+    }
+
 });
+
+// --- FUNKCJE GLOBALNE ---
+function showToast(message, type = 'info') {
+    const container = document.getElementById('toast-container');
+    if (!container) {
+        alert(message);
+        return;
+    }
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(() => { toast.remove(); }, 3000);
+}
+
+function selectGroupMembers(selectElement) {
+    const checkboxes = document.querySelectorAll('#popup-friends-list input[type="checkbox"]');
+    checkboxes.forEach(cb => cb.checked = false);
+
+    const idsString = selectElement.value;
+    if (!idsString) {
+        if (checkboxes.length > 0) checkboxes[0].dispatchEvent(new Event('change', { bubbles: true }));
+        return;
+    }
+
+    const idsToSelect = idsString.split(',').filter(id => id);
+    idsToSelect.forEach(id => {
+        const cb = document.querySelector(`#popup-friends-list input[value="${id}"]`);
+        if (cb) cb.checked = true;
+    });
+
+    const firstChecked = document.querySelector('#popup-friends-list input[type="checkbox"]:checked');
+    if (firstChecked) {
+        firstChecked.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+}

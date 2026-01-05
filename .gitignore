@@ -1,0 +1,14 @@
+# Pliki tymczasowe Pythona (kompilowane)
+__pycache__/
+*.pyc
+*.pyo
+
+# Baza danych SQLite (lokalna)
+db.sqlite3
+
+# Pliki systemowe Maca (śmieci)
+.DS_Store
+
+# Wirtualne środowisko
+venv/
+.env

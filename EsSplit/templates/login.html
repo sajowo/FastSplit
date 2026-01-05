@@ -8,15 +8,35 @@
     <link rel="stylesheet" href="{% static 'css/login.css' %}">
     <link rel="icon" type="image/x-icon" href="{% static 'img/favv16.png' %}">
 
+    <style>
+        .error-message {
+            background-color: #ffdddd;
+            color: #d8000c;
+            border: 1px solid #d8000c;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            font-size: 14px;
+            text-align: center;
+        }
+    </style>
 </head>
 
 <body>
     <div class="center">
         <h1>Witaj!</h1>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="error-message">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
         <form method="post" action="{% url 'login' %}">
             {% csrf_token %}
             <div class="txt_field">
-                <input type="text" name="username" required>
+                <input type="text" name="email" required>
                 <span></span>
                 <label>Email Address</label>
             </div>
@@ -25,7 +45,6 @@
                 <span></span>
                 <label>Password</label>
             </div>
-            <!-- <div class="forgot">Forgot Password</div> Funkcja do rozwinięcia-->
             <input type="submit" value="Login">
             <div class="users_signup">Don't have an account? <a href="{% url 'signup' %}">SignUp</a></div>
         </form>
