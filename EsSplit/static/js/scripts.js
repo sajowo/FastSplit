@@ -3,7 +3,34 @@ document.addEventListener('DOMContentLoaded', function () {
     window.scriptHasRun = true;
 
     // --- ZMIENNE POMOCNICZE ---
-    let touchedUserIds = new Set();
+    // (dawniej: touchedUserIds do "blokowania" suwaków; teraz kontrola sumy działa od razu)
+
+    // Suwaki: kumulacyjne "lockowanie" – kiedy raz ustawisz osobę, jej kwota zostaje stała,
+    // a reszta dzieli tylko pozostałą pulę (proporcjonalnie do aktualnych wartości, bez resetu do równego podziału).
+    const lockedFriendIds = new Set();
+    const lockOrder = []; // kolejność "zamrażania" (ostatni = najbardziej elastyczny przy cięciu puli)
+
+    const roundToCents = (n) => {
+        const x = Number(n);
+        if (!Number.isFinite(x)) return 0;
+        return Math.round(x * 100) / 100;
+    };
+
+    const toCents = (n) => {
+        const x = Number(n);
+        if (!Number.isFinite(x)) return 0;
+        return Math.round(x * 100);
+    };
+
+    const fromCents = (c) => (Number(c || 0) / 100);
+
+    const lockId = (id) => {
+        const friendId = String(id);
+        lockedFriendIds.add(friendId);
+        const idx = lockOrder.indexOf(friendId);
+        if (idx >= 0) lockOrder.splice(idx, 1);
+        lockOrder.push(friendId);
+    };
 
     const themeSwitch = document.getElementById('theme-switch');
     const body = document.body;
@@ -228,13 +255,11 @@ document.addEventListener('DOMContentLoaded', function () {
     if (closePopupBtn) closePopupBtn.addEventListener('click', hidePopup);
     if (form) form.addEventListener('submit', handleFormSubmit);
 
-    // Reset auto-locka przy zmianie kwot
+    // Reset przy zmianie kwot
     if (amountInput) amountInput.addEventListener('input', () => {
-        touchedUserIds.clear();
         refreshSlidersLimit();
     });
     if (tipInput) tipInput.addEventListener('input', () => {
-        touchedUserIds.clear();
         refreshSlidersLimit();
     });
 
@@ -266,8 +291,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
-        touchedUserIds.clear();
-
         if (selectedList.length > 0) {
             const ul = document.createElement('ul');
             selectedList.forEach(person => {
@@ -287,6 +310,11 @@ document.addEventListener('DOMContentLoaded', function () {
     // --- SLIDERY ---
     function generateSliders(friendsList) {
         splitDetails.innerHTML = '';
+
+        // Nowa lista / nowe suwaki: resetujemy locki
+        lockedFriendIds.clear();
+        lockOrder.length = 0;
+
         let totalAmount = calculateTotal();
         let sliderMax = totalAmount > 0 ? totalAmount : 100;
 
@@ -335,11 +363,6 @@ document.addEventListener('DOMContentLoaded', function () {
             numberInput.percentDisplay = percentSpan;
 
             const handleInput = (val) => {
-                touchedUserIds.add(person.id);
-                if (touchedUserIds.size === friendsList.length) {
-                    touchedUserIds.clear();
-                    touchedUserIds.add(person.id);
-                }
                 numberInput.value = val;
                 slider.value = val;
                 updatePercent(val);
@@ -371,52 +394,140 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (sliders.length === 0) return;
 
-        let newShare = (newTotal / sliders.length).toFixed(2);
-
         sliders.forEach((slider, index) => {
             slider.max = newTotal > 0 ? newTotal : 100;
-            slider.value = newShare;
             inputs[index].max = slider.max;
-            inputs[index].value = newShare;
-            if (inputs[index].percentDisplay) inputs[index].percentDisplay.textContent = newTotal > 0 ? ((newShare / newTotal) * 100).toFixed(0) + '%' : '0%';
+        });
+
+        // Nie resetuj do równego podziału.
+        // Zachowaj dotychczasowe wartości (locked pozostają), a resztę dopasuj do nowej puli.
+        rebalanceSlidersToTotal({ lockActive: false });
+    }
+
+    function getSliderPairs() {
+        const sliders = Array.from(document.querySelectorAll('#split-details input[type="range"]'));
+        const inputs = Array.from(document.querySelectorAll('#split-details input[type="number"]'));
+        return sliders.map((slider, i) => ({
+            id: String(slider.dataset.friendId || ''),
+            slider,
+            input: inputs[i]
+        }));
+    }
+
+    function syncPair(pair, cents, totalCents) {
+        const value = Math.max(0, roundToCents(fromCents(cents)));
+        pair.slider.value = value.toFixed(2);
+        if (pair.input) {
+            pair.input.value = value.toFixed(2);
+            if (pair.input.percentDisplay) {
+                const p = totalCents > 0 ? Math.round((cents / totalCents) * 100) : 0;
+                pair.input.percentDisplay.textContent = `${p}%`;
+            }
+        }
+    }
+
+    function rebalanceSlidersToTotal(opts = {}) {
+        const { activeId = null, activeCents = null, lockActive = false } = opts;
+        const pairs = getSliderPairs();
+        let totalAmount = calculateTotal();
+        if (!Number.isFinite(totalAmount) || totalAmount < 0) totalAmount = 0;
+        const totalCents = Math.max(0, toCents(totalAmount));
+
+        if (pairs.length === 0) return;
+
+        const values = new Map();
+        pairs.forEach((p) => {
+            const raw = parseFloat(p.slider.value);
+            values.set(p.id, Math.max(0, toCents(Number.isFinite(raw) ? raw : 0)));
+        });
+
+        const activeKey = activeId != null ? String(activeId) : null;
+        if (activeKey && lockActive) lockId(activeKey);
+
+        if (activeKey && activeCents != null) {
+            const v = Math.max(0, Math.min(Number(activeCents) || 0, totalCents));
+            values.set(activeKey, v);
+        }
+
+        // Suma "zamrożonych"
+        const lockedIds = Array.from(lockedFriendIds);
+        let lockedSum = 0;
+        lockedIds.forEach((id) => {
+            lockedSum += values.get(id) || 0;
+        });
+
+        // Jeśli pula się nie domyka (np. po zmianie rachunku) i locki przekraczają total,
+        // obcinamy ostatnio ustawianą osobę (najczęściej bieżącą).
+        if (lockedSum > totalCents) {
+            const overshoot = lockedSum - totalCents;
+            const adjustId = activeKey || (lockOrder.length ? lockOrder[lockOrder.length - 1] : null);
+            if (adjustId && values.has(adjustId)) {
+                const current = values.get(adjustId) || 0;
+                const next = Math.max(0, current - overshoot);
+                values.set(adjustId, next);
+            }
+            // przelicz ponownie po korekcie
+            lockedSum = 0;
+            lockedIds.forEach((id) => {
+                lockedSum += values.get(id) || 0;
+            });
+        }
+
+        let remaining = totalCents - lockedSum;
+        if (remaining < 0) remaining = 0;
+
+        const unlocked = pairs.filter((p) => !lockedFriendIds.has(p.id));
+
+        if (unlocked.length > 0) {
+            const currentUnlockedSum = unlocked.reduce((sum, p) => sum + (values.get(p.id) || 0), 0);
+
+            if (currentUnlockedSum <= 0) {
+                // Jeśli wszystko ma 0, rozdziel równo
+                const n = unlocked.length;
+                const per = n > 0 ? Math.floor(remaining / n) : 0;
+                let used = 0;
+                for (let i = 0; i < n - 1; i++) {
+                    values.set(unlocked[i].id, per);
+                    used += per;
+                }
+                values.set(unlocked[n - 1].id, Math.max(0, remaining - used));
+            } else {
+                // Proporcjonalnie do dotychczasowych wartości (brak efektu "resetu")
+                let used = 0;
+                for (let i = 0; i < unlocked.length - 1; i++) {
+                    const id = unlocked[i].id;
+                    const base = values.get(id) || 0;
+                    const v = Math.floor((remaining * base) / currentUnlockedSum);
+                    values.set(id, v);
+                    used += v;
+                }
+                const lastId = unlocked[unlocked.length - 1].id;
+                values.set(lastId, Math.max(0, remaining - used));
+            }
+        } else {
+            // Wszyscy są "locked" – domknij sumę na aktywnym/ostatnim locked, jeśli potrzeba.
+            const diff = totalCents - lockedSum;
+            if (diff !== 0) {
+                const adjustId = activeKey || (lockOrder.length ? lockOrder[lockOrder.length - 1] : null);
+                if (adjustId && values.has(adjustId)) {
+                    values.set(adjustId, Math.max(0, (values.get(adjustId) || 0) + diff));
+                }
+            }
+        }
+
+        // Zapisz na UI
+        pairs.forEach((p) => {
+            syncPair(p, values.get(p.id) || 0, totalCents);
         });
     }
 
     function balanceRevolutStyle(activeSlider, friendsList) {
-        const sliders = Array.from(document.querySelectorAll('#split-details input[type="range"]'));
-        const inputs = Array.from(document.querySelectorAll('#split-details input[type="number"]'));
-        let totalAmount = calculateTotal();
+        const friendId = String(activeSlider.dataset.friendId || '');
+        const raw = parseFloat(activeSlider.value);
+        const v = Math.max(0, toCents(Number.isFinite(raw) ? raw : 0));
 
-        let lockedSum = 0;
-        let activeValue = parseFloat(activeSlider.value);
-        let unlockedSliders = [];
-        let unlockedInputs = [];
-
-        sliders.forEach((s, index) => {
-            if (s === activeSlider) return;
-            let fId = s.dataset.friendId;
-            if (touchedUserIds.has(fId)) {
-                lockedSum += parseFloat(s.value);
-            } else {
-                unlockedSliders.push(s);
-                unlockedInputs.push(inputs[index]);
-            }
-        });
-
-        let remainingForUntouched = totalAmount - activeValue - lockedSum;
-        if (unlockedSliders.length === 0) return;
-
-        let share = remainingForUntouched / unlockedSliders.length;
-        if (share < 0) share = 0;
-
-        unlockedSliders.forEach((s, i) => {
-            s.value = share.toFixed(2);
-            unlockedInputs[i].value = share.toFixed(2);
-            if (unlockedInputs[i].percentDisplay) {
-                let p = totalAmount > 0 ? ((share / totalAmount) * 100).toFixed(0) : 0;
-                unlockedInputs[i].percentDisplay.textContent = `${p}%`;
-            }
-        });
+        // Aktywnie ustawiana osoba staje się "locked" (kumulacyjnie), a reszta dopasowuje się do pozostałej puli.
+        rebalanceSlidersToTotal({ activeId: friendId, activeCents: v, lockActive: true });
     }
 
     // --- WYSYŁANIE ---
