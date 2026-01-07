@@ -23,20 +23,39 @@ INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
-    'django.contrib.sessions',  # Poprawiona kolejność
+    'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    
+    # --- NOWE BIBLIOTEKI ZABEZPIECZAJĄCE ---
+    'axes',              # Blokowanie po nieudanych logowaniach
+    'django_recaptcha',  # Obsługa Captcha
+    # ---------------------------------------
+    
     'EsSplit',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    
+    # --- AXES MIDDLEWARE (Musi być wysoko, przed uwierzytelnianiem) ---
+    'axes.middleware.AxesMiddleware',
+    # ------------------------------------------------------------------
+    
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+# --- KONFIGURACJA BACKENDÓW LOGOWANIA (Wymagane dla Axes) ---
+AUTHENTICATION_BACKENDS = [
+    # Domyślny backend Django
+    'django.contrib.auth.backends.ModelBackend',
+    # Backend Axes
+    'axes.backends.AxesStandaloneBackend',
 ]
 
 ROOT_URLCONF = 'FastSplit.urls'
@@ -78,7 +97,11 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
     },
     {
+        # Zmieniono na min. 8 znaków (wymóg bezpieczeństwa)
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 8,
+        }
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
@@ -129,5 +152,36 @@ LOGGING = {
             'handlers': ['console'],
             'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
         },
+        # Dodatkowo logowanie dla Axes, żebyś widział próby włamań w konsoli
+        'axes': {
+            'handlers': ['console'],
+            'level': 'INFO',
+        },
     },
 }
+
+# ==========================================
+# KONFIGURACJA ZABEZPIECZEŃ (POPRAWIONA)
+# ==========================================
+
+# 1. AXES (Blokowanie po 3 nieudanych próbach)
+AXES_ENABLED = False
+AXES_FAILURE_LIMIT = 3
+AXES_COOLOFF_TIME = 0.25
+AXES_RESET_ON_SUCCESS = True
+
+# Progresywna blokada logowania (nasza logika, niezależna od Axes)
+LOGIN_FAILURE_LIMIT = 3
+LOGIN_LOCKOUT_SCHEDULE_MINUTES = [1, 5, 10, 15]
+
+# Zmiana składni na nowszą (naprawia Warning):
+AXES_LOCK_OUT_BY = 'combination_user_and_ip' 
+
+# 2. RECAPTCHA (Google v2 Checkbox - klucze testowe)
+RECAPTCHA_PUBLIC_KEY = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'
+RECAPTCHA_PRIVATE_KEY = '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe'
+RECAPTCHA_USE_SSL = False 
+
+# 3. WYCISZENIE BŁĘDÓW (Naprawia Error przy migracji)
+# Pozwalamy na używanie kluczy testowych Google w trybie developerskim
+SILENCED_SYSTEM_CHECKS = ['django_recaptcha.recaptcha_test_key_error']

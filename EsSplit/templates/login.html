@@ -27,26 +27,50 @@
         <h1>Witaj!</h1>
 
         {% if messages %}
-            {% for message in messages %}
-                <div class="error-message">
-                    {{ message }}
-                </div>
-            {% endfor %}
+        {% for message in messages %}
+        {% if 'error' in message.tags %}
+        <div class="error-message">
+            {{ message }}
+        </div>
         {% endif %}
+        {% endfor %}
+        {% endif %}
+
+        {% if form.errors %}
+        <div class="error-message">
+            {% for field in form %}
+            {% for error in field.errors %}
+            {{ error }}<br>
+            {% endfor %}
+            {% endfor %}
+            {% for error in form.non_field_errors %}
+            {{ error }}
+            {% endfor %}
+        </div>
+        {% endif %}
+
         <form method="post" action="{% url 'login' %}">
             {% csrf_token %}
+
+            {{ form.media }}
+
             <div class="txt_field">
                 <input type="text" name="email" required>
                 <span></span>
-                <label>Email Address</label>
+                <label>Adres email</label>
             </div>
             <div class="txt_field">
                 <input type="password" name="password" required>
                 <span></span>
-                <label>Password</label>
+                <label>Hasło</label>
             </div>
-            <input type="submit" value="Login">
-            <div class="users_signup">Don't have an account? <a href="{% url 'signup' %}">SignUp</a></div>
+
+            <div style="margin: 20px 0; display: flex; justify-content: center;">
+                {{ form.captcha }}
+            </div>
+
+            <input type="submit" value="Zaloguj się">
+            <div class="users_signup">Nie masz konta? <a href="{% url 'signup' %}">Zarejestruj się</a></div>
         </form>
     </div>
 </body>

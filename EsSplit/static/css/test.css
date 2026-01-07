@@ -1,102 +1,272 @@
-/* style.css */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap');
+
+/* Reset pudełkowy - kluczowe: padding nie rozpycha elementów */
+* {
+    box-sizing: border-box;
+}
 
 body {
     margin: 0;
     padding: 0;
-    font-family: 'Lucida Sans', sans-serif;
-    background-color: #3F51B5;
-    height: 100vh;
+    font-family: 'Roboto', sans-serif;
+    /* Twoje niebieskie tło jak na screenie */
+    background-color: #465BC7;
     display: flex;
     justify-content: center;
     align-items: center;
+    min-height: 100vh;
 }
 
-form {
-    width: 700px;
-    /* max-width: 900px; */
-    background: white;
-    border-radius: 15px;
+.registration-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
     padding: 20px;
-    box-sizing: border-box;
+}
+
+.registration-container {
+    background-color: #ffffff;
+    padding: 45px;
+    border-radius: 12px;
+    /* Zaokrąglenie karty */
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    max-width: 650px;
+    /* Szerszy formularz, żeby pomieścić dwie kolumny */
+}
+
+/* --- NAGŁÓWEK GŁÓWNY --- */
+.main-title {
+    text-align: center;
+    color: #666;
+    margin: 0 0 35px 0;
+    font-weight: 400;
+    font-size: 18px;
+}
+
+/* --- NAGŁÓWKI --- */
+.form-title {
+    text-align: center;
+    color: #333;
+    margin: 0 0 10px 0;
+    font-weight: 700;
+    font-size: 28px;
+}
+
+.form-subtitle {
+    text-align: center;
+    color: #666;
+    margin: 0 0 35px 0;
+    font-size: 16px;
+}
+
+/* --- UKŁAD SIATKI (GRID) --- */
+.registration-form {
+    width: 100%;
+}
+
+/* Wymuś spójny wygląd inputów (czasem przeglądarka/rozszerzenia potrafią nadpisać) */
+.registration-form input[type="text"],
+.registration-form input[type="email"],
+.registration-form input[type="password"] {
+    width: 100%;
+    display: block;
+    padding: 14px 16px;
+    min-height: 48px;
+    font-size: 16px;
+    font-family: inherit;
+    color: #333;
+
+    background-color: #F8F9FA;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+
+    outline: none;
+    transition: all 0.2s ease;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.registration-form input[type="text"]::placeholder,
+.registration-form input[type="email"]::placeholder,
+.registration-form input[type="password"]::placeholder {
+    color: #aaa;
+}
+
+.registration-form input[type="text"]:focus,
+.registration-form input[type="email"]:focus,
+.registration-form input[type="password"]:focus {
+    background-color: #ffffff;
+    border-color: #2196F3;
+    box-shadow: 0 0 0 4px rgba(33, 150, 243, 0.15);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    /* Dwie równe kolumny */
+    gap: 20px;
+    /* Odstęp między kolumnami */
+    margin-bottom: 20px;
+}
+
+.full-width {
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+/* --- WYGLĄD PÓL (Inputy) --- */
+.input-group {
+    display: flex;
+    flex-direction: column;
+    /* To wymusza etykietę NAD polem */
+}
+
+.input-group label {
+    font-size: 14px;
+    font-weight: 700;
+    /* Pogrubiona etykieta */
+    color: #444;
+    /* Ciemnoszary kolor tekstu */
+    margin-bottom: 8px;
+    display: block;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 14px 16px;
+    /* Duży padding wewnątrz */
+    font-size: 16px;
+    color: #333;
+
+    /* Stylizacja "Bloku" - efekt SplitWise */
+    background-color: #F8F9FA;
+    /* Jasnoszare tło pola */
+    border: 1px solid #ddd;
+    /* Bardzo delikatna ramka */
+    border-radius: 12px;
+    /* Zaokrąglone rogi inputa */
+
+    outline: none;
+    transition: all 0.2s ease;
+    min-height: 48px;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.input-group input::placeholder {
+    color: #aaa;
+}
+
+/* Stan aktywny (kliknięcie w pole) */
+.input-group input:focus {
+    background-color: #ffffff;
+    border-color: #2196F3;
+    /* Twój kolor (niebieski) */
+    box-shadow: 0 0 0 4px rgba(33, 150, 243, 0.15);
+    /* Poświata */
+}
+
+/* --- BŁĘDY --- */
+.error-msg {
+    color: #d32f2f;
+    font-size: 13px;
+    margin-top: 5px;
+}
+
+/* --- PRZYCISK --- */
+.checkbox-group {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 20px;
+    margin-top: 20px;
+}
+
+.checkbox-group input[type="checkbox"] {
+    margin-top: 3px;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.checkbox-group label {
+    font-size: 14px;
+    color: #666;
+    line-height: 1.5;
+    cursor: pointer;
+    user-select: none;
+}
+
+.link-accent {
+    color: #2196F3;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.link-accent:hover {
+    text-decoration: underline;
+}
+
+.submit-btn {
+    width: 100%;
+    padding: 16px;
+    background-color: #2196F3;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+.submit-btn:hover {
+    background-color: #1976D2;
+}
+
+/* --- CAPTCHA & LINKI --- */
+.captcha-container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    margin-bottom: 25px;
+    margin-top: 10px;
 }
 
-@media (max-width: 768px) {
-    form {
-        width: 95%;
-        max-width: 500px;
-    }
-}
-
-@media (max-width: 480px) {
-    form {
-        width: 95%;
-        max-width: 400px;
-    }
-}
-
-form h2 {
+.login-link {
     text-align: center;
-    padding: 0 0 20px 0;
-    border-bottom: 1px solid #ccc;
-    width: 100%;
+    margin-top: 25px;
+    color: #666;
+    font-size: 14px;
 }
 
-.txt_field {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    margin: 10px 0;
-}
-
-.txt_field label {
-    /* Etykiety na lewej stronie */
-    text-align: left;
-    width: auto;
-    /* Szerokość etykiet dostosowuje się do tekstu */
-    margin-right: 10px;
-    color: #333;
-}
-
-.txt_field input {
-    flex: 1;
-    /* Pole tekstowe zajmuje pozostałą szerokość */
-    padding: 10px;
-    font-size: 16px;
-    border: none;
-    border: 2px solid #ccc;
-    background: transparent;
-    border-radius: 8px;
-    transition: border-color 0.3s;
-}
-
-.txt_field input:focus~label,
-.txt_field input:valid~label {
-    top: 10px;
-    font-size: 16px;
-    color: #999;
-}
-
-button[type="submit"] {
-    width: 100%;
-    max-width: 200px;
-    height: 50px;
-    margin-top: 20px;
-    border: none;
-    background-color: #2691d9;
-    border-radius: 15px;
-    font-size: 16px;
-    color: #e9f4fb;
+.login-link a {
+    color: #2196F3;
+    text-decoration: none;
     font-weight: 700;
-    cursor: pointer;
-    outline: none;
-    transition: background-color 0.3s, transform 0.2s;
 }
 
-button[type="submit"]:hover {
-    background-color: #1e81ce;
-    transform: scale(1.05);
+/* --- RESPONSYWNOŚĆ (TELEFONY) --- */
+@media (max-width: 600px) {
+    .registration-container {
+        padding: 30px 20px;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+        /* Na telefonie jedna kolumna */
+        gap: 0;
+    }
+
+    .input-group {
+        margin-bottom: 20px;
+        /* Dodajemy margines, bo grid gap znika */
+    }
 }

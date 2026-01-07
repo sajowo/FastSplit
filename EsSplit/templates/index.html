@@ -13,6 +13,16 @@
 <body>
   <div id="toast-container"></div>
 
+  {% if messages %}
+  <script>
+    window.__DJANGO_MESSAGES__ = [
+      {% for message in messages %}
+    { text: "{{ message|escapejs }}", tags: "{{ message.tags|escapejs }}" },
+    {% endfor %}
+    ];
+  </script>
+  {% endif %}
+
   <header>
     <div class="logo">
       <img src="{% static 'img/logo.png' %}" alt="Logo" />
@@ -21,11 +31,12 @@
     <section class="search-friend">
       <form method="POST" action="{% url 'search_user' %}">
         {% csrf_token %}
-        <input type="text" name="username" placeholder="Nazwa użytkownika" />
+        <input type="text" name="username" id="user-search-input" placeholder="Nazwa użytkownika" autocomplete="off" />
         <button type="submit">
           <img src="{% static 'img/search.png' %}" alt="szukanie" />
         </button>
       </form>
+      <div class="search-results" id="search-results" hidden></div>
     </section>
 
     <div class="user-profile">
@@ -40,6 +51,34 @@
       {% endif %}
     </div>
 
+    <div class="notifications">
+      <button type="button" class="notifications-btn" id="notifications-toggle" aria-expanded="false"
+        aria-controls="notifications-panel">
+        Powiadomienia
+        {% if friend_requests %}
+        <span class="notifications-badge">{{ friend_requests|length }}</span>
+        {% endif %}
+      </button>
+      <div class="notifications-panel" id="notifications-panel" hidden>
+        {% if friend_requests %}
+        <h3 style="margin-top: 0">📬 Masz nowe zaproszenia!</h3>
+        <ul class="notification-list">
+          {% for req in friend_requests %}
+          <li class="notification-item">
+            <span>Użytkownik <strong>{{ req.from_user.username }}</strong> chce Cię dodać do znajomych.</span>
+            <div>
+              <a href="{% url 'handle_request' req.id 'accept' %}" class="btn-accept">Akceptuj</a>
+              <a href="{% url 'handle_request' req.id 'reject' %}" class="btn-reject">Odrzuć</a>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="notifications-empty">Brak powiadomień.</div>
+        {% endif %}
+      </div>
+    </div>
+
     <div class="switch-container">
       <label class="switch">
         <input type="checkbox" id="theme-switch" />
@@ -49,27 +88,10 @@
   </header>
 
   <main>
-    {% if friend_requests %}
-    <div class="notification-box">
-      <h3 style="margin-top: 0">📬 Masz nowe zaproszenia!</h3>
-      <ul class="notification-list">
-        {% for req in friend_requests %}
-        <li class="notification-item">
-          <span>Użytkownik <strong>{{ req.from_user.username }}</strong> chce Cię dodać do znajomych.</span>
-          <div>
-            <a href="{% url 'handle_request' req.id 'accept' %}" class="btn-accept">Akceptuj</a>
-            <a href="{% url 'handle_request' req.id 'reject' %}" class="btn-reject">Odrzuć</a>
-          </div>
-        </li>
-        {% endfor %}
-      </ul>
-    </div>
-    {% endif %}
-
     <section class="split-request">
 
       <div class="create-spill">
-        <h2>Create Spill</h2>
+        <h2>Utwórz podział</h2>
         <form id="split-form" action="#" method="POST">
           {% csrf_token %}
           <div id="selected-friends"></div>
@@ -80,16 +102,16 @@
           </div>
 
           <div class="form-group">
-            <label for="amount">Amount to Split:</label>
-            <input type="number" id="amount" name="amount" step="0.01" min="0" placeholder="Enter amount" />
+            <label for="amount">Kwota do podziału:</label>
+            <input type="number" id="amount" name="amount" step="0.01" min="0" placeholder="Wpisz kwotę" />
           </div>
           <div class="form-group">
-            <label for="tip">Tip (%):</label>
-            <input type="number" id="tip" name="tip" step="0.01" min="0" placeholder="Enter tip percentage" />
+            <label for="tip">Napiwek (%):</label>
+            <input type="number" id="tip" name="tip" step="0.01" min="0" placeholder="Wpisz procent napiwku" />
           </div>
           <div id="split-details"></div>
           <button type="button" id="choose-friends-button">Wybierz znajomych</button>
-          <button type="submit">Create Spill</button>
+          <button type="submit">Utwórz podział</button>
         </form>
         <div id="spill-results"></div>
       </div>
@@ -141,15 +163,14 @@
           class="split-item {% if bill.status == 'PAID' %}bill-paid{% elif bill.status == 'REJECTED' %}bill-rejected{% else %}bill-pending{% endif %}">
           <h3>
             {{ bill.creator.username }}
-            <small style="font-size: 0.6em; color: grey">({{ bill.get_status_display }})</small>
+            <small class="split-status">({{ bill.get_status_display }})</small>
           </h3>
           <p>{{ bill.description }} - <strong>{{ bill.display_amount|default:bill.amount_per_person }}</strong></p>
 
           {% if bill.debtors_list %}
-          <div
-            style="font-size: 0.85em; background: #f9f9f9; padding: 8px; border-radius: 4px; margin-top: 5px; margin-bottom: 5px; color: #555;">
+          <div class="split-details-box">
             <strong>Szczegóły podziału:</strong>
-            <ul style="margin: 5px 0 0 0; padding-left: 20px;">
+            <ul class="split-details-list">
               {% for share in bill.debtors_list %}
               <li>{{ share.user.username }}: <strong>{{ share.amount_owed }} PLN</strong></li>
               {% endfor %}
@@ -157,21 +178,21 @@
           </div>
           {% endif %}
 
-          <p style="font-size: 0.8em">{{ bill.date|date:"d M Y, H:i" }}</p>
+          <p class="split-date">{{ bill.date|date:"d M Y, H:i" }}</p>
 
-          <div class="actions" style="margin-top: 5px">
+          <div class="actions">
             {% if bill.status == 'PENDING' %}
             {% if request.user == bill.creator %}
-            <a href="{% url 'update_bill' bill.id 'PAID' %}" style="color: green; margin-right: 10px">✅ Sfinalizuj</a>
+            <a href="{% url 'update_bill' bill.id 'PAID' %}" class="action-link action-positive">✅ Sfinalizuj</a>
             {% endif %}
-            <a href="{% url 'update_bill' bill.id 'REJECTED' %}" style="color: red">❌ Odrzuć</a>
+            <a href="{% url 'update_bill' bill.id 'REJECTED' %}" class="action-link action-negative">❌ Odrzuć</a>
             {% elif bill.status == 'REJECTED' %}
-            <span style="color: red">Rachunek odrzucony</span>
+            <span class="action-text action-negative">Rachunek odrzucony</span>
             {% if request.user == bill.creator %}
-            <a href="{% url 'update_bill' bill.id 'PENDING' %}" style="margin-left: 10px">↺ Przywróć</a>
+            <a href="{% url 'update_bill' bill.id 'PENDING' %}" class="action-link">↺ Przywróć</a>
             {% endif %}
             {% elif bill.status == 'PAID' %}
-            <span style="color: green; font-weight: bold">Sfinalizowano</span>
+            <span class="action-text action-positive">Sfinalizowano</span>
             {% endif %}
           </div>
         </div>

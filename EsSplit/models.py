@@ -80,3 +80,22 @@ class BillShare(models.Model):
 
     def __str__(self):
         return f"{self.user.username} wisi {self.amount_owed} za {self.bill.description}"
+
+
+class LoginLockout(models.Model):
+    ip_address = models.CharField(max_length=64)
+    email = models.CharField(max_length=254)
+    failures = models.PositiveIntegerField(default=0)
+    lockout_level = models.PositiveIntegerField(default=0)
+    locked_until = models.DateTimeField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('ip_address', 'email')
+        indexes = [
+            models.Index(fields=['ip_address', 'email']),
+            models.Index(fields=['locked_until']),
+        ]
+
+    def __str__(self):
+        return f"{self.ip_address} / {self.email} (lvl={self.lockout_level}, failures={self.failures})"

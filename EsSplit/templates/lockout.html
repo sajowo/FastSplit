@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="utf-8">
+    <title>Blokada logowania</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'img/favv16.png' %}">
+
+    <style>
+        .lockout-title {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2em;
+            color: black;
+        }
+
+        .lockout-subtitle {
+            text-align: center;
+            color: #666666;
+            margin: 0 0 18px 0;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .timer-wrap {
+            display: flex;
+            justify-content: center;
+            margin: 18px 0 18px 0;
+        }
+
+        .timer-circle {
+            width: 180px;
+            height: 180px;
+            border-radius: 999px;
+            background: #fff;
+            border: 10px solid #2691d9;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+        }
+
+        .timer-time {
+            font-size: 42px;
+            font-weight: 800;
+            color: #3F51B5;
+            letter-spacing: 1px;
+            line-height: 1;
+        }
+
+        .timer-label {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #666666;
+            text-align: center;
+            padding: 0 12px;
+        }
+
+        .lockout-actions {
+            margin-top: 12px;
+        }
+
+        .lockout-link {
+            display: block;
+            margin-top: 14px;
+            text-align: center;
+            font-size: 14px;
+            color: #2691d9;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .lockout-link:hover {
+            text-decoration: underline;
+        }
+
+        .lockout-muted {
+            text-align: center;
+            color: #999;
+            margin-top: 10px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="center">
+        <h1 class="lockout-title">Konto zablokowane</h1>
+        <p class="lockout-subtitle">
+            Zbyt wiele nieudanych prób logowania. Dla bezpieczeństwa dostęp do logowania został chwilowo zablokowany.
+        </p>
+
+        <div class="timer-wrap">
+            <div class="timer-circle" id="timer" data-remaining="{{ remaining_seconds|default:0 }}">
+                <div class="timer-time" id="timer-time">--:--</div>
+                <div class="timer-label">do kolejnej próby logowania</div>
+            </div>
+        </div>
+
+        <div class="lockout-actions">
+            <a class="lockout-link" id="back-to-login" href="{% url 'login' %}">Wróć do logowania</a>
+            <div class="lockout-muted" id="lockout-hint">Link zadziała po odblokowaniu.</div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            const timerEl = document.getElementById('timer');
+            const timeEl = document.getElementById('timer-time');
+            const backLink = document.getElementById('back-to-login');
+            const hintEl = document.getElementById('lockout-hint');
+
+            let remaining = parseInt(timerEl?.dataset?.remaining || '0', 10);
+            if (!Number.isFinite(remaining) || remaining < 0) remaining = 0;
+
+            const render = () => {
+                const mins = Math.floor(remaining / 60);
+                const secs = remaining % 60;
+                timeEl.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+                if (remaining <= 0) {
+                    hintEl.textContent = 'Możesz spróbować ponownie.';
+                    // delikatne auto-przejście po odblokowaniu
+                    setTimeout(() => {
+                        window.location.href = backLink.href;
+                    }, 600);
+                }
+            };
+
+            // Gdy trwa blokada, zostaw link, ale bez auto-scrolla/klików
+            if (remaining > 0) {
+                backLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                });
+            } else {
+                hintEl.textContent = 'Możesz spróbować ponownie.';
+            }
+
+            render();
+
+            if (remaining > 0) {
+                const interval = setInterval(() => {
+                    remaining -= 1;
+                    if (remaining <= 0) {
+                        remaining = 0;
+                        clearInterval(interval);
+                    }
+                    render();
+                }, 1000);
+            }
+        })();
+    </script>
+</body>
+
+</html>

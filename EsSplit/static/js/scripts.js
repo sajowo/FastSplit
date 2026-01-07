@@ -9,6 +9,213 @@ document.addEventListener('DOMContentLoaded', function () {
     const body = document.body;
     if (themeSwitch) themeSwitch.addEventListener('change', () => body.classList.toggle('dark-theme'));
 
+    // --- POWIADOMIENIA (panel w headerze) ---
+    const notificationsToggle = document.getElementById('notifications-toggle');
+    const notificationsPanel = document.getElementById('notifications-panel');
+
+    const closeNotifications = () => {
+        if (!notificationsToggle || !notificationsPanel) return;
+        notificationsPanel.hidden = true;
+        notificationsToggle.setAttribute('aria-expanded', 'false');
+    };
+
+    const openNotifications = () => {
+        if (!notificationsToggle || !notificationsPanel) return;
+        notificationsPanel.hidden = false;
+        notificationsToggle.setAttribute('aria-expanded', 'true');
+    };
+
+    const toggleNotifications = () => {
+        if (!notificationsToggle || !notificationsPanel) return;
+        if (notificationsPanel.hidden) openNotifications();
+        else closeNotifications();
+    };
+
+    if (notificationsToggle && notificationsPanel) {
+        notificationsToggle.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleNotifications();
+        });
+
+        notificationsPanel.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
+        document.addEventListener('click', () => closeNotifications());
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeNotifications();
+        });
+    }
+
+    // --- WYSZUKIWANIE UŻYTKOWNIKÓW (dropdown + Zaproś) ---
+    const searchForm = document.querySelector('.search-friend form');
+    const searchInput = document.getElementById('user-search-input');
+    const searchResults = document.getElementById('search-results');
+    const csrfTokenInput = document.querySelector('.search-friend input[name="csrfmiddlewaretoken"]');
+
+    let searchDebounceId = null;
+    let lastQuery = '';
+
+    const closeSearchResults = () => {
+        if (!searchResults) return;
+        searchResults.hidden = true;
+        searchResults.innerHTML = '';
+    };
+
+    const openSearchResults = () => {
+        if (!searchResults) return;
+        searchResults.hidden = false;
+    };
+
+    const renderSearchResults = (items) => {
+        if (!searchResults) return;
+        searchResults.innerHTML = '';
+
+        if (!Array.isArray(items) || items.length === 0) {
+            const empty = document.createElement('div');
+            empty.className = 'search-result-empty';
+            empty.textContent = 'Brak wyników.';
+            searchResults.appendChild(empty);
+            openSearchResults();
+            return;
+        }
+
+        items.forEach((u) => {
+            const row = document.createElement('div');
+            row.className = 'search-result-item';
+
+            const name = document.createElement('div');
+            name.className = 'search-result-name';
+            name.textContent = u.username;
+
+            const right = document.createElement('div');
+            right.className = 'search-result-actions';
+
+            const status = String(u && u.status ? u.status : '').trim();
+
+            const renderInviteButton = () => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'search-invite-btn';
+                btn.textContent = 'Zaproś';
+                btn.addEventListener('click', async () => {
+                    btn.disabled = true;
+                    try {
+                        const res = await fetch('/invite_user/', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                                'X-CSRFToken': csrfTokenInput ? csrfTokenInput.value : ''
+                            },
+                            body: new URLSearchParams({ user_id: String(u.id) }).toString()
+                        });
+                        const data = await res.json().catch(() => ({}));
+                        if (!res.ok) {
+                            showToast(data && data.message ? data.message : 'Nie udało się wysłać zaproszenia.', 'error');
+                            btn.disabled = false;
+                            return;
+                        }
+                        showToast(data.message || 'Wysłano zaproszenie.', 'success');
+                        right.innerHTML = '';
+                        const s = document.createElement('span');
+                        s.className = 'search-result-status';
+                        s.textContent = 'Wysłano';
+                        right.appendChild(s);
+                    } catch (e) {
+                        showToast('Błąd sieci podczas wysyłania zaproszenia.', 'error');
+                        btn.disabled = false;
+                    }
+                });
+                right.appendChild(btn);
+            };
+
+            if (status === 'friend') {
+                const s = document.createElement('span');
+                s.className = 'search-result-status';
+                s.textContent = 'Już znajomy';
+                right.appendChild(s);
+            } else if (status === 'pending_sent') {
+                const s = document.createElement('span');
+                s.className = 'search-result-status';
+                s.textContent = 'Wysłano';
+                right.appendChild(s);
+            } else if (status === 'pending_received') {
+                const s = document.createElement('span');
+                s.className = 'search-result-status';
+                s.textContent = 'Masz zaproszenie';
+                right.appendChild(s);
+            } else {
+                // domyślnie pokazuj przycisk (np. gdy backend zwróci brak statusu)
+                renderInviteButton();
+            }
+
+            row.appendChild(name);
+            row.appendChild(right);
+            searchResults.appendChild(row);
+        });
+
+        openSearchResults();
+    };
+
+    const runSearch = async (q) => {
+        if (!searchResults) return;
+        const query = String(q || '').trim();
+        lastQuery = query;
+
+        if (query.length < 2) {
+            closeSearchResults();
+            return;
+        }
+
+        try {
+            const res = await fetch(`/search_user/?q=${encodeURIComponent(query)}`, { headers: { 'Accept': 'application/json' } });
+            if (!res.ok) {
+                closeSearchResults();
+                return;
+            }
+            const data = await res.json();
+            // jeśli w międzyczasie wpisano coś innego
+            if (lastQuery !== query) return;
+            renderSearchResults((data && data.results) || []);
+        } catch (e) {
+            closeSearchResults();
+        }
+    };
+
+    if (searchInput && searchResults) {
+        searchInput.addEventListener('input', () => {
+            if (searchDebounceId) clearTimeout(searchDebounceId);
+            searchDebounceId = setTimeout(() => runSearch(searchInput.value), 250);
+        });
+
+        searchInput.addEventListener('focus', () => {
+            if (searchResults.innerHTML.trim() && !searchResults.hidden) return;
+            if (searchInput.value && String(searchInput.value).trim().length >= 2) {
+                runSearch(searchInput.value);
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            const target = e.target;
+            if (!target) return;
+            if (searchResults.contains(target) || searchInput.contains(target)) return;
+            closeSearchResults();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeSearchResults();
+        });
+    }
+
+    if (searchForm && searchInput) {
+        searchForm.addEventListener('submit', (e) => {
+            // nie rób auto-zapraszania po Enter; tylko pokaż listę
+            e.preventDefault();
+            runSearch(searchInput.value);
+        });
+    }
+
     const form = document.getElementById('split-form');
     const selectedFriendsContainer = document.getElementById('selected-friends');
     const splitDetails = document.getElementById('split-details');
@@ -299,8 +506,29 @@ function showToast(message, type = 'info') {
     toast.className = `toast ${type}`;
     toast.textContent = message;
     container.appendChild(toast);
-    setTimeout(() => { toast.remove(); }, 3000);
+    setTimeout(() => { toast.remove(); }, 5000);
 }
+
+// Pokazuj komunikaty Django (messages) jako toasty na dashboardzie
+(function () {
+    const items = window.__DJANGO_MESSAGES__;
+    if (!Array.isArray(items) || items.length === 0) return;
+
+    const toType = (tags) => {
+        const t = String(tags || '');
+        if (t.includes('error')) return 'error';
+        if (t.includes('success')) return 'success';
+        return 'info';
+    };
+
+    items.forEach((m) => {
+        if (!m || !m.text) return;
+        showToast(m.text, toType(m.tags));
+    });
+
+    // zabezpieczenie przed ponownym pokazaniem po navigacji
+    window.__DJANGO_MESSAGES__ = [];
+})();
 
 function selectGroupMembers(selectElement) {
     const checkboxes = document.querySelectorAll('#popup-friends-list input[type="checkbox"]');

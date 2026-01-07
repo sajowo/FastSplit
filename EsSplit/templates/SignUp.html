@@ -1,31 +1,91 @@
-<!-- your_app/templates/register.html -->
-
 <!DOCTYPE html>
 <html lang="pl">
 
 <head>
     <meta charset="utf-8">
-    <title>Podziel Rachunek {% block title %}{% endblock %}</title>
+    <title>Rejestracja</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/test.css' %}">
-    <link rel="icon" type="image/x-icon" href="{% static 'img/favv16.png' %}">
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 
-
 <body>
-    <section>
-        <div class="txt_field">
-            <form method="post">
-                <h2>Rejestracja użytkownika</h2>
+    <div class="registration-container">
+        <form method="post" class="registration-form">
 
-                {% csrf_token %}
-                {{ form.as_p }}
-                <button type="submit">Zarejestruj się</button>
-            </form>
-        </div>
+            {% csrf_token %}
+            {{ form.media }}
 
-    </section>
+            <div class="form-row">
+                <div class="input-group">
+                    <label>Imię</label>
+                    <input type="text" name="first_name" required value="{{ form.first_name.value|default_if_none:'' }}"
+                        placeholder="Np. Jan">
+                    {% if form.first_name.errors %}
+                    <div class="error-msg">{{ form.first_name.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="input-group">
+                    <label>Nazwisko</label>
+                    <input type="text" name="last_name" required value="{{ form.last_name.value|default_if_none:'' }}"
+                        placeholder="Kowalski">
+                    {% if form.last_name.errors %}
+                    <div class="error-msg">{{ form.last_name.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="input-group full-width">
+                <label>Adres Email</label>
+                <input type="email" name="email" required value="{{ form.email.value|default_if_none:'' }}"
+                    placeholder="jan.kowalski@poczta.pl">
+                {% if form.email.errors %}
+                <div class="error-msg">{{ form.email.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-row">
+                <div class="input-group">
+                    <label>Hasło</label>
+                    <input type="password" name="password" required placeholder="••••••••">
+                    {% if form.password.errors %}
+                    <div class="error-msg">{{ form.password.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="input-group">
+                    <label>Powtórz hasło</label>
+                    <input type="password" name="password_confirm" required placeholder="••••••••">
+                    {% if form.password_confirm.errors %}
+                    <div class="error-msg">{{ form.password_confirm.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="captcha-container">
+                {{ form.captcha }}
+            </div>
+            {% if form.captcha.errors %}
+            <div class="error-msg" style="text-align: center;">Potwierdź, że nie jesteś robotem.</div>
+            {% endif %}
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="terms" name="terms" required>
+                <label for="terms">
+                    Akceptuję <a href="#" class="link-accent">Regulamin</a> oraz <a href="#"
+                        class="link-accent">Politykę Prywatności</a> serwisu FastSplit.
+                </label>
+            </div>
+
+            <button type="submit" class="submit-btn">Utwórz konto <i class="fas fa-arrow-right"></i></button>
+
+            <div class="login-link">
+                Masz już konto? <a href="{% url 'login' %}">Zaloguj się tutaj</a>
+            </div>
+        </form>
+    </div>
 </body>
 
 </html>
