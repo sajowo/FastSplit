@@ -24,66 +24,77 @@
   {% endif %}
 
   <header>
-    <div class="logo">
-      <img src="{% static 'img/logo.png' %}" alt="Logo" />
-    </div>
+    <div class="header-left">
+      <div class="logo">
+        <img src="{% static 'img/logo.png' %}" alt="Logo" />
+      </div>
 
-    <section class="search-friend">
-      <form method="POST" action="{% url 'search_user' %}">
-        {% csrf_token %}
-        <input type="text" name="username" id="user-search-input" placeholder="Nazwa użytkownika" autocomplete="off" />
-        <button type="submit">
-          <img src="{% static 'img/search.png' %}" alt="szukanie" />
-        </button>
-      </form>
-      <div class="search-results" id="search-results" hidden></div>
-    </section>
-
-    <div class="user-profile">
-      <img src="{% static 'img/profile.png' %}" alt="Profil" />
-      {% if request.user.is_authenticated %}
-      <p>Cześć, {{ request.user.first_name }}</p>
-      <input type="hidden" id="logged-in-user-id" value="{{ request.user.id }}" />
-      <input type="hidden" id="logged-in-user-name" value="{{ request.user.username }}" />
-      <a href="{% url 'logout' %}" class="logout-link">Wyloguj się</a>
-      {% else %}
-      <a href="{% url 'login' %}" class="login-link">Zaloguj się</a>
-      {% endif %}
-    </div>
-
-    <div class="notifications">
-      <button type="button" class="notifications-btn" id="notifications-toggle" aria-expanded="false"
-        aria-controls="notifications-panel">
-        Powiadomienia
-        {% if friend_requests %}
-        <span class="notifications-badge">{{ friend_requests|length }}</span>
-        {% endif %}
-      </button>
-      <div class="notifications-panel" id="notifications-panel" hidden>
-        {% if friend_requests %}
-        <h3 style="margin-top: 0">📬 Masz nowe zaproszenia!</h3>
-        <ul class="notification-list">
-          {% for req in friend_requests %}
-          <li class="notification-item">
-            <span>Użytkownik <strong>{{ req.from_user.username }}</strong> chce Cię dodać do znajomych.</span>
-            <div>
-              <a href="{% url 'handle_request' req.id 'accept' %}" class="btn-accept">Akceptuj</a>
-              <a href="{% url 'handle_request' req.id 'reject' %}" class="btn-reject">Odrzuć</a>
-            </div>
-          </li>
-          {% endfor %}
-        </ul>
+      <div class="user-profile">
+        <img src="{% static 'img/profile.png' %}" alt="Profil" />
+        {% if request.user.is_authenticated %}
+        <p>Cześć, {{ request.user.first_name }}</p>
+        <input type="hidden" id="logged-in-user-id" value="{{ request.user.id }}" />
+        <input type="hidden" id="logged-in-user-name" value="{{ request.user.username }}" />
+        <a href="{% url 'logout' %}" class="logout-link">Wyloguj się</a>
         {% else %}
-        <div class="notifications-empty">Brak powiadomień.</div>
+        <a href="{% url 'login' %}" class="login-link">Zaloguj się</a>
         {% endif %}
+      </div>
+
+      <div class="notifications">
+        <button type="button" class="notifications-btn notifications-icon-btn" id="notifications-toggle"
+          aria-expanded="false" aria-controls="notifications-panel" aria-label="Powiadomienia">
+          <span class="notifications-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" focusable="false" aria-hidden="true">
+              <path d="M12 22a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2Zm6-6V11a6 6 0 1 0-12 0v5l-2 2v1h16v-1l-2-2Z" />
+            </svg>
+          </span>
+          {% if friend_requests %}
+          <span class="notifications-badge">{{ friend_requests|length }}</span>
+          {% endif %}
+        </button>
+        <div class="notifications-panel" id="notifications-panel" hidden>
+          {% if friend_requests %}
+          <h3 style="margin-top: 0">📬 Masz nowe zaproszenia!</h3>
+          <ul class="notification-list">
+            {% for req in friend_requests %}
+            <li class="notification-item">
+              <span>Użytkownik <strong>{{ req.from_user.username }}</strong> chce Cię dodać do znajomych.</span>
+              <div>
+                <a href="{% url 'handle_request' req.id 'accept' %}" class="btn-accept">Akceptuj</a>
+                <a href="{% url 'handle_request' req.id 'reject' %}" class="btn-reject">Odrzuć</a>
+              </div>
+            </li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <div class="notifications-empty">Brak powiadomień.</div>
+          {% endif %}
+        </div>
       </div>
     </div>
 
-    <div class="switch-container">
-      <label class="switch">
-        <input type="checkbox" id="theme-switch" />
-        <span class="slider round"></span>
-      </label>
+    <div class="header-center">
+      <section class="search-friend">
+        <form method="POST" action="{% url 'search_user' %}">
+          {% csrf_token %}
+          <input type="text" name="username" id="user-search-input" placeholder="Nazwa użytkownika"
+            autocomplete="off" />
+          <button type="submit" aria-label="Szukaj">
+            <img src="{% static 'img/search.png' %}" alt="" />
+          </button>
+        </form>
+        <div class="search-results" id="search-results" hidden></div>
+      </section>
+    </div>
+
+    <div class="header-right">
+      <div class="switch-container">
+        <label class="switch">
+          <input type="checkbox" id="theme-switch" />
+          <span class="slider round"></span>
+        </label>
+      </div>
     </div>
   </header>
 

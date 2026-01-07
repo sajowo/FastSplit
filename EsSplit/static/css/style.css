@@ -26,6 +26,29 @@ header {
   z-index: 100;
 }
 
+.header-left,
+.header-center,
+.header-right {
+  display: flex;
+  align-items: center;
+}
+
+.header-left {
+  gap: 12px;
+  min-width: 0;
+}
+
+.header-center {
+  flex: 1;
+  justify-content: center;
+  padding: 0 16px;
+  min-width: 0;
+}
+
+.header-right {
+  gap: 12px;
+}
+
 .logo {
   width: 50px;
   height: 50px;
@@ -41,20 +64,24 @@ header {
 .search-friend {
   display: flex;
   align-items: center;
-  margin-right: 20px;
   position: relative;
+}
+
+.header-center .search-friend {
+  width: min(520px, 100%);
 }
 
 .search-friend form {
   display: flex;
   align-items: center;
+  width: 100%;
 }
 
 .search-friend input[type="text"] {
   padding: 10px;
   border: none;
   border-radius: 5px;
-  width: 150px;
+  width: 100%;
   background-color: #fff;
   color: #3f51b5;
   vertical-align: middle;
@@ -157,8 +184,7 @@ header {
   position: relative;
   display: flex;
   align-items: center;
-  margin-right: 20px;
-  background-color: #3f51b5;
+  background-color: transparent;
   color: #fff;
   border: none;
   cursor: pointer;
@@ -168,7 +194,7 @@ header {
 }
 
 .user-profile:hover {
-  background-color: #303f9f;
+  background-color: rgba(255, 255, 255, 0.14);
   transform: scale(1.05);
 }
 
@@ -207,7 +233,7 @@ header {
 
 /* Switch Motywu */
 .switch-container {
-  margin-right: 20px;
+  margin-right: 0;
 }
 
 .switch {
@@ -305,7 +331,7 @@ main {
 /* --- POWIADOMIENIA (PRZYCISK W HEADERZE) --- */
 .notifications {
   position: relative;
-  margin-right: 20px;
+  margin-right: 0;
 }
 
 .notifications-btn {
@@ -322,13 +348,33 @@ main {
   transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
+.notifications-icon-btn {
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  justify-content: center;
+  position: relative;
+}
+
+.notifications-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notifications-icon-btn .notifications-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+}
+
 .notifications-btn:hover {
   background-color: #303f9f;
   transform: scale(1.03);
 }
 
 .notifications-badge {
-  min-width: 22px;
+  background-color: transparent;
   height: 22px;
   padding: 0 7px;
   border-radius: 999px;
@@ -337,14 +383,15 @@ main {
   font-size: 12px;
   font-weight: 700;
   display: inline-flex;
-  align-items: center;
+  background-color: rgba(255, 255, 255, 0.14);
   justify-content: center;
   line-height: 1;
 }
 
 .notifications-panel {
   position: absolute;
-  right: 0;
+  left: 0;
+  right: auto;
   top: calc(100% + 10px);
   width: 380px;
   max-width: calc(100vw - 30px);
@@ -842,7 +889,17 @@ body.dark-theme {
 }
 
 body.dark-theme header {
-  background-color: #383838;
+  background-color: #303f9f;
+}
+
+body.dark-theme .user-profile,
+body.dark-theme .notifications-btn {
+  background-color: transparent;
+}
+
+body.dark-theme .user-profile:hover,
+body.dark-theme .notifications-btn:hover {
+  background-color: rgba(255, 255, 255, 0.12);
 }
 
 /* Tu miałeś szary w swojej wersji */
@@ -850,8 +907,9 @@ body.dark-theme .create-spill,
 body.dark-theme .friends-list,
 body.dark-theme .split-item,
 body.dark-theme .stat-card {
-  background-color: #383838;
+  background-color: #2f2f2f;
   color: #ddd;
+  border-color: rgba(255, 255, 255, 0.10);
 }
 
 body.dark-theme .split-item h3,
@@ -864,9 +922,21 @@ body.dark-theme .create-spill button[type="submit"] {
   color: #ddd;
 }
 
+body.dark-theme #choose-friends-button {
+  background-color: #3f51b5;
+  color: #fff;
+}
+
+body.dark-theme #choose-friends-button:hover,
+body.dark-theme .create-spill button[type="submit"]:hover {
+  background-color: #2196f3;
+}
+
 body.dark-theme #friends-list div {
   background-color: #383838;
   color: #ddd;
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
 }
 
 body.dark-theme .create-spill input[type="number"],
@@ -874,6 +944,10 @@ body.dark-theme .create-spill input[type="text"] {
   background: #383838;
   color: #ddd;
   border-color: rgba(255, 255, 255, 0.12);
+}
+
+body.dark-theme .create-spill input::placeholder {
+  color: rgba(221, 221, 221, 0.7);
 }
 
 body.dark-theme .split-details-box {
@@ -886,4 +960,95 @@ body.dark-theme .action-link {
   background: #383838;
   border-color: rgba(255, 255, 255, 0.12);
   color: #ddd;
+}
+
+body.dark-theme .split-status,
+body.dark-theme .split-date {
+  color: rgba(221, 221, 221, 0.75);
+}
+
+/* Wewnętrzne panele w środkowej kolumnie (żeby nie zostawały białe) */
+body.dark-theme .friends-container,
+body.dark-theme .create-group-container {
+  background: #383838;
+  color: #ddd;
+  border-color: rgba(255, 255, 255, 0.10);
+}
+
+body.dark-theme .create-group-container input[type="text"] {
+  background: #2f2f2f;
+  color: #ddd;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+body.dark-theme .group-members-list {
+  background: #2f2f2f;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+body.dark-theme .btn-create-group {
+  background: #2f2f2f;
+  color: #ddd;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Header: wyszukiwarka + dropdown */
+body.dark-theme .search-friend input[type="text"] {
+  background-color: #383838;
+  color: #ddd;
+}
+
+body.dark-theme .search-friend input[type="text"]::placeholder {
+  color: rgba(221, 221, 221, 0.7);
+}
+
+body.dark-theme .search-results {
+  background: #383838;
+  color: #ddd;
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+}
+
+body.dark-theme .search-result-item {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+body.dark-theme .search-result-item:hover {
+  background: #2f2f2f;
+}
+
+body.dark-theme .search-result-name,
+body.dark-theme .search-result-status {
+  color: #ddd;
+}
+
+/* Profil: dropdown wyloguj */
+body.dark-theme .user-profile .logout-link {
+  background-color: #383838;
+  color: #ddd;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* Powiadomienia */
+body.dark-theme .notifications-panel {
+  background: #383838;
+  color: #ddd;
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+}
+
+body.dark-theme .notifications-panel .notification-item {
+  background: #2f2f2f;
+  border-color: rgba(255, 255, 255, 0.10);
+}
+
+body.dark-theme .notifications-empty {
+  color: rgba(221, 221, 221, 0.75);
+}
+
+/* Popup wyboru znajomych */
+body.dark-theme #popup-container {
+  background-color: #383838;
+  color: #ddd;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
 }

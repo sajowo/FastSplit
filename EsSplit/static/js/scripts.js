@@ -34,7 +34,57 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const themeSwitch = document.getElementById('theme-switch');
     const body = document.body;
-    if (themeSwitch) themeSwitch.addEventListener('change', () => body.classList.toggle('dark-theme'));
+
+    const THEME_STORAGE_KEY = 'fastsplit_theme'; // 'dark' | 'light'
+
+    const setTheme = (isDark) => {
+        body.classList.toggle('dark-theme', Boolean(isDark));
+        if (themeSwitch) themeSwitch.checked = Boolean(isDark);
+    };
+
+    const getAutoTheme = () => {
+        // 1) Preferencja systemowa
+        if (window.matchMedia) {
+            try {
+                return window.matchMedia('(prefers-color-scheme: dark)').matches;
+            } catch (e) {
+                // ignore
+            }
+        }
+
+        // 2) Fallback "po zachodzie" (prosty): noc wg czasu lokalnego
+        const hour = new Date().getHours();
+        return hour >= 20 || hour < 6;
+    };
+
+    const initTheme = () => {
+        let saved = null;
+        try {
+            saved = localStorage.getItem(THEME_STORAGE_KEY);
+        } catch (e) {
+            // ignore
+        }
+
+        if (saved === 'dark') return setTheme(true);
+        if (saved === 'light') return setTheme(false);
+
+        // Brak ręcznej preferencji → auto
+        setTheme(getAutoTheme());
+    };
+
+    initTheme();
+
+    if (themeSwitch) {
+        themeSwitch.addEventListener('change', () => {
+            const isDark = themeSwitch.checked;
+            setTheme(isDark);
+            try {
+                localStorage.setItem(THEME_STORAGE_KEY, isDark ? 'dark' : 'light');
+            } catch (e) {
+                // ignore
+            }
+        });
+    }
 
     // --- POWIADOMIENIA (panel w headerze) ---
     const notificationsToggle = document.getElementById('notifications-toggle');
