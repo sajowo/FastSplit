@@ -444,13 +444,24 @@ document.addEventListener('DOMContentLoaded', function () {
         const activeKey = activeId != null ? String(activeId) : null;
         if (activeKey && lockActive) lockId(activeKey);
 
+        // Gdy wszyscy są "locked", zmiana aktywnej osoby nie ma gdzie się zbilansować,
+        // więc UI wygląda jakby suwak był zablokowany (wartość natychmiast wraca).
+        // Rozwiązanie: w tej iteracji traktujemy jedną INNĄ osobę jako balansującą
+        // (tymczasowo "odmrażamy" ją), żeby aktywny suwak dało się zmniejszać/zwiększać.
+        const effectiveLocked = new Set(lockedFriendIds);
+        if (pairs.length > 1 && effectiveLocked.size === pairs.length) {
+            const fallbackId = pairs.find((p) => p.id !== activeKey)?.id || null;
+            const balancingId = lockOrder.find((id) => id !== activeKey) || fallbackId;
+            if (balancingId) effectiveLocked.delete(String(balancingId));
+        }
+
         if (activeKey && activeCents != null) {
             const v = Math.max(0, Math.min(Number(activeCents) || 0, totalCents));
             values.set(activeKey, v);
         }
 
-        // Suma "zamrożonych"
-        const lockedIds = Array.from(lockedFriendIds);
+        // Suma "zamrożonych" (efektywnie; z ewentualnym balansującym wyjątkiem)
+        const lockedIds = Array.from(effectiveLocked);
         let lockedSum = 0;
         lockedIds.forEach((id) => {
             lockedSum += values.get(id) || 0;
@@ -476,7 +487,7 @@ document.addEventListener('DOMContentLoaded', function () {
         let remaining = totalCents - lockedSum;
         if (remaining < 0) remaining = 0;
 
-        const unlocked = pairs.filter((p) => !lockedFriendIds.has(p.id));
+        const unlocked = pairs.filter((p) => !effectiveLocked.has(p.id));
 
         if (unlocked.length > 0) {
             const currentUnlockedSum = unlocked.reduce((sum, p) => sum + (values.get(p.id) || 0), 0);
