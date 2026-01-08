@@ -23,245 +23,332 @@
   </script>
   {% endif %}
 
-  <header>
-    <div class="header-left">
-      <div class="logo">
-        <img src="{% static 'img/logo.png' %}" alt="Logo" />
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="topbar-left">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">
+            <img class="brand-logo" src="{% static 'img/logo.png' %}" alt="" aria-hidden="true" />
+          </div>
+        </div>
+
+        <section class="search-friend topbar-search">
+          <form method="POST" action="{% url 'search_user' %}">
+            {% csrf_token %}
+            <span class="search-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" focusable="false" aria-hidden="true">
+                <path
+                  d="M10 2a8 8 0 1 0 4.9 14.3l4.4 4.4 1.4-1.4-4.4-4.4A8 8 0 0 0 10 2Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z" />
+              </svg>
+            </span>
+            <input type="text" name="username" id="user-search-input" placeholder="Szukaj użytkownika..."
+              autocomplete="off" />
+            <button type="submit" aria-label="Szukaj" class="search-submit">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" focusable="false" aria-hidden="true">
+                <path
+                  d="M10 2a8 8 0 1 0 4.9 14.3l4.4 4.4 1.4-1.4-4.4-4.4A8 8 0 0 0 10 2Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z" />
+              </svg>
+            </button>
+          </form>
+          <div class="search-results" id="search-results" hidden></div>
+        </section>
       </div>
 
-      <div class="user-profile">
-        <img src="{% static 'img/profile.png' %}" alt="Profil" />
-        {% if request.user.is_authenticated %}
-        <p>Cześć, {{ request.user.first_name }}</p>
-        <input type="hidden" id="logged-in-user-id" value="{{ request.user.id }}" />
-        <input type="hidden" id="logged-in-user-name" value="{{ request.user.username }}" />
-        <a href="{% url 'logout' %}" class="logout-link">Wyloguj się</a>
-        {% else %}
-        <a href="{% url 'login' %}" class="login-link">Zaloguj się</a>
-        {% endif %}
-      </div>
+      <div class="topbar-right">
+        <div class="notifications">
+          <button type="button" class="icon-btn" id="notifications-toggle" aria-expanded="false"
+            aria-controls="notifications-panel" aria-label="Powiadomienia">
+            <span class="notifications-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" focusable="false" aria-hidden="true">
+                <path d="M12 22a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2Zm6-6V11a6 6 0 1 0-12 0v5l-2 2v1h16v-1l-2-2Z" />
+              </svg>
+            </span>
+            {% if notifications_count %}
+            <span class="notifications-badge" id="notifications-badge">{{ notifications_count }}</span>
+            {% else %}
+            <span class="notifications-badge" id="notifications-badge" hidden>0</span>
+            {% endif %}
+          </button>
+          <div class="notifications-panel" id="notifications-panel" hidden>
+            <h3 style="margin-top: 0">Powiadomienia</h3>
 
-      <div class="notifications">
-        <button type="button" class="notifications-btn notifications-icon-btn" id="notifications-toggle"
-          aria-expanded="false" aria-controls="notifications-panel" aria-label="Powiadomienia">
-          <span class="notifications-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" focusable="false" aria-hidden="true">
-              <path d="M12 22a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2Zm6-6V11a6 6 0 1 0-12 0v5l-2 2v1h16v-1l-2-2Z" />
-            </svg>
-          </span>
-          {% if notifications_count %}
-          <span class="notifications-badge" id="notifications-badge">{{ notifications_count }}</span>
+            {% if friend_requests %}
+            <div style="margin: 10px 0 6px 0; font-weight: 700;">Zaproszenia do znajomych</div>
+            <ul class="notification-list">
+              {% for req in friend_requests %}
+              <li class="notification-item">
+                <span>Użytkownik <strong>{{ req.from_user.username }}</strong> chce Cię dodać do znajomych.</span>
+                <div>
+                  <a href="{% url 'handle_request' req.id 'accept' %}" class="btn-accept">Akceptuj</a>
+                  <a href="{% url 'handle_request' req.id 'reject' %}" class="btn-reject">Odrzuć</a>
+                </div>
+              </li>
+              {% endfor %}
+            </ul>
+            {% endif %}
+
+            {% if paid_bill_shares_for_creator %}
+            <div style="margin: 10px 0 6px 0; font-weight: 700;">Opłacone udziały</div>
+            <ul class="notification-list">
+              {% for share in paid_bill_shares_for_creator %}
+              <li class="notification-item">
+                <span>
+                  Użytkownik <strong>{{ share.user.username }}</strong> opłacił udział w rozliczeniu:
+                  <strong>{{ share.bill.description }}</strong>
+                </span>
+              </li>
+              {% endfor %}
+            </ul>
+            {% endif %}
+
+            {% if rejected_bill_shares_for_creator %}
+            <div style="margin: 10px 0 6px 0; font-weight: 700;">Odrzucone udziały</div>
+            <ul class="notification-list">
+              {% for share in rejected_bill_shares_for_creator %}
+              <li class="notification-item">
+                <span>
+                  Użytkownik <strong>{{ share.user.username }}</strong> odrzucił udział w rozliczeniu:
+                  <strong>{{ share.bill.description }}</strong>
+                </span>
+              </li>
+              {% endfor %}
+            </ul>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="switch-container">
+          <label class="switch" aria-label="Tryb ciemny">
+            <input type="checkbox" id="theme-switch" />
+            <span class="slider round"></span>
+          </label>
+        </div>
+
+        <div class="user-chip">
+          {% if request.user.is_authenticated %}
+          <div class="user-meta">
+            <div class="user-name">{{ request.user.first_name|default:request.user.username }}</div>
+          </div>
+          <div class="user-avatar">{{ request.user.username|slice:":2"|upper }}</div>
+          <input type="hidden" id="logged-in-user-id" value="{{ request.user.id }}" />
+          <input type="hidden" id="logged-in-user-name" value="{{ request.user.username }}" />
+          <a href="{% url 'logout' %}" class="logout-link">Wyloguj się</a>
           {% else %}
-          <span class="notifications-badge" id="notifications-badge" hidden>0</span>
-          {% endif %}
-        </button>
-        <div class="notifications-panel" id="notifications-panel" hidden>
-          <h3 style="margin-top: 0">Powiadomienia</h3>
-
-          {% if friend_requests %}
-          <div style="margin: 10px 0 6px 0; font-weight: 700;">Zaproszenia do znajomych</div>
-          <ul class="notification-list">
-            {% for req in friend_requests %}
-            <li class="notification-item">
-              <span>Użytkownik <strong>{{ req.from_user.username }}</strong> chce Cię dodać do znajomych.</span>
-              <div>
-                <a href="{% url 'handle_request' req.id 'accept' %}" class="btn-accept">Akceptuj</a>
-                <a href="{% url 'handle_request' req.id 'reject' %}" class="btn-reject">Odrzuć</a>
-              </div>
-            </li>
-            {% endfor %}
-          </ul>
-          {% endif %}
-
-          {% if paid_bill_shares_for_creator %}
-          <div style="margin: 10px 0 6px 0; font-weight: 700;">Opłacone udziały</div>
-          <ul class="notification-list">
-            {% for share in paid_bill_shares_for_creator %}
-            <li class="notification-item">
-              <span>
-                Użytkownik <strong>{{ share.user.username }}</strong> opłacił udział w rozliczeniu:
-                <strong>{{ share.bill.description }}</strong>
-              </span>
-            </li>
-            {% endfor %}
-          </ul>
-          {% endif %}
-
-          {% if rejected_bill_shares_for_creator %}
-          <div style="margin: 10px 0 6px 0; font-weight: 700;">Odrzucone udziały</div>
-          <ul class="notification-list">
-            {% for share in rejected_bill_shares_for_creator %}
-            <li class="notification-item">
-              <span>
-                Użytkownik <strong>{{ share.user.username }}</strong> odrzucił udział w rozliczeniu:
-                <strong>{{ share.bill.description }}</strong>
-              </span>
-            </li>
-            {% endfor %}
-          </ul>
+          <a href="{% url 'login' %}" class="login-link">Zaloguj się</a>
           {% endif %}
         </div>
-      </div>
-    </div>
-
-    <div class="header-center">
-      <section class="search-friend">
-        <form method="POST" action="{% url 'search_user' %}">
-          {% csrf_token %}
-          <input type="text" name="username" id="user-search-input" placeholder="Nazwa użytkownika"
-            autocomplete="off" />
-          <button type="submit" aria-label="Szukaj">
-            <img src="{% static 'img/search.png' %}" alt="" />
-          </button>
-        </form>
-        <div class="search-results" id="search-results" hidden></div>
-      </section>
-    </div>
-
-    <div class="header-right">
-      <div class="switch-container">
-        <label class="switch">
-          <input type="checkbox" id="theme-switch" />
-          <span class="slider round"></span>
-        </label>
       </div>
     </div>
   </header>
 
-  <main>
-    <section class="split-request">
+  <main class="dashboard-main">
+    <div class="dashboard-container">
+      <section class="dashboard-grid">
 
-      <div class="create-spill">
-        <h2>Utwórz podział</h2>
-        <form id="split-form" action="#" method="POST">
-          {% csrf_token %}
-          <div id="selected-friends"></div>
+        <div class="dashboard-col dashboard-left">
+          <section class="create-spill dashboard-card">
+            <h2>Utwórz podział</h2>
+            <form id="split-form" action="#" method="POST">
+              {% csrf_token %}
+              <div id="selected-friends"></div>
 
-          <div class="form-group">
-            <label for="bill-name">Nazwa rachunku:</label>
-            <input type="text" id="bill-name" name="bill_name" placeholder="np. Pizza, Paliwo" required />
-          </div>
+              <div class="form-group">
+                <label for="bill-name">Nazwa rachunku:</label>
+                <input type="text" id="bill-name" name="bill_name" placeholder="np. Pizza, Paliwo" required />
+              </div>
 
-          <div class="form-group">
-            <label for="amount">Kwota do podziału:</label>
-            <input type="number" id="amount" name="amount" step="0.01" min="0" placeholder="Wpisz kwotę" />
-          </div>
-          <div class="form-group">
-            <label for="tip">Napiwek (%):</label>
-            <input type="number" id="tip" name="tip" step="0.01" min="0" placeholder="Wpisz procent napiwku" />
-          </div>
-          <div id="split-details"></div>
-          <button type="button" id="choose-friends-button">Wybierz znajomych</button>
-          <button type="submit">Utwórz podział</button>
-        </form>
-        <div id="spill-results"></div>
-      </div>
+              <div class="form-group">
+                <label for="amount">Kwota do podziału:</label>
+                <input type="number" id="amount" name="amount" step="0.01" min="0" placeholder="Wpisz kwotę" />
+              </div>
+              <div class="form-group">
+                <label for="tip">Napiwek (%):</label>
+                <input type="number" id="tip" name="tip" step="0.01" min="0" placeholder="Wpisz procent napiwku" />
+              </div>
+              <div id="split-details"></div>
+              <button type="button" id="choose-friends-button">Wybierz znajomych</button>
+              <button type="submit">Utwórz podział</button>
+            </form>
+            <div id="spill-results"></div>
+          </section>
 
-      <section class="friends-list">
-        <div class="friends-container">
-          <h2>Lista znajomych</h2>
-          <div id="friends-list">
-            {% if friends %}
-            {% for friend in friends %}
-            <div draggable="true" id="friend-{{ friend.id }}">
-              {{ friend.friend_account.username }}
+          <section class="friends-list dashboard-card">
+            <div class="friends-container">
+              <h2>Lista znajomych</h2>
+              <div id="friends-list">
+                {% if friends %}
+                {% for friend in friends %}
+                <div draggable="true" id="friend-{{ friend.id }}">
+                  {{ friend.friend_account.username }}
+                </div>
+                {% endfor %}
+                {% else %}
+                <div>Brak znajomych.</div>
+                {% endif %}
+              </div>
             </div>
-            {% endfor %}
-            {% else %}
-            <div>Brak znajomych.</div>
-            {% endif %}
-          </div>
+
+            <div class="create-group-container">
+              <h3>Stwórz nową grupę</h3>
+              <form action="{% url 'create_group' %}" method="POST">
+                {% csrf_token %}
+                <input type="text" name="group_name" placeholder="Nazwa grupy (np. Wakacje)" required />
+                <div class="group-members-list">
+                  <p style="margin-top: 0; font-size: 0.9em; color: grey">Wybierz członków:</p>
+                  {% if friends %}
+                  {% for friend in friends %}
+                  <label style="display: block; margin-bottom: 5px; cursor: pointer">
+                    <input type="checkbox" name="group_members" value="{{ friend.friend_account.id }}" />
+                    {{ friend.friend_account.username }}
+                  </label>
+                  {% endfor %}
+                  {% else %}
+                  <p>Brak znajomych do dodania.</p>
+                  {% endif %}
+                </div>
+                <button type="submit" class="btn-create-group">Utwórz grupę</button>
+              </form>
+            </div>
+          </section>
         </div>
 
-        <div class="create-group-container">
-          <h3>Stwórz nową grupę</h3>
-          <form action="{% url 'create_group' %}" method="POST">
-            {% csrf_token %}
-            <input type="text" name="group_name" placeholder="Nazwa grupy (np. Wakacje)" required />
-            <div class="group-members-list">
-              <p style="margin-top: 0; font-size: 0.9em; color: grey">Wybierz członków:</p>
-              {% if friends %}
-              {% for friend in friends %}
-              <label style="display: block; margin-bottom: 5px; cursor: pointer">
-                <input type="checkbox" name="group_members" value="{{ friend.friend_account.id }}" />
-                {{ friend.friend_account.username }}
-              </label>
+        <section class="my-waiting dashboard-card dashboard-center">
+          <h2>Moje rozliczenia (czekam na innych)</h2>
+          {% if my_waiting_bills %}
+          {% for bill in my_waiting_bills %}
+          <div class="split-item bill-pending my-waiting-item">
+            <h3>
+              {{ bill.description }}
+              {% if bill.waiting_rejected %}
+              <small class="split-status">({{ bill.waiting_paid }}/{{ bill.waiting_total }} opłacone, {{
+                bill.waiting_rejected|length }} odrzucone)</small>
+              {% else %}
+              <small class="split-status">({{ bill.waiting_paid }}/{{ bill.waiting_total }} opłacone)</small>
+              {% endif %}
+            </h3>
+            <p><strong>{{ bill.amount }} PLN (Całość)</strong></p>
+
+            {% if bill.waiting_paid_shares %}
+            <div class="split-details-box">
+              <strong>Opłacili:</strong>
+              <ul class="split-details-list">
+                {% for s in bill.waiting_paid_shares %}
+                <li>
+                  <span class="share-marker share-paid" aria-hidden="true">✅</span>
+                  {{ s.user.username }}
+                </li>
+                {% endfor %}
+              </ul>
+            </div>
+            {% endif %}
+
+            {% if bill.waiting_unpaid %}
+            <div class="split-details-box">
+              <strong>Oczekuję na:</strong>
+              <ul class="split-details-list">
+                {% for s in bill.waiting_unpaid %}
+                <li>
+                  <span class="share-marker share-pending" aria-hidden="true">⏳</span>
+                  {{ s.user.username }}
+                </li>
+                {% endfor %}
+              </ul>
+            </div>
+            {% endif %}
+
+            {% if bill.waiting_rejected %}
+            <div class="split-details-box">
+              <strong>Odrzucili:</strong>
+              <ul class="split-details-list">
+                {% for s in bill.waiting_rejected %}
+                <li>
+                  <span class="share-marker share-rejected" aria-hidden="true">❌</span>
+                  {{ s.user.username }}
+                </li>
+                {% endfor %}
+              </ul>
+            </div>
+            {% endif %}
+
+            <p class="split-date">{{ bill.date|date:"d M Y, H:i" }}</p>
+
+            <div class="actions">
+              <a href="{% url 'update_bill' bill.id 'PAID' %}" class="action-link action-positive">✅ Sfinalizuj</a>
+              <a href="{% url 'update_bill' bill.id 'REJECTED' %}" class="action-link action-negative">❌ Odrzuć</a>
+            </div>
+          </div>
+          {% endfor %}
+          {% else %}
+          <div>Brak oczekujących rozliczeń.</div>
+          {% endif %}
+        </section>
+
+        <aside class="right-panel dashboard-right">
+          <div class="stats-row">
+            <div class="stat-card stat-card-receive">
+              <p class="stat-label">Do odebrania</p>
+              <p class="stat-value">{{ amount_to_receive|floatformat:2 }} <span>PLN</span></p>
+            </div>
+            <div class="stat-card stat-card-pay">
+              <p class="stat-label">Do zapłacenia</p>
+              <p class="stat-value">{{ amount_to_pay|floatformat:2 }} <span>PLN</span></p>
+            </div>
+          </div>
+
+          <div class="right-section">
+            <h2>Do opłacenia</h2>
+            <div class="right-scroll right-todo">
+              {% if todo_bills %}
+              {% for bill in todo_bills %}
+              <div class="split-item bill-pending">
+                <h3>
+                  {{ bill.creator.username }}
+                  <small class="split-status">(Oczekujący)</small>
+                </h3>
+                <p>{{ bill.description }} - <strong>{{ bill.display_amount }}</strong></p>
+                <p class="split-date">{{ bill.date|date:"d M Y, H:i" }}</p>
+                <div class="actions">
+                  <form action="{% url 'pay_bill_share' bill.id %}" method="POST" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="action-link action-positive">💸 Opłać</button>
+                  </form>
+                  <form action="{% url 'reject_bill_share' bill.id %}" method="POST" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="action-link action-negative">❌ Odrzuć</button>
+                  </form>
+                </div>
+              </div>
               {% endfor %}
               {% else %}
-              <p>Brak znajomych do dodania.</p>
+              <div>Brak rachunków do opłacenia.</div>
               {% endif %}
             </div>
-            <button type="submit" class="btn-create-group">Utwórz grupę</button>
-          </form>
-        </div>
-      </section>
+          </div>
 
-      <div class="recent-splits">
-        <h2>Ostatnie rozliczenia</h2>
-        {% if participated_bills %}
-        {% for bill in participated_bills %}
-        <div
-          class="split-item {% if bill.user_effective_status == 'PAID' %}bill-paid{% elif bill.user_effective_status == 'REJECTED' %}bill-rejected{% else %}bill-pending{% endif %}">
-          <h3>
-            {{ bill.creator.username }}
-            <small class="split-status">({{ bill.user_status_label }})</small>
-          </h3>
-          <p>{{ bill.description }} - <strong>{{ bill.display_amount|default:bill.amount_per_person }}</strong></p>
-
-          {% if bill.debtors_list %}
-          <div class="split-details-box">
-            <strong>Szczegóły podziału:</strong>
-            <ul class="split-details-list">
-              {% for share in bill.debtors_list %}
-              <li>{{ share.user.username }}: <strong>{{ share.amount_owed }} PLN</strong></li>
+          <div class="right-section" style="margin-top: 18px;">
+            <h2>Historia (ostatnie 8)</h2>
+            <div class="right-scroll right-history">
+              {% if history_bills %}
+              {% for bill in history_bills %}
+              <div
+                class="split-item {% if bill.user_effective_status == 'PAID' %}bill-paid{% elif bill.user_effective_status == 'REJECTED' %}bill-rejected{% else %}bill-pending{% endif %}">
+                <h3>
+                  {{ bill.creator.username }}
+                  <small class="split-status">({{ bill.user_status_label }})</small>
+                </h3>
+                <p>{{ bill.description }} - <strong>{{ bill.display_amount|default:bill.amount_per_person }}</strong>
+                </p>
+                <p class="split-date">{{ bill.date|date:"d M Y, H:i" }}</p>
+              </div>
               {% endfor %}
-            </ul>
+              {% else %}
+              <div>Brak historii.</div>
+              {% endif %}
+            </div>
           </div>
-          {% endif %}
-
-          <p class="split-date">{{ bill.date|date:"d M Y, H:i" }}</p>
-
-          <div class="actions">
-            {% if bill.user_effective_status == 'PENDING' %}
-            {% if request.user == bill.creator %}
-            <a href="{% url 'update_bill' bill.id 'PAID' %}" class="action-link action-positive">✅ Sfinalizuj</a>
-            <a href="{% url 'update_bill' bill.id 'REJECTED' %}" class="action-link action-negative">❌ Odrzuć</a>
-            {% else %}
-            {% if not bill.user_share_rejected %}
-            {% if not bill.user_share_paid %}
-            <form action="{% url 'pay_bill_share' bill.id %}" method="POST" style="display:inline;">
-              {% csrf_token %}
-              <button type="submit" class="action-link action-positive">💸 Opłać</button>
-            </form>
-            <form action="{% url 'reject_bill_share' bill.id %}" method="POST" style="display:inline;">
-              {% csrf_token %}
-              <button type="submit" class="action-link action-negative">❌ Odrzuć udział</button>
-            </form>
-            {% else %}
-            <span class="action-text action-positive">Opłacono</span>
-            {% endif %}
-            {% else %}
-            <span class="action-text action-negative">Odrzucono udział</span>
-            {% endif %}
-            {% endif %}
-            {% elif bill.user_effective_status == 'REJECTED' %}
-            {% if request.user == bill.creator %}
-            <span class="action-text action-negative">Rachunek odrzucony</span>
-            <a href="{% url 'update_bill' bill.id 'PENDING' %}" class="action-link">↺ Przywróć</a>
-            {% else %}
-            <span class="action-text action-negative">Odrzucono udział</span>
-            {% endif %}
-            {% elif bill.user_effective_status == 'PAID' %}
-            <span class="action-text action-positive">Sfinalizowano</span>
-            {% endif %}
-          </div>
-        </div>
-        {% endfor %}
-        {% else %}
-        <div>Brak rozliczeń.</div>
-        {% endif %}
-      </div>
-    </section>
+        </aside>
+      </section>
+    </div>
   </main>
 
   <div id="popup-container" style="display:none;">

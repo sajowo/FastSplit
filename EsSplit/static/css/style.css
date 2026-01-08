@@ -11,8 +11,548 @@ body {
   overflow: hidden;
 }
 
-/* --- HEADER --- */
+/* --- DASHBOARD (SplitIt-style) --- */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 120;
+  height: 80px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  background: #3f51b5;
+  color: #fff;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.topbar-inner {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.topbar-left,
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.brand-mark {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: transparent;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: none;
+}
+
+.brand-logo {
+  width: 40px;
+  height: 40px;
+  display: block;
+}
+
+.brand-title {
+  font-size: 18px;
+}
+
+.icon-btn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: inherit;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+}
+
+.icon-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-left: 16px;
+  border-left: 1px solid rgba(0, 0, 0, 0.10);
+}
+
+.user-meta {
+  display: none;
+  text-align: right;
+}
+
+.user-name {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.user-plan {
+  font-size: 11px;
+  opacity: 0.65;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  color: #fff;
+  background: linear-gradient(135deg, #3f51b5, #8e24aa);
+  box-shadow: 0 0 0 3px rgba(63, 81, 181, 0.16);
+}
+
+@media (min-width: 640px) {
+  .user-meta {
+    display: block;
+  }
+}
+
+/* Nadpisanie starego headera (by nie trzymał fixed + innego paddingu) */
 header {
+  position: sticky;
+  left: auto;
+  width: auto;
+}
+
+.topbar .switch-container {
+  margin-right: 0;
+}
+
+.topbar .switch {
+  width: 54px;
+  height: 30px;
+}
+
+.topbar .slider:before {
+  height: 22px;
+  width: 22px;
+  left: 4px;
+  bottom: 4px;
+}
+
+.topbar input:checked+.slider:before {
+  transform: translateX(24px);
+}
+
+.topbar-search {
+  position: relative;
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .topbar-search {
+    display: block;
+  }
+}
+
+.topbar-search form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.topbar-search .search-icon {
+  color: rgba(229, 231, 235, 0.70);
+  display: inline-flex;
+}
+
+.topbar-search input[type="text"] {
+  width: 280px;
+  max-width: 34vw;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 0;
+  color: inherit;
+}
+
+.topbar-search input[type="text"]::placeholder {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.topbar-search form:focus-within {
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.topbar-search .search-submit {
+  border: none;
+  background: transparent;
+  color: rgba(229, 231, 235, 0.70);
+  cursor: pointer;
+  padding: 0;
+  display: inline-flex;
+}
+
+.dashboard-main {
+  height: calc(100vh - 80px);
+  overflow: hidden;
+}
+
+.dashboard-container {
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 20px 16px;
+  height: 100%;
+  overflow: hidden;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: minmax(0, 1fr);
+  gap: 24px;
+  height: 100%;
+  align-items: stretch;
+}
+
+@media (min-width: 1024px) {
+  .dashboard-grid {
+    grid-template-columns: 2.6fr 6.2fr 3.2fr;
+    align-items: stretch;
+  }
+}
+
+/* Dashboard: spójne kafle list (żeby nie były białe w dark mode) */
+.dashboard-main .split-item {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.dashboard-main .split-item h3,
+.dashboard-main .split-item p {
+  color: inherit;
+}
+
+.dashboard-main .split-details-box {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.06);
+  color: inherit;
+}
+
+body.dark-theme .dashboard-main .split-item {
+  background: rgba(17, 24, 39, 0.72);
+  border-color: rgba(148, 163, 184, 0.16);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+body.dark-theme .dashboard-main .split-details-box {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(148, 163, 184, 0.14);
+  color: rgba(229, 231, 235, 0.92);
+}
+
+.dashboard-col {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-height: 0;
+}
+
+.dashboard-card {
+  border-radius: 18px;
+  padding: 20px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+}
+
+.dashboard-left,
+.dashboard-center,
+.dashboard-right {
+  min-height: 0;
+}
+
+.dashboard-left {
+  overflow: auto;
+  padding-right: 6px;
+}
+
+.dashboard-center {
+  overflow: auto;
+  padding-right: 6px;
+}
+
+.dashboard-right {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* Prawa kolumna: dwie sekcje po ~2 karty i scroll w środku */
+.right-section {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.right-scroll {
+  overflow-y: auto;
+  padding-right: 6px;
+  min-height: 0;
+}
+
+/* ok. 2 karty widoczne (wysokość przybliżona), reszta scroll */
+.right-todo {
+  max-height: 340px;
+}
+
+.right-history {
+  max-height: 340px;
+}
+
+.stats-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.stat-card {
+  border-radius: 18px;
+  padding: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.10);
+}
+
+.stat-label {
+  margin: 0 0 6px 0;
+  font-size: 12px;
+  font-weight: 700;
+  opacity: 0.85;
+}
+
+.stat-value {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.stat-value span {
+  font-size: 12px;
+  font-weight: 800;
+  opacity: 0.8;
+}
+
+.stat-card-receive {
+  background: rgba(76, 175, 80, 0.06);
+  border-color: rgba(76, 175, 80, 0.20);
+}
+
+.stat-card-receive .stat-label,
+.stat-card-receive .stat-value {
+  color: #2e7d32;
+}
+
+.stat-card-pay {
+  background: rgba(255, 193, 7, 0.08);
+  border-color: rgba(255, 193, 7, 0.22);
+}
+
+.stat-card-pay .stat-label,
+.stat-card-pay .stat-value {
+  color: #b26a00;
+}
+
+/* Karty list: poprawa wizualna bez zmiany logiki */
+.dashboard-card h2 {
+  margin-top: 0;
+}
+
+.dashboard-card .split-item {
+  border-radius: 16px;
+}
+
+/* --- DARK THEME dla nowego dashboardu --- */
+body.dark-theme {
+  background-color: #0b1220;
+  color: #e5e7eb;
+}
+
+body.dark-theme .topbar {
+  background: rgba(11, 18, 32, 0.78);
+  border-bottom-color: rgba(255, 255, 255, 0.10);
+}
+
+body.dark-theme .topbar-search form {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+body.dark-theme .topbar-search input[type="text"]::placeholder {
+  color: rgba(229, 231, 235, 0.55);
+}
+
+body.dark-theme .topbar {
+  background: rgba(11, 18, 32, 0.78);
+  border-bottom-color: rgba(255, 255, 255, 0.10);
+}
+
+body.dark-theme .brand-mark {
+  box-shadow: 0 10px 25px rgba(63, 81, 181, 0.22);
+}
+
+body.dark-theme .icon-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+body.dark-theme .user-chip {
+  border-left-color: rgba(255, 255, 255, 0.12);
+}
+
+body.dark-theme .topbar-search form {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+body.dark-theme .topbar-search .search-icon,
+body.dark-theme .topbar-search .search-submit {
+  color: rgba(229, 231, 235, 0.70);
+}
+
+body.dark-theme .topbar-search input[type="text"]::placeholder {
+  color: rgba(229, 231, 235, 0.55);
+}
+
+body.dark-theme .topbar-search form:focus-within {
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+/* Powiadomienia: pozycjonowanie i wyśrodkowanie cyfry w badge */
+.icon-btn .notifications-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+}
+
+.notifications-badge {
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: #f44336;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+/* User chip: wylogowanie widoczne po najechaniu na cały chip */
+.user-chip {
+  position: relative;
+  border-radius: 14px;
+  padding: 8px 12px 8px 16px;
+}
+
+.user-chip:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+body.dark-theme .user-chip:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.logout-link {
+  position: static;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 10px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  text-decoration: none;
+  font-weight: 800;
+  font-size: 13px;
+  opacity: 0;
+  pointer-events: none;
+  max-width: 0;
+  overflow: hidden;
+  transition: opacity 0.15s ease, max-width 0.15s ease;
+  white-space: nowrap;
+}
+
+body.dark-theme .logout-link {
+  border-color: rgba(148, 163, 184, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  color: #e5e7eb;
+}
+
+.user-chip:hover .logout-link {
+  opacity: 1;
+  pointer-events: auto;
+  max-width: 140px;
+}
+
+body.dark-theme .dashboard-card {
+  background-color: rgba(17, 24, 39, 0.78);
+  border-color: rgba(148, 163, 184, 0.16);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+body.dark-theme .stat-card {
+  background-color: rgba(17, 24, 39, 0.60);
+  border-color: rgba(148, 163, 184, 0.16);
+}
+
+body.dark-theme .stat-card-receive {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.24);
+}
+
+body.dark-theme .stat-card-receive .stat-label,
+body.dark-theme .stat-card-receive .stat-value {
+  color: #34d399;
+}
+
+body.dark-theme .stat-card-pay {
+  background: rgba(245, 158, 11, 0.10);
+  border-color: rgba(245, 158, 11, 0.26);
+}
+
+body.dark-theme .stat-card-pay .stat-label,
+body.dark-theme .stat-card-pay .stat-value {
+  color: #fbbf24;
+}
+
+/* --- HEADER --- */
+header:not(.topbar) {
   background-color: #3f51b5;
   color: #fff;
   padding: 1em;
@@ -61,7 +601,7 @@ header {
 }
 
 /* Wyszukiwarka */
-.search-friend {
+header:not(.topbar) .search-friend {
   display: flex;
   align-items: center;
   position: relative;
@@ -71,13 +611,13 @@ header {
   width: min(520px, 100%);
 }
 
-.search-friend form {
+header:not(.topbar) .search-friend form {
   display: flex;
   align-items: center;
   width: 100%;
 }
 
-.search-friend input[type="text"] {
+header:not(.topbar) .search-friend input[type="text"] {
   padding: 10px;
   border: none;
   border-radius: 5px;
@@ -87,7 +627,7 @@ header {
   vertical-align: middle;
 }
 
-.search-friend form button[type="submit"] {
+header:not(.topbar) .search-friend form button[type="submit"] {
   background-color: transparent;
   color: #fff;
   border: none;
@@ -292,7 +832,7 @@ input:checked+.slider:before {
 }
 
 /* --- MAIN LAYOUT --- */
-main {
+main:not(.dashboard-main) {
   margin-top: 110px;
   padding-top: 0;
   display: flex;
@@ -326,6 +866,34 @@ main {
   align-items: flex-start;
   width: 100%;
   height: 100%;
+}
+
+/* Nowy panel: moje oczekujące (po lewej) */
+.split-request .my-waiting {
+  background-color: #f5f5f5;
+  padding: 24px;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 420px;
+  margin-left: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  max-height: 100%;
+  overflow-y: auto;
+}
+
+.split-request .my-waiting h2 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  font-size: 20px;
+}
+
+.split-request .my-waiting .my-waiting-item {
+  text-align: left;
+}
+
+.split-request .my-waiting .split-item h3 {
+  justify-content: space-between;
 }
 
 /* --- POWIADOMIENIA (PRZYCISK W HEADERZE) --- */
@@ -374,24 +942,24 @@ main {
 }
 
 .notifications-badge {
-  background-color: transparent;
+  min-width: 22px;
   height: 22px;
   padding: 0 7px;
   border-radius: 999px;
   background: #f44336;
   color: #fff;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 800;
   display: inline-flex;
-  background-color: rgba(255, 255, 255, 0.14);
+  align-items: center;
   justify-content: center;
   line-height: 1;
 }
 
 .notifications-panel {
   position: absolute;
-  left: 0;
-  right: auto;
+  left: auto;
+  right: 0;
   top: calc(100% + 10px);
   width: 380px;
   max-width: calc(100vw - 30px);
@@ -585,21 +1153,20 @@ main {
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
 }
 
-/* Ostatnie Rozliczenia (Prawa kolumna - TU JEST TWOJA POPRAWKA) */
-.recent-splits {
+/* Prawy panel: do opłacenia + historia */
+.right-panel {
   margin-left: auto;
   width: 100%;
   max-width: 300px;
-  /* Twoja poprawka */
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: stretch;
   max-height: 100%;
   overflow-y: auto;
   padding-right: 6px;
 }
 
-.recent-splits h2 {
+.right-panel h2 {
   margin-top: 0;
   margin-bottom: 16px;
   font-size: 24px;
@@ -649,6 +1216,34 @@ main {
 .split-details-list {
   margin: 8px 0 0 0;
   padding-left: 18px;
+}
+
+.split-details-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.share-marker {
+  width: 18px;
+  min-width: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.share-marker.share-paid {
+  color: green;
+}
+
+.share-marker.share-rejected {
+  color: red;
+}
+
+.share-marker.share-pending {
+  color: orange;
 }
 
 .split-date {
@@ -946,11 +1541,11 @@ body.dark-theme #bill-popup-close {
 
 /* --- DARK THEME --- */
 body.dark-theme {
-  background-color: #282828;
-  color: #ddd;
+  background-color: #0b1220;
+  color: #e5e7eb;
 }
 
-body.dark-theme header {
+body.dark-theme header:not(.topbar) {
   background-color: #303f9f;
 }
 
@@ -964,33 +1559,34 @@ body.dark-theme .notifications-btn:hover {
   background-color: rgba(255, 255, 255, 0.12);
 }
 
-/* Tu miałeś szary w swojej wersji */
-body.dark-theme .create-spill,
-body.dark-theme .friends-list,
-body.dark-theme .split-item,
-body.dark-theme .stat-card {
+/* Tu miałeś szary w swojej wersji (dotyczy starego układu, nie nowego dashboardu) */
+body.dark-theme main:not(.dashboard-main) .create-spill,
+body.dark-theme main:not(.dashboard-main) .friends-list,
+body.dark-theme main:not(.dashboard-main) .my-waiting,
+body.dark-theme main:not(.dashboard-main) .split-item,
+body.dark-theme main:not(.dashboard-main) .stat-card {
   background-color: #2f2f2f;
   color: #ddd;
   border-color: rgba(255, 255, 255, 0.10);
 }
 
-body.dark-theme .split-item h3,
-body.dark-theme .split-item p {
+body.dark-theme main:not(.dashboard-main) .split-item h3,
+body.dark-theme main:not(.dashboard-main) .split-item p {
   color: #ddd;
 }
 
-body.dark-theme .create-spill button[type="submit"] {
+body.dark-theme main:not(.dashboard-main) .create-spill button[type="submit"] {
   background-color: #3f51b5;
   color: #ddd;
 }
 
-body.dark-theme #choose-friends-button {
+body.dark-theme main:not(.dashboard-main) #choose-friends-button {
   background-color: #3f51b5;
   color: #fff;
 }
 
-body.dark-theme #choose-friends-button:hover,
-body.dark-theme .create-spill button[type="submit"]:hover {
+body.dark-theme main:not(.dashboard-main) #choose-friends-button:hover,
+body.dark-theme main:not(.dashboard-main) .create-spill button[type="submit"]:hover {
   background-color: #2196f3;
 }
 
@@ -1054,13 +1650,13 @@ body.dark-theme .btn-create-group {
   border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
-/* Header: wyszukiwarka + dropdown */
-body.dark-theme .search-friend input[type="text"] {
+/* Header (stary): wyszukiwarka + dropdown */
+body.dark-theme header:not(.topbar) .search-friend input[type="text"] {
   background-color: #383838;
   color: #ddd;
 }
 
-body.dark-theme .search-friend input[type="text"]::placeholder {
+body.dark-theme header:not(.topbar) .search-friend input[type="text"]::placeholder {
   color: rgba(221, 221, 221, 0.7);
 }
 

@@ -101,8 +101,19 @@ document.addEventListener('DOMContentLoaded', function () {
     const billPopupRejectForm = document.getElementById('bill-popup-reject-form');
     const billPopupAcceptForm = document.getElementById('bill-popup-accept-form');
 
+    function getCookie(name) {
+        const cookies = document.cookie ? document.cookie.split(';') : [];
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.startsWith(name + '=')) {
+                return decodeURIComponent(cookie.substring(name.length + 1));
+            }
+        }
+        return null;
+    }
+
     const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
-    const csrfToken = csrfInput ? csrfInput.value : null;
+    const csrfToken = getCookie('csrftoken') || (csrfInput ? csrfInput.value : null);
 
     const openBillPopup = ({ billId, creator, description, amountOwed }) => {
         if (!billPopupOverlay || !billPopupBody || !billPopupReject || !billPopupAcceptForm || !billPopupRejectForm) return;
@@ -426,7 +437,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
-                                'X-CSRFToken': csrfTokenInput ? csrfTokenInput.value : ''
+                                'X-CSRFToken': csrfToken || (csrfTokenInput ? csrfTokenInput.value : '')
                             },
                             body: new URLSearchParams({ user_id: String(u.id) }).toString()
                         });
@@ -870,7 +881,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         const selectedFriendsIds = Array.from(document.querySelectorAll('#selected-friends li')).map(li => li.dataset.id);
-        const csrftoken = $('input[name="csrfmiddlewaretoken"]').val();
+        const csrftoken = getCookie('csrftoken') || $('input[name="csrfmiddlewaretoken"]').val();
 
         if (!csrftoken) {
             showToast("Błąd CSRF!", "error");

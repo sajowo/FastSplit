@@ -12,3 +12,19 @@ db.sqlite3
 # Wirtualne środowisko
 venv/
 .env
+
+# Wynik collectstatic (generowane)
+staticfiles/
+
+# Logi
+*.log
+debug.log
+
+# Ustawienia IDE
+.idea/
+.vscode/
+
+# Cache narzędzi
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/

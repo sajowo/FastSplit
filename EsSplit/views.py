@@ -13,8 +13,10 @@ import random
 import json
 from django.http import JsonResponse
 from django.views.decorators.http import require_GET, require_POST
+from django.views.decorators.cache import never_cache
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q
+from django.db.models import Q, Sum, Value, DecimalField
+from django.db.models.functions import Coalesce
 from .models import Person, Friend, Bill, FriendRequest, Group, BillShare, LoginLockout
 
 from datetime import timedelta
@@ -24,13 +26,14 @@ from axes.helpers import get_client_ip_address
 logger = logging.getLogger(__name__)
 
 # --- WIDOK GŁÓWNY (DASHBOARD) ---
+@never_cache
 def index(request):
     if request.user.is_authenticated:
         friends = Friend.objects.filter(user=request.user)
         friend_requests = FriendRequest.objects.filter(to_user=request.user)
         my_groups = Group.objects.filter(creator=request.user)
 
-        rejected_bill_shares_for_creator = (
+        rejected_bill_shares_qs = (
             BillShare.objects
             .select_related('bill', 'user')
             .filter(
@@ -39,9 +42,9 @@ def index(request):
                 rejected=True,
             )
             .order_by('-bill__date')
-        )[:5]
+        )
 
-        paid_bill_shares_for_creator = (
+        paid_bill_shares_qs = (
             BillShare.objects
             .select_related('bill', 'user')
             .filter(
@@ -54,64 +57,150 @@ def index(request):
             .order_by('-bill__date')
         )
 
-        paid_bill_shares_for_creator = paid_bill_shares_for_creator[:5]
+        rejected_bill_shares_for_creator = list(rejected_bill_shares_qs[:5])
+        paid_bill_shares_for_creator = list(paid_bill_shares_qs[:5])
 
-        # Prawy panel: pokazuj od razu rachunki dla uczestników (Revolut-style).
-        visible_participant_bills = Q(participants=request.user)
-
-        participated_bills = list(
-            Bill.objects
-            .filter(Q(creator=request.user) | visible_participant_bills)
-            .distinct()
-            .order_by('-date')[:5]
-        )
-
-        for bill in participated_bills:
+        def decorate_bill_for_user(bill: Bill):
             if request.user == bill.creator:
                 bill.display_amount = f"{bill.amount} PLN (Całość)"
                 bill.debtors_list = bill.shares.filter(amount_owed__gt=0)
-                bill.user_share_accepted = True
                 bill.user_share_rejected = False
                 bill.user_share_paid = True
                 bill.user_effective_status = bill.status
                 bill.user_status_label = bill.get_status_display()
-            else:
-                try:
-                    share = bill.shares.get(user=request.user)
-                    bill.display_amount = f"{share.amount_owed} PLN (Twój udział)"
-                    bill.user_share_accepted = True
-                    bill.user_share_rejected = bool(getattr(share, 'rejected', False))
-                    bill.user_share_paid = bool(getattr(share, 'paid', False))
+                return bill
 
-                    if bill.status == Bill.Status.PENDING and bill.user_share_rejected:
-                        bill.user_effective_status = Bill.Status.REJECTED
-                        bill.user_status_label = "Odrzucony"
-                    else:
-                        bill.user_effective_status = bill.status
-                        bill.user_status_label = bill.get_status_display()
-                except:
-                    bill.display_amount = "0.00 PLN"
-                    bill.user_share_accepted = False
-                    bill.user_share_rejected = False
-                    bill.user_share_paid = False
+            try:
+                share = bill.shares.get(user=request.user)
+                bill.display_amount = f"{share.amount_owed} PLN (Twój udział)"
+                bill.user_share_rejected = bool(getattr(share, 'rejected', False))
+                bill.user_share_paid = bool(getattr(share, 'paid', False))
+
+                if bill.status == Bill.Status.PENDING and bill.user_share_rejected:
+                    bill.user_effective_status = Bill.Status.REJECTED
+                    bill.user_status_label = "Odrzucony"
+                else:
                     bill.user_effective_status = bill.status
                     bill.user_status_label = bill.get_status_display()
-                bill.debtors_list = None
+            except Exception:
+                bill.display_amount = "0.00 PLN"
+                bill.user_share_rejected = False
+                bill.user_share_paid = False
+                bill.user_effective_status = bill.status
+                bill.user_status_label = bill.get_status_display()
+
+            bill.debtors_list = None
+            return bill
+
+        # Prawy panel: 1) DO ZROBIENIA (opłać/odrzuć) – tylko Twoje, 2) HISTORIA (ostatnie 8)
+        todo_bills = list(
+            Bill.objects
+            .filter(
+                participants=request.user,
+                status=Bill.Status.PENDING,
+                shares__user=request.user,
+                shares__paid=False,
+                shares__rejected=False,
+            )
+            .exclude(creator=request.user)
+            .distinct()
+            .order_by('-date')[:8]
+        )
+
+        history_bills = list(
+            Bill.objects
+            .filter(Q(creator=request.user) | Q(participants=request.user))
+            .filter(
+                Q(status=Bill.Status.PAID)
+                | Q(status=Bill.Status.REJECTED)
+                | Q(shares__user=request.user, shares__paid=True)
+                | Q(shares__user=request.user, shares__rejected=True)
+            )
+            .exclude(Q(creator=request.user, status=Bill.Status.PENDING))
+            .exclude(id__in=[b.id for b in todo_bills])
+            .distinct()
+            .order_by('-date')[:8]
+        )
+
+        # Lewa strona: rachunki utworzone przeze mnie, oczekujące na innych
+        my_waiting_bills = list(
+            Bill.objects
+            .filter(creator=request.user, status=Bill.Status.PENDING)
+            .prefetch_related('shares__user')
+            .order_by('-date')[:8]
+        )
+
+        # Statystyki (prawy panel): Do odebrania / Do zapłacenia (tylko oczekujące, bez odrzuconych udziałów)
+        amount_to_receive = (
+            BillShare.objects
+            .filter(
+                bill__creator=request.user,
+                bill__status=Bill.Status.PENDING,
+                rejected=False,
+                paid=False,
+            )
+            .exclude(user=request.user)
+            .aggregate(total=Coalesce(
+                Sum('amount_owed'),
+                Value(0),
+                output_field=DecimalField(max_digits=10, decimal_places=2),
+            ))
+            .get('total')
+        )
+
+        amount_to_pay = (
+            BillShare.objects
+            .filter(
+                user=request.user,
+                bill__status=Bill.Status.PENDING,
+                rejected=False,
+                paid=False,
+            )
+            .exclude(bill__creator=request.user)
+            .aggregate(total=Coalesce(
+                Sum('amount_owed'),
+                Value(0),
+                output_field=DecimalField(max_digits=10, decimal_places=2),
+            ))
+            .get('total')
+        )
+
+        todo_bills = [decorate_bill_for_user(b) for b in todo_bills]
+        history_bills = [decorate_bill_for_user(b) for b in history_bills]
+        my_waiting_bills = [decorate_bill_for_user(b) for b in my_waiting_bills]
+
+        for bill in my_waiting_bills:
+            shares = list(bill.shares.exclude(user=request.user).select_related('user'))
+            bill.waiting_total = len(shares)
+            bill.waiting_paid_shares = [
+                s for s in shares if getattr(s, 'paid', False) and not getattr(s, 'rejected', False)
+            ]
+            bill.waiting_paid = len(bill.waiting_paid_shares)
+            bill.waiting_rejected = [s for s in shares if getattr(s, 'rejected', False)]
+            bill.waiting_unpaid = [
+                s for s in shares
+                if (not getattr(s, 'paid', False) and not getattr(s, 'rejected', False))
+            ]
 
         context = {
             'friends': friends,
             'friend_requests': friend_requests,
             'rejected_bill_shares_for_creator': rejected_bill_shares_for_creator,
             'paid_bill_shares_for_creator': paid_bill_shares_for_creator,
-            'notifications_count': friend_requests.count() + rejected_bill_shares_for_creator.count() + paid_bill_shares_for_creator.count(),
+            'notifications_count': friend_requests.count() + rejected_bill_shares_qs.count() + paid_bill_shares_qs.count(),
             'my_groups': my_groups,
-            'participated_bills': participated_bills
+            'todo_bills': todo_bills,
+            'history_bills': history_bills,
+            'my_waiting_bills': my_waiting_bills,
+            'amount_to_receive': amount_to_receive,
+            'amount_to_pay': amount_to_pay,
         }
         return render(request, 'index.html', context)
     else:
         return redirect('login')
 
 # --- LOGOWANIE (POPRAWIONE - CAPTCHA BLOKUJE) ---
+@never_cache
 def login_view(request):
     # Jeśli już trwa blokada (np. user odświeża stronę), przekieruj na lockout
     if getattr(request, 'session', None) is not None:
@@ -253,6 +342,7 @@ def generate_username(first_name, last_name):
     return username
 
 # --- REJESTRACJA (POPRAWIONA) ---
+@never_cache
 def register(request):
     if request.method == 'POST':
         form = RegisterForm(request.POST)
