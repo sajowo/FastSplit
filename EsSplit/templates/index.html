@@ -49,13 +49,17 @@
               <path d="M12 22a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2Zm6-6V11a6 6 0 1 0-12 0v5l-2 2v1h16v-1l-2-2Z" />
             </svg>
           </span>
-          {% if friend_requests %}
-          <span class="notifications-badge">{{ friend_requests|length }}</span>
+          {% if notifications_count %}
+          <span class="notifications-badge" id="notifications-badge">{{ notifications_count }}</span>
+          {% else %}
+          <span class="notifications-badge" id="notifications-badge" hidden>0</span>
           {% endif %}
         </button>
         <div class="notifications-panel" id="notifications-panel" hidden>
+          <h3 style="margin-top: 0">Powiadomienia</h3>
+
           {% if friend_requests %}
-          <h3 style="margin-top: 0">📬 Masz nowe zaproszenia!</h3>
+          <div style="margin: 10px 0 6px 0; font-weight: 700;">Zaproszenia do znajomych</div>
           <ul class="notification-list">
             {% for req in friend_requests %}
             <li class="notification-item">
@@ -67,8 +71,34 @@
             </li>
             {% endfor %}
           </ul>
-          {% else %}
-          <div class="notifications-empty">Brak powiadomień.</div>
+          {% endif %}
+
+          {% if paid_bill_shares_for_creator %}
+          <div style="margin: 10px 0 6px 0; font-weight: 700;">Opłacone udziały</div>
+          <ul class="notification-list">
+            {% for share in paid_bill_shares_for_creator %}
+            <li class="notification-item">
+              <span>
+                Użytkownik <strong>{{ share.user.username }}</strong> opłacił udział w rozliczeniu:
+                <strong>{{ share.bill.description }}</strong>
+              </span>
+            </li>
+            {% endfor %}
+          </ul>
+          {% endif %}
+
+          {% if rejected_bill_shares_for_creator %}
+          <div style="margin: 10px 0 6px 0; font-weight: 700;">Odrzucone udziały</div>
+          <ul class="notification-list">
+            {% for share in rejected_bill_shares_for_creator %}
+            <li class="notification-item">
+              <span>
+                Użytkownik <strong>{{ share.user.username }}</strong> odrzucił udział w rozliczeniu:
+                <strong>{{ share.bill.description }}</strong>
+              </span>
+            </li>
+            {% endfor %}
+          </ul>
           {% endif %}
         </div>
       </div>
@@ -171,10 +201,10 @@
         {% if participated_bills %}
         {% for bill in participated_bills %}
         <div
-          class="split-item {% if bill.status == 'PAID' %}bill-paid{% elif bill.status == 'REJECTED' %}bill-rejected{% else %}bill-pending{% endif %}">
+          class="split-item {% if bill.user_effective_status == 'PAID' %}bill-paid{% elif bill.user_effective_status == 'REJECTED' %}bill-rejected{% else %}bill-pending{% endif %}">
           <h3>
             {{ bill.creator.username }}
-            <small class="split-status">({{ bill.get_status_display }})</small>
+            <small class="split-status">({{ bill.user_status_label }})</small>
           </h3>
           <p>{{ bill.description }} - <strong>{{ bill.display_amount|default:bill.amount_per_person }}</strong></p>
 
@@ -192,17 +222,36 @@
           <p class="split-date">{{ bill.date|date:"d M Y, H:i" }}</p>
 
           <div class="actions">
-            {% if bill.status == 'PENDING' %}
+            {% if bill.user_effective_status == 'PENDING' %}
             {% if request.user == bill.creator %}
             <a href="{% url 'update_bill' bill.id 'PAID' %}" class="action-link action-positive">✅ Sfinalizuj</a>
-            {% endif %}
             <a href="{% url 'update_bill' bill.id 'REJECTED' %}" class="action-link action-negative">❌ Odrzuć</a>
-            {% elif bill.status == 'REJECTED' %}
-            <span class="action-text action-negative">Rachunek odrzucony</span>
-            {% if request.user == bill.creator %}
-            <a href="{% url 'update_bill' bill.id 'PENDING' %}" class="action-link">↺ Przywróć</a>
+            {% else %}
+            {% if not bill.user_share_rejected %}
+            {% if not bill.user_share_paid %}
+            <form action="{% url 'pay_bill_share' bill.id %}" method="POST" style="display:inline;">
+              {% csrf_token %}
+              <button type="submit" class="action-link action-positive">💸 Opłać</button>
+            </form>
+            <form action="{% url 'reject_bill_share' bill.id %}" method="POST" style="display:inline;">
+              {% csrf_token %}
+              <button type="submit" class="action-link action-negative">❌ Odrzuć udział</button>
+            </form>
+            {% else %}
+            <span class="action-text action-positive">Opłacono</span>
             {% endif %}
-            {% elif bill.status == 'PAID' %}
+            {% else %}
+            <span class="action-text action-negative">Odrzucono udział</span>
+            {% endif %}
+            {% endif %}
+            {% elif bill.user_effective_status == 'REJECTED' %}
+            {% if request.user == bill.creator %}
+            <span class="action-text action-negative">Rachunek odrzucony</span>
+            <a href="{% url 'update_bill' bill.id 'PENDING' %}" class="action-link">↺ Przywróć</a>
+            {% else %}
+            <span class="action-text action-negative">Odrzucono udział</span>
+            {% endif %}
+            {% elif bill.user_effective_status == 'PAID' %}
             <span class="action-text action-positive">Sfinalizowano</span>
             {% endif %}
           </div>
@@ -248,6 +297,25 @@
         {% endif %}
       </ul>
       <button id="close-popup">Gotowe</button>
+    </div>
+  </div>
+
+  <!-- Popup dla rozliczeń z powiadomień -->
+  <div id="bill-popup-overlay" style="display:none;">
+    <div id="bill-popup" role="dialog" aria-modal="true" aria-labelledby="bill-popup-title">
+      <h2 id="bill-popup-title" style="margin-top:0;">Rozliczenie</h2>
+      <div id="bill-popup-body"></div>
+      <div id="bill-popup-actions">
+        <button type="button" id="bill-popup-close">Zamknij</button>
+        <form id="bill-popup-reject-form" method="POST" style="display:inline;">
+          {% csrf_token %}
+          <button type="submit" id="bill-popup-reject" class="action-link action-negative">❌ Odrzuć</button>
+        </form>
+        <form id="bill-popup-accept-form" method="POST" style="display:inline;">
+          {% csrf_token %}
+          <button type="submit" class="action-link action-positive">✅ Akceptuj</button>
+        </form>
+      </div>
     </div>
   </div>
 

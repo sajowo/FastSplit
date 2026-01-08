@@ -810,6 +810,68 @@ main {
   z-index: 1000;
 }
 
+/* --- POPUP: Rozliczenie z powiadomień --- */
+#bill-popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 1500;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+#bill-popup {
+  width: min(520px, 100%);
+  background: #fff;
+  color: #111;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  padding: 16px;
+}
+
+#bill-popup-body {
+  margin-top: 10px;
+  font-size: 14px;
+  color: #333;
+}
+
+#bill-popup-actions {
+  margin-top: 14px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+#bill-popup-close {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: #fff;
+  color: #333;
+  padding: 8px 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+body.dark-theme #bill-popup {
+  background: #383838;
+  color: #ddd;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+body.dark-theme #bill-popup-body {
+  color: rgba(221, 221, 221, 0.85);
+}
+
+body.dark-theme #bill-popup-close {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: #2f2f2f;
+  color: #ddd;
+}
+
 #popup-container ul {
   list-style: none;
   padding: 0;

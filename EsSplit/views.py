@@ -30,25 +30,80 @@ def index(request):
         friend_requests = FriendRequest.objects.filter(to_user=request.user)
         my_groups = Group.objects.filter(creator=request.user)
 
-        participated_bills = Bill.objects.filter(
-            Q(creator=request.user) | Q(participants=request.user)
-        ).distinct().order_by('-date')[:5]
+        rejected_bill_shares_for_creator = (
+            BillShare.objects
+            .select_related('bill', 'user')
+            .filter(
+                bill__creator=request.user,
+                bill__status=Bill.Status.PENDING,
+                rejected=True,
+            )
+            .order_by('-bill__date')
+        )[:5]
+
+        paid_bill_shares_for_creator = (
+            BillShare.objects
+            .select_related('bill', 'user')
+            .filter(
+                bill__creator=request.user,
+                bill__status=Bill.Status.PENDING,
+                paid=True,
+                rejected=False,
+            )
+            .exclude(user=request.user)
+            .order_by('-bill__date')
+        )
+
+        paid_bill_shares_for_creator = paid_bill_shares_for_creator[:5]
+
+        # Prawy panel: pokazuj od razu rachunki dla uczestników (Revolut-style).
+        visible_participant_bills = Q(participants=request.user)
+
+        participated_bills = list(
+            Bill.objects
+            .filter(Q(creator=request.user) | visible_participant_bills)
+            .distinct()
+            .order_by('-date')[:5]
+        )
 
         for bill in participated_bills:
             if request.user == bill.creator:
                 bill.display_amount = f"{bill.amount} PLN (Całość)"
                 bill.debtors_list = bill.shares.filter(amount_owed__gt=0)
+                bill.user_share_accepted = True
+                bill.user_share_rejected = False
+                bill.user_share_paid = True
+                bill.user_effective_status = bill.status
+                bill.user_status_label = bill.get_status_display()
             else:
                 try:
                     share = bill.shares.get(user=request.user)
                     bill.display_amount = f"{share.amount_owed} PLN (Twój udział)"
+                    bill.user_share_accepted = True
+                    bill.user_share_rejected = bool(getattr(share, 'rejected', False))
+                    bill.user_share_paid = bool(getattr(share, 'paid', False))
+
+                    if bill.status == Bill.Status.PENDING and bill.user_share_rejected:
+                        bill.user_effective_status = Bill.Status.REJECTED
+                        bill.user_status_label = "Odrzucony"
+                    else:
+                        bill.user_effective_status = bill.status
+                        bill.user_status_label = bill.get_status_display()
                 except:
                     bill.display_amount = "0.00 PLN"
+                    bill.user_share_accepted = False
+                    bill.user_share_rejected = False
+                    bill.user_share_paid = False
+                    bill.user_effective_status = bill.status
+                    bill.user_status_label = bill.get_status_display()
                 bill.debtors_list = None
 
         context = {
             'friends': friends,
             'friend_requests': friend_requests,
+            'rejected_bill_shares_for_creator': rejected_bill_shares_for_creator,
+            'paid_bill_shares_for_creator': paid_bill_shares_for_creator,
+            'notifications_count': friend_requests.count() + rejected_bill_shares_for_creator.count() + paid_bill_shares_for_creator.count(),
             'my_groups': my_groups,
             'participated_bills': participated_bills
         }
@@ -398,7 +453,8 @@ def create_spill(request):
                         BillShare.objects.create(
                             bill=bill,
                             user=user,
-                            amount_owed=float(user_amount)
+                            amount_owed=float(user_amount),
+                            accepted=True
                         )
             
             bill.save()
@@ -418,9 +474,14 @@ def update_bill_status(request, bill_id, new_status):
     
     is_creator = request.user == bill.creator
     is_participant = request.user in bill.participants.all()
-    
+
     if not (is_creator or is_participant):
         messages.error(request, "Brak uprawnień.")
+        return redirect('index')
+
+    # Zmiana statusu całego rachunku jest tylko dla twórcy.
+    if not is_creator:
+        messages.error(request, "Tylko twórca może zmieniać status rachunku.")
         return redirect('index')
 
     if new_status == 'REJECTED':
@@ -429,15 +490,155 @@ def update_bill_status(request, bill_id, new_status):
         messages.info(request, "Rachunek odrzucony.")
         
     elif new_status == 'PAID':
-        if is_creator:
-            bill.status = Bill.Status.PAID
-            bill.save()
-            messages.success(request, "Sfinalizowano!")
-        else:
-            messages.error(request, "Tylko twórca może sfinalizować.")
+        bill.status = Bill.Status.PAID
+        bill.save()
+        messages.success(request, "Sfinalizowano!")
 
     elif new_status == 'PENDING':
          bill.status = Bill.Status.PENDING
          bill.save()
 
     return redirect('index')
+
+
+@login_required
+@require_POST
+def accept_bill_share(request, bill_id):
+    bill = get_object_or_404(Bill, id=bill_id)
+
+    # tylko uczestnik (nie twórca)
+    if request.user == bill.creator or request.user not in bill.participants.all():
+        messages.error(request, "Brak uprawnień.")
+        return redirect('index')
+
+    share = BillShare.objects.filter(bill=bill, user=request.user).first()
+    if not share:
+        messages.error(request, "Nie znaleziono udziału w rozliczeniu.")
+        return redirect('index')
+
+    if bill.status != Bill.Status.PENDING:
+        messages.info(request, "To rozliczenie nie jest już oczekujące.")
+        return redirect('index')
+
+    share.accepted = True
+    # Akceptacja anuluje ewentualne wcześniejsze odrzucenie udziału
+    if getattr(share, 'rejected', False):
+        share.rejected = False
+        share.save(update_fields=['accepted', 'rejected'])
+    else:
+        share.save(update_fields=['accepted'])
+
+    wants_json = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or 'application/json' in (request.headers.get('Accept') or '')
+    if wants_json:
+        return JsonResponse({'ok': True})
+
+    messages.success(request, "Zaakceptowano rozliczenie.")
+    return redirect('index')
+
+
+@login_required
+@require_POST
+def reject_bill_share(request, bill_id):
+    bill = get_object_or_404(Bill, id=bill_id)
+
+    # tylko uczestnik (nie twórca)
+    if request.user == bill.creator or request.user not in bill.participants.all():
+        messages.error(request, "Brak uprawnień.")
+        return redirect('index')
+
+    share = BillShare.objects.filter(bill=bill, user=request.user).first()
+    if not share:
+        messages.error(request, "Nie znaleziono udziału w rozliczeniu.")
+        return redirect('index')
+
+    if bill.status != Bill.Status.PENDING:
+        messages.info(request, "To rozliczenie nie jest już oczekujące.")
+        return redirect('index')
+
+    share.accepted = True
+    share.rejected = True
+    if getattr(share, 'paid', False):
+        share.paid = False
+        share.save(update_fields=['accepted', 'rejected', 'paid'])
+    else:
+        share.save(update_fields=['accepted', 'rejected'])
+
+    wants_json = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or 'application/json' in (request.headers.get('Accept') or '')
+    if wants_json:
+        return JsonResponse({'ok': True})
+
+    messages.info(request, "Odrzucono udział w rozliczeniu.")
+    return redirect('index')
+
+
+@login_required
+@require_POST
+def pay_bill_share(request, bill_id):
+    bill = get_object_or_404(Bill, id=bill_id)
+
+    # tylko uczestnik (nie twórca)
+    if request.user == bill.creator or request.user not in bill.participants.all():
+        messages.error(request, "Brak uprawnień.")
+        return redirect('index')
+
+    share = BillShare.objects.filter(bill=bill, user=request.user).first()
+    if not share:
+        messages.error(request, "Nie znaleziono udziału w rozliczeniu.")
+        return redirect('index')
+
+    if bill.status != Bill.Status.PENDING:
+        messages.info(request, "To rozliczenie nie jest już oczekujące.")
+        return redirect('index')
+
+    if getattr(share, 'rejected', False):
+        messages.error(request, "Odrzuciłeś udział w tym rozliczeniu.")
+        return redirect('index')
+
+    share.paid = True
+    share.save(update_fields=['paid'])
+
+    # Jeśli wszyscy uczestnicy (bez twórcy) opłacili swoje udziały, automatycznie finalizujemy rachunek.
+    all_paid = not BillShare.objects.filter(
+        bill=bill,
+        rejected=False,
+    ).exclude(user=bill.creator).exclude(paid=True, accepted=True).exists()
+
+    if all_paid:
+        bill.status = Bill.Status.PAID
+        bill.save(update_fields=['status'])
+
+    wants_json = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or 'application/json' in (request.headers.get('Accept') or '')
+    if wants_json:
+        return JsonResponse({'ok': True, 'bill_paid': all_paid})
+
+    messages.success(request, "Oznaczono jako opłacone.")
+    return redirect('index')
+
+
+@login_required
+@require_GET
+def get_pending_bill_notifications(request):
+    pending = (
+        BillShare.objects
+        .select_related('bill', 'bill__creator')
+        .filter(
+            user=request.user,
+            bill__status=Bill.Status.PENDING,
+            accepted=False,
+            rejected=False,
+        )
+        .exclude(bill__creator=request.user)
+        .order_by('-bill__date')
+    )
+
+    data = []
+    for share in pending:
+        data.append({
+            'bill_id': share.bill_id,
+            'creator': share.bill.creator.username,
+            'description': share.bill.description,
+            'amount_owed': str(share.amount_owed),
+            'date': share.bill.date.isoformat(),
+        })
+
+    return JsonResponse({'pending': data})

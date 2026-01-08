@@ -89,6 +89,249 @@ document.addEventListener('DOMContentLoaded', function () {
     // --- POWIADOMIENIA (panel w headerze) ---
     const notificationsToggle = document.getElementById('notifications-toggle');
     const notificationsPanel = document.getElementById('notifications-panel');
+    const notificationsBadge = document.getElementById('notifications-badge');
+
+    const billNotificationsList = document.getElementById('bill-notifications-list');
+    const billNotificationsEmpty = document.getElementById('bill-notifications-empty');
+
+    const billPopupOverlay = document.getElementById('bill-popup-overlay');
+    const billPopupBody = document.getElementById('bill-popup-body');
+    const billPopupClose = document.getElementById('bill-popup-close');
+    const billPopupReject = document.getElementById('bill-popup-reject');
+    const billPopupRejectForm = document.getElementById('bill-popup-reject-form');
+    const billPopupAcceptForm = document.getElementById('bill-popup-accept-form');
+
+    const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+    const csrfToken = csrfInput ? csrfInput.value : null;
+
+    const openBillPopup = ({ billId, creator, description, amountOwed }) => {
+        if (!billPopupOverlay || !billPopupBody || !billPopupReject || !billPopupAcceptForm || !billPopupRejectForm) return;
+
+        billPopupBody.innerHTML = `
+            <div><strong>Od:</strong> ${escapeHtml(creator)}</div>
+            <div><strong>Opis:</strong> ${escapeHtml(description)}</div>
+            <div><strong>Twój udział:</strong> ${escapeHtml(amountOwed)} PLN</div>
+        `;
+
+        billPopupRejectForm.action = `/bill/${encodeURIComponent(billId)}/reject/`;
+        billPopupAcceptForm.action = `/bill/${encodeURIComponent(billId)}/accept/`;
+
+        billPopupOverlay.style.display = 'flex';
+    };
+
+    const closeBillPopup = () => {
+        if (!billPopupOverlay) return;
+        billPopupOverlay.style.display = 'none';
+    };
+
+    if (billPopupClose) {
+        billPopupClose.addEventListener('click', (e) => {
+            e.preventDefault();
+            closeBillPopup();
+        });
+    }
+
+    if (billPopupOverlay) {
+        billPopupOverlay.addEventListener('click', (e) => {
+            if (e.target === billPopupOverlay) closeBillPopup();
+        });
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeBillPopup();
+    });
+
+    // Zabezpieczenie przed XSS przy budowaniu HTML
+    function escapeHtml(str) {
+        return String(str ?? '')
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#39;');
+    }
+
+    // --- POWIADOMIENIA: RACHUNKI (polling) ---
+    const BILL_NOTIF_SEEN_KEY = 'fastsplit_seen_pending_bills';
+
+    const getSeenBills = () => {
+        try {
+            const raw = localStorage.getItem(BILL_NOTIF_SEEN_KEY);
+            const arr = raw ? JSON.parse(raw) : [];
+            return Array.isArray(arr) ? new Set(arr.map(String)) : new Set();
+        } catch (e) {
+            return new Set();
+        }
+    };
+
+    const setSeenBills = (ids) => {
+        try {
+            localStorage.setItem(BILL_NOTIF_SEEN_KEY, JSON.stringify(Array.from(ids)));
+        } catch (e) {
+            // ignore
+        }
+    };
+
+    const renderBillNotifications = (items) => {
+        if (!billNotificationsList || !billNotificationsEmpty) return;
+
+        billNotificationsList.innerHTML = '';
+        if (!items || items.length === 0) {
+            billNotificationsEmpty.hidden = false;
+            return;
+        }
+
+        billNotificationsEmpty.hidden = true;
+        items.forEach((it) => {
+            const li = document.createElement('li');
+            li.className = 'notification-item';
+            li.innerHTML = `
+                <span>
+                    Nowe rozliczenie od <strong>${escapeHtml(it.creator)}</strong>: ${escapeHtml(it.description)}
+                    <br />
+                    <small style="opacity:0.8;">Twój udział: <strong>${escapeHtml(it.amount_owed)} PLN</strong></small>
+                </span>
+                <div>
+                    <button type="button" class="btn-accept" data-accept-bill-id="${escapeHtml(it.bill_id)}">Akceptuj</button>
+                    <button type="button" class="btn-reject" data-reject-bill-id="${escapeHtml(it.bill_id)}">Odrzuć</button>
+                </div>
+            `;
+
+            const acceptBtn = li.querySelector('button[data-accept-bill-id]');
+            if (acceptBtn) {
+                acceptBtn.addEventListener('click', async () => {
+                    if (!csrfToken) {
+                        showToast('Brak tokenu CSRF – odśwież stronę.', 'error');
+                        return;
+                    }
+                    acceptBtn.disabled = true;
+                    try {
+                        const res = await fetch(`/bill/${encodeURIComponent(it.bill_id)}/accept/`, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': csrfToken,
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json',
+                            },
+                        });
+
+                        if (!res.ok) {
+                            acceptBtn.disabled = false;
+                            showToast('Nie udało się zaakceptować rozliczenia.', 'error');
+                            return;
+                        }
+
+                        // Usuń z listy (bez przeładowania)
+                        li.remove();
+                        const remainingItems = billNotificationsList.querySelectorAll('.notification-item').length;
+                        if (remainingItems === 0) billNotificationsEmpty.hidden = false;
+
+                        // Badge: zmniejsz o 1, ale nie poniżej 0
+                        const currentBadge = notificationsBadge && !notificationsBadge.hidden ? Number(notificationsBadge.textContent) || 0 : 0;
+                        updateBadge(Math.max(0, currentBadge - 1));
+
+                        showToast('Zaakceptowano rozliczenie.', 'success');
+                        // Odśwież, żeby prawy panel pokazał zaakceptowane PENDING
+                        window.location.reload();
+                    } catch (e) {
+                        acceptBtn.disabled = false;
+                        showToast('Błąd sieci przy akceptacji.', 'error');
+                    }
+                });
+            }
+
+            const rejectBtn = li.querySelector('button[data-reject-bill-id]');
+            if (rejectBtn) {
+                rejectBtn.addEventListener('click', async () => {
+                    if (!csrfToken) {
+                        showToast('Brak tokenu CSRF – odśwież stronę.', 'error');
+                        return;
+                    }
+                    rejectBtn.disabled = true;
+                    try {
+                        const res = await fetch(`/bill/${encodeURIComponent(it.bill_id)}/reject/`, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': csrfToken,
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json',
+                            },
+                        });
+
+                        if (!res.ok) {
+                            rejectBtn.disabled = false;
+                            showToast('Nie udało się odrzucić rozliczenia.', 'error');
+                            return;
+                        }
+
+                        li.remove();
+                        const remainingItems = billNotificationsList.querySelectorAll('.notification-item').length;
+                        if (remainingItems === 0) billNotificationsEmpty.hidden = false;
+
+                        const currentBadge = notificationsBadge && !notificationsBadge.hidden ? Number(notificationsBadge.textContent) || 0 : 0;
+                        updateBadge(Math.max(0, currentBadge - 1));
+
+                        showToast('Odrzucono rozliczenie.', 'info');
+                        window.location.reload();
+                    } catch (e) {
+                        rejectBtn.disabled = false;
+                        showToast('Błąd sieci przy odrzuceniu.', 'error');
+                    }
+                });
+            }
+            billNotificationsList.appendChild(li);
+        });
+    };
+
+    const updateBadge = (count) => {
+        if (!notificationsBadge) return;
+        const n = Number(count) || 0;
+        notificationsBadge.textContent = String(n);
+        notificationsBadge.hidden = n <= 0;
+    };
+
+    const fetchBillNotifications = async () => {
+        if (!billNotificationsList || !billNotificationsEmpty) return;
+        try {
+            const res = await fetch('/notifications/pending-bills/', { headers: { 'Accept': 'application/json' } });
+            if (!res.ok) return;
+            const payload = await res.json();
+            const pending = Array.isArray(payload.pending) ? payload.pending : [];
+
+            const seen = getSeenBills();
+            let hasNew = false;
+            pending.forEach((p) => {
+                const id = String(p.bill_id);
+                if (!seen.has(id)) {
+                    hasNew = true;
+                    seen.add(id);
+                }
+            });
+
+            // Render listy
+            renderBillNotifications(pending);
+
+            // Badge: tylko dla rachunków (friend_requests już są w HTML; tutaj dokładamy pending bills)
+            // Najprościej: ustawiamy badge na max(istniejący, pending.length) jeśli nie umiemy odczytać friend_requests.
+            // Gdy badge już ma liczbę z serwera (notifications_count), podbijamy o różnicę.
+            const currentBadge = notificationsBadge && !notificationsBadge.hidden ? Number(notificationsBadge.textContent) || 0 : 0;
+            const computed = Math.max(currentBadge, pending.length);
+            updateBadge(computed);
+
+            if (hasNew) {
+                setSeenBills(seen);
+                showToast('Masz nowe rozliczenie do akceptacji.', 'info');
+            }
+        } catch (e) {
+            // ignore
+        }
+    };
+
+    // Start: pobierz od razu + potem co 10s (tylko jeśli sekcja istnieje)
+    if (billNotificationsList && billNotificationsEmpty) {
+        fetchBillNotifications();
+        setInterval(fetchBillNotifications, 10000);
+    }
 
     const closeNotifications = () => {
         if (!notificationsToggle || !notificationsPanel) return;
@@ -657,6 +900,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 splitDetails.innerHTML = '';
                 selectedFriendsContainer.innerHTML = '';
                 if (submitBtn) submitBtn.disabled = false;
+
+                // Odśwież, żeby od razu zobaczyć nowy rachunek w prawym panelu
+                setTimeout(() => window.location.reload(), 700);
             },
             error: function (xhr) {
                 showToast("❌ Błąd: " + xhr.status + " " + xhr.responseText, "error");

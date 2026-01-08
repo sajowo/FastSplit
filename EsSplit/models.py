@@ -74,6 +74,9 @@ class BillShare(models.Model):
     bill = models.ForeignKey(Bill, on_delete=models.CASCADE, related_name='shares')
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     amount_owed = models.DecimalField(max_digits=10, decimal_places=2)
+    accepted = models.BooleanField(default=False)
+    rejected = models.BooleanField(default=False)
+    paid = models.BooleanField(default=False)
 
     class Meta:
         unique_together = ('bill', 'user')
