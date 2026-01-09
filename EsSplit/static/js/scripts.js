@@ -711,10 +711,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const tipInput = document.getElementById('tip');
     const chooseBtn = document.getElementById('choose-friends-button');
     const closePopupBtn = document.getElementById('close-popup');
+    const cancelSplitBtn = document.getElementById('cancel-split');
 
     if (chooseBtn) chooseBtn.addEventListener('click', () => document.getElementById('popup-container').style.display = 'flex');
     if (closePopupBtn) closePopupBtn.addEventListener('click', hidePopup);
     if (form) form.addEventListener('submit', handleFormSubmit);
+    if (cancelSplitBtn) cancelSplitBtn.addEventListener('click', cancelSplit);
 
     // Reset przy zmianie kwot
     if (amountInput) amountInput.addEventListener('input', () => {
@@ -727,6 +729,26 @@ document.addEventListener('DOMContentLoaded', function () {
     function hidePopup() {
         document.getElementById('popup-container').style.display = 'none';
         updateSelectedFriends();
+    }
+
+    function cancelSplit() {
+        if (form) form.reset();
+
+        // Wyczyść wybór znajomych w popupie
+        document.querySelectorAll('#popup-friends-list input[type="checkbox"]').forEach((cb) => {
+            cb.checked = false;
+        });
+
+        const groupSelector = document.getElementById('group-selector');
+        if (groupSelector) groupSelector.value = '';
+
+        // Wyczyść podsumowanie + suwaki
+        if (selectedFriendsContainer) selectedFriendsContainer.innerHTML = '<p>Nie wybrano nikogo.</p>';
+        if (splitDetails) splitDetails.innerHTML = '';
+
+        // Zamknij popup jeśli był otwarty
+        const popup = document.getElementById('popup-container');
+        if (popup) popup.style.display = 'none';
     }
 
     // --- WYBÓR ZNAJOMYCH ---

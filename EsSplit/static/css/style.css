@@ -1346,12 +1346,114 @@ main:not(.dashboard-main) {
   box-shadow: 0 10px 20px rgba(63, 81, 181, 0.25);
 }
 
+.create-split-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-top: 10px;
+  width: 100%;
+  max-width: 320px;
+}
+
+.create-split-actions button {
+  width: 100%;
+  max-width: 320px;
+}
+
+.create-spill .btn-secondary {
+  background: rgba(0, 0, 0, 0.04);
+  color: inherit;
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  padding: 12px 20px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.create-spill .btn-secondary:hover {
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.10);
+}
+
+body.dark-theme .create-spill .btn-secondary {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #ddd;
+}
+
 .create-spill button[type="submit"]:hover {
   background-color: #2196f3;
 }
 
 .create-spill #spill-results {
   margin-top: 2em;
+}
+
+/* Wybrani znajomi (panel Utwórz podział) */
+#selected-friends {
+  margin: 6px 0 14px 0;
+  width: 100%;
+  max-width: 320px;
+}
+
+#selected-friends p {
+  margin: 0;
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+#selected-friends ul {
+  list-style: none;
+  margin: 0;
+  padding: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(0, 0, 0, 0.02);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+}
+
+#selected-friends li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 13px;
+  line-height: 1;
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  background: rgba(63, 81, 181, 0.10);
+  color: inherit;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#selected-friends li::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(63, 81, 181, 0.65);
+  flex: 0 0 auto;
+}
+
+body.dark-theme #selected-friends ul {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.30);
+}
+
+body.dark-theme #selected-friends li {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(63, 81, 181, 0.20);
+}
+
+body.dark-theme #selected-friends li::before {
+  background: rgba(129, 140, 248, 0.85);
 }
 
 #choose-friends-button {
