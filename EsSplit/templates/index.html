@@ -174,11 +174,24 @@
 
           <section class="friends-list dashboard-card">
             <div class="friends-container">
-              <h2>Lista znajomych</h2>
+              <div class="friends-header">
+                <div class="friends-title">
+                  <span class="friends-title-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" focusable="false"
+                      aria-hidden="true">
+                      <path
+                        d="M16 11c1.66 0 3-1.34 3-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3Zm-8 0c1.66 0 3-1.34 3-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3Zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13Zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5C23 14.17 18.33 13 16 13Z" />
+                    </svg>
+                  </span>
+                  <h2>Twoi znajomi</h2>
+                </div>
+                <span class="friends-count">{{ friends|length }} RAZEM</span>
+              </div>
               <div id="friends-list">
                 {% if friends %}
                 {% for friend in friends %}
-                <div draggable="true" id="friend-{{ friend.id }}">
+                <div draggable="true" id="friend-{{ friend.id }}" data-friend-user-id="{{ friend.friend_account.id }}"
+                  data-friend-username="{{ friend.friend_account.username|escapejs }}">
                   {{ friend.friend_account.username }}
                 </div>
                 {% endfor %}
@@ -189,15 +202,24 @@
             </div>
 
             <div class="create-group-container">
-              <h3>Stwórz nową grupę</h3>
+              <div class="group-header">
+                <span class="group-title-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" focusable="false"
+                    aria-hidden="true">
+                    <path
+                      d="M12 12c2.21 0 4-1.79 4-4S14.21 4 12 4 8 5.79 8 8s1.79 4 4 4Zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4Zm9-5v2h-2v2h-2v-2h-2V9h2V7h2v2h2Z" />
+                  </svg>
+                </span>
+                <h3>Stwórz nową grupę</h3>
+              </div>
               <form action="{% url 'create_group' %}" method="POST">
                 {% csrf_token %}
                 <input type="text" name="group_name" placeholder="Nazwa grupy (np. Wakacje)" required />
                 <div class="group-members-list">
-                  <p style="margin-top: 0; font-size: 0.9em; color: grey">Wybierz członków:</p>
+                  <p class="group-hint">Wybierz członków:</p>
                   {% if friends %}
                   {% for friend in friends %}
-                  <label style="display: block; margin-bottom: 5px; cursor: pointer">
+                  <label>
                     <input type="checkbox" name="group_members" value="{{ friend.friend_account.id }}" />
                     {{ friend.friend_account.username }}
                   </label>
@@ -213,7 +235,7 @@
         </div>
 
         <section class="my-waiting dashboard-card dashboard-center">
-          <h2>Moje rozliczenia (czekam na innych)</h2>
+          <h2>Aktywne rozliczenia</h2>
           {% if my_waiting_bills %}
           {% for bill in my_waiting_bills %}
           <div class="split-item bill-pending my-waiting-item">
@@ -235,7 +257,8 @@
                 {% for s in bill.waiting_paid_shares %}
                 <li>
                   <span class="share-marker share-paid" aria-hidden="true">✅</span>
-                  {{ s.user.username }}
+                  <span class="share-user">{{ s.user.username }}</span>
+                  <span class="share-amount">{{ s.amount_owed|floatformat:2 }} PLN</span>
                 </li>
                 {% endfor %}
               </ul>
@@ -249,7 +272,8 @@
                 {% for s in bill.waiting_unpaid %}
                 <li>
                   <span class="share-marker share-pending" aria-hidden="true">⏳</span>
-                  {{ s.user.username }}
+                  <span class="share-user">{{ s.user.username }}</span>
+                  <span class="share-amount">{{ s.amount_owed|floatformat:2 }} PLN</span>
                 </li>
                 {% endfor %}
               </ul>
@@ -283,7 +307,7 @@
           {% endif %}
         </section>
 
-        <aside class="right-panel dashboard-right">
+        <aside class="right-panel dashboard-right {% if todo_bills %}has-todo{% else %}no-todo{% endif %}">
           <div class="stats-row">
             <div class="stat-card stat-card-receive">
               <p class="stat-label">Do odebrania</p>
@@ -295,7 +319,7 @@
             </div>
           </div>
 
-          <div class="right-section">
+          <div class="right-section todo-section">
             <h2>Do opłacenia</h2>
             <div class="right-scroll right-todo">
               {% if todo_bills %}
@@ -325,7 +349,7 @@
             </div>
           </div>
 
-          <div class="right-section" style="margin-top: 18px;">
+          <div class="right-section history-section" style="margin-top: 18px;">
             <h2>Historia (ostatnie 8)</h2>
             <div class="right-scroll right-history">
               {% if history_bills %}

@@ -115,6 +115,163 @@ document.addEventListener('DOMContentLoaded', function () {
     const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
     const csrfToken = getCookie('csrftoken') || (csrfInput ? csrfInput.value : null);
 
+    // --- USUWANIE ZNAJOMYCH (klik w pigułkę) ---
+    const friendsPills = document.getElementById('friends-list');
+    let friendDragInProgress = false;
+
+    if (friendsPills) {
+        let activeFriendPopover = null;
+
+        const closeFriendPopover = () => {
+            if (!activeFriendPopover) return;
+            try {
+                if (typeof activeFriendPopover.__cleanup === 'function') {
+                    activeFriendPopover.__cleanup();
+                }
+            } catch (e) {
+                // ignore
+            }
+            activeFriendPopover.remove();
+            activeFriendPopover = null;
+        };
+
+        const positionFriendPopover = (popover, anchor) => {
+            const rect = anchor.getBoundingClientRect();
+            const margin = 8;
+            const width = 220;
+
+            let left = rect.left;
+            let top = rect.bottom + margin;
+
+            // clamp to viewport
+            left = Math.min(left, window.innerWidth - width - margin);
+            left = Math.max(margin, left);
+
+            popover.style.left = `${Math.round(left)}px`;
+            popover.style.top = `${Math.round(top)}px`;
+        };
+
+        const openFriendPopover = (pill, { userId, username, onRemove }) => {
+            closeFriendPopover();
+
+            const pop = document.createElement('div');
+            pop.className = 'friend-action-popover';
+            pop.setAttribute('role', 'dialog');
+            pop.setAttribute('aria-label', 'Opcje znajomego');
+            pop.innerHTML = `
+                <div class="friend-action-title">${escapeHtml(username)}</div>
+                <div class="friend-action-actions">
+                    <button type="button" class="friend-action-btn friend-action-remove">Usuń znajomego</button>
+                    <button type="button" class="friend-action-btn friend-action-cancel">Anuluj</button>
+                </div>
+            `;
+
+            document.body.appendChild(pop);
+            activeFriendPopover = pop;
+            positionFriendPopover(pop, pill);
+
+            const removeBtn = pop.querySelector('.friend-action-remove');
+            const cancelBtn = pop.querySelector('.friend-action-cancel');
+
+            if (cancelBtn) cancelBtn.addEventListener('click', () => closeFriendPopover());
+            if (removeBtn) {
+                removeBtn.addEventListener('click', async () => {
+                    removeBtn.disabled = true;
+                    await onRemove();
+                });
+            }
+
+            // close on outside click
+            const onDocClick = (e) => {
+                if (!activeFriendPopover) return;
+                if (activeFriendPopover.contains(e.target)) return;
+                if (pill.contains(e.target)) return;
+                closeFriendPopover();
+                document.removeEventListener('click', onDocClick, true);
+            };
+            document.addEventListener('click', onDocClick, true);
+
+            const onEsc = (e) => {
+                if (e.key !== 'Escape') return;
+                closeFriendPopover();
+                document.removeEventListener('keydown', onEsc);
+            };
+            document.addEventListener('keydown', onEsc);
+
+            const onReposition = () => {
+                if (!activeFriendPopover) return;
+                positionFriendPopover(activeFriendPopover, pill);
+            };
+            window.addEventListener('scroll', onReposition, true);
+            window.addEventListener('resize', onReposition);
+
+            const cleanup = () => {
+                window.removeEventListener('scroll', onReposition, true);
+                window.removeEventListener('resize', onReposition);
+            };
+
+            pop.__cleanup = cleanup;
+        };
+
+        friendsPills.addEventListener('dragstart', (e) => {
+            const pill = e.target && e.target.closest ? e.target.closest('[data-friend-user-id]') : null;
+            if (!pill) return;
+            friendDragInProgress = true;
+        });
+
+        friendsPills.addEventListener('dragend', () => {
+            // click potrafi odpalić się po drag&drop – odetnijmy to
+            setTimeout(() => { friendDragInProgress = false; }, 0);
+        });
+
+        friendsPills.addEventListener('click', async (e) => {
+            const pill = e.target && e.target.closest ? e.target.closest('[data-friend-user-id]') : null;
+            if (!pill) return;
+            if (friendDragInProgress) return;
+
+            const userId = pill.getAttribute('data-friend-user-id');
+            const username = pill.getAttribute('data-friend-username') || pill.textContent.trim();
+            if (!userId) return;
+
+            openFriendPopover(pill, {
+                userId,
+                username,
+                onRemove: async () => {
+                    if (!csrfToken) {
+                        showToast('Brak tokenu CSRF – odśwież stronę.', 'error');
+                        closeFriendPopover();
+                        return;
+                    }
+
+                    try {
+                        const res = await fetch(`/friends/remove/${encodeURIComponent(userId)}/`, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': csrfToken,
+                                'X-Requested-With': 'XMLHttpRequest',
+                            },
+                            credentials: 'same-origin',
+                        });
+
+                        const data = await res.json().catch(() => ({}));
+                        if (!res.ok || !data.ok) {
+                            showToast((data && data.message) ? data.message : 'Nie udało się usunąć znajomego.', 'error');
+                            closeFriendPopover();
+                            return;
+                        }
+
+                        showToast(data.message || 'Usunięto znajomego.', 'success');
+                        closeFriendPopover();
+                        setTimeout(() => window.location.reload(), 500);
+                    } catch (err) {
+                        showToast('Błąd sieci podczas usuwania znajomego.', 'error');
+                        closeFriendPopover();
+                    }
+                }
+            });
+        });
+    }
+
     const openBillPopup = ({ billId, creator, description, amountOwed }) => {
         if (!billPopupOverlay || !billPopupBody || !billPopupReject || !billPopupAcceptForm || !billPopupRejectForm) return;
 

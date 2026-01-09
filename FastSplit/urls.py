@@ -18,6 +18,7 @@ urlpatterns = [
     path('search_user/', views.search_user, name='search_user'),
     path('invite_user/', views.invite_user, name='invite_user'),
     path('request/<int:request_id>/<str:action>/', views.handle_friend_request, name='handle_request'), # <-- TO BYŁO POTRZEBNE
+    path('friends/remove/<int:user_id>/', views.remove_friend, name='remove_friend'),
     
     # Grupy (To naprawi Twój obecny błąd)
     path('create_group/', views.create_group, name='create_group'), # <-- TEGO BRAKOWAŁO

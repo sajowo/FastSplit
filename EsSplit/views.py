@@ -476,6 +476,42 @@ def invite_user(request):
     FriendRequest.objects.create(from_user=request.user, to_user=target_user)
     return JsonResponse({'ok': True, 'message': f"Wysłano zaproszenie do {target_user.username}."})
 
+
+@login_required
+@require_POST
+def remove_friend(request, user_id: int):
+    """Usuwa znajomego (relację Friend w obie strony)."""
+    try:
+        target_user = User.objects.get(id=int(user_id))
+    except Exception:
+        return JsonResponse({'ok': False, 'message': 'Nieprawidłowy użytkownik.'}, status=400)
+
+    if target_user == request.user:
+        return JsonResponse({'ok': False, 'message': 'Nie możesz usunąć samego siebie.'}, status=400)
+
+    # usuń relacje w obie strony
+    deleted = 0
+    deleted += Friend.objects.filter(user=request.user, friend_account=target_user).delete()[0]
+    deleted += Friend.objects.filter(user=target_user, friend_account=request.user).delete()[0]
+
+    # usuń ewentualne zaległe zaproszenia między tymi użytkownikami
+    FriendRequest.objects.filter(from_user=request.user, to_user=target_user).delete()
+    FriendRequest.objects.filter(from_user=target_user, to_user=request.user).delete()
+
+    if deleted == 0:
+        msg = 'Nie znaleziono takiego znajomego.'
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'ok': False, 'message': msg}, status=404)
+        messages.info(request, msg)
+        return redirect('index')
+
+    msg = f"Usunięto znajomego: {target_user.username}."
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'ok': True, 'message': msg})
+
+    messages.success(request, msg)
+    return redirect('index')
+
 # --- OBSŁUGA ZAPROSZEŃ ---
 def handle_friend_request(request, request_id, action):
     f_request = get_object_or_404(FriendRequest, id=request_id)

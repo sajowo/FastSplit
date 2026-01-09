@@ -239,15 +239,210 @@ header {
 
 @media (min-width: 1024px) {
   .dashboard-grid {
-    grid-template-columns: 2.6fr 6.2fr 3.2fr;
+    grid-template-columns: 3fr 5.9fr 3.1fr;
     align-items: stretch;
   }
+}
+
+/* Dashboard: karty w lewej kolumnie muszą mieścić się w gridzie (bez "ucinanek") */
+.dashboard-main .dashboard-left .create-spill,
+.dashboard-main .dashboard-left .friends-list {
+  max-width: 100%;
+  margin-left: 0;
+}
+
+/* Dashboard: "Twoi znajomi" + tworzenie grupy (styl jak na referencji) */
+.dashboard-main .dashboard-left .friends-list {
+  padding: 18px;
+}
+
+.dashboard-main .dashboard-left .friends-container,
+.dashboard-main .dashboard-left .create-group-container {
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+
+.dashboard-main .dashboard-left .friends-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.dashboard-main .dashboard-left .friends-title,
+.dashboard-main .dashboard-left .group-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.dashboard-main .dashboard-left .friends-title h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.dashboard-main .dashboard-left .friends-title-icon,
+.dashboard-main .dashboard-left .group-title-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(0, 0, 0, 0.04);
+  color: inherit;
+  flex: 0 0 auto;
+}
+
+.dashboard-main .dashboard-left .friends-count {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  background: rgba(0, 0, 0, 0.04);
+  white-space: nowrap;
+}
+
+.dashboard-main .dashboard-left #friends-list {
+  gap: 10px;
+}
+
+.dashboard-main .dashboard-left #friends-list div {
+  box-shadow: none;
+  border-radius: 999px;
+  font-weight: 800;
+  padding: 8px 10px;
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.dashboard-main .dashboard-left .create-group-container {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 0;
+  position: relative;
+}
+
+.dashboard-main .dashboard-left .create-group-container::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(to right,
+      transparent,
+      rgba(0, 0, 0, 0.14),
+      transparent);
+}
+
+.dashboard-main .dashboard-left .create-group-container h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.dashboard-main .dashboard-left .group-hint {
+  margin: 10px 0 8px 0;
+  font-size: 12px;
+  font-weight: 800;
+  opacity: 0.75;
+}
+
+.dashboard-main .dashboard-left .create-group-container input[type="text"] {
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+
+.dashboard-main .dashboard-left .group-members-list {
+  border-radius: 14px;
+  border-color: rgba(0, 0, 0, 0.10);
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.dashboard-main .dashboard-left .group-members-list label {
+  padding: 6px 6px;
+  border-radius: 10px;
+}
+
+.dashboard-main .dashboard-left .group-members-list input[type="checkbox"] {
+  accent-color: #3f51b5;
+}
+
+.dashboard-main .dashboard-left .btn-create-group {
+  width: 100%;
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-weight: 900;
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  background: rgba(0, 0, 0, 0.04);
+  color: inherit;
+}
+
+.dashboard-main .dashboard-left .btn-create-group:hover {
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.10);
+}
+
+body.dark-theme .dashboard-main .dashboard-left .friends-title-icon,
+body.dark-theme .dashboard-main .dashboard-left .group-title-icon {
+  border-color: rgba(148, 163, 184, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+body.dark-theme .dashboard-main .dashboard-left .friends-count {
+  border-color: rgba(148, 163, 184, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+body.dark-theme .dashboard-main .dashboard-left #friends-list div {
+  border-color: rgba(148, 163, 184, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+body.dark-theme .dashboard-main .dashboard-left .create-group-container {
+  border-top-color: transparent;
+}
+
+body.dark-theme .dashboard-main .dashboard-left .create-group-container::before {
+  background: linear-gradient(to right,
+      transparent,
+      rgba(148, 163, 184, 0.18),
+      transparent);
+}
+
+body.dark-theme .dashboard-main .dashboard-left .group-members-list {
+  border-color: rgba(148, 163, 184, 0.16);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+body.dark-theme .dashboard-main .dashboard-left .create-group-container input[type="text"] {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(148, 163, 184, 0.16);
+  color: rgba(229, 231, 235, 0.92);
+}
+
+body.dark-theme .dashboard-main .dashboard-left .create-group-container input[type="text"]::placeholder {
+  color: rgba(229, 231, 235, 0.55);
+}
+
+body.dark-theme .dashboard-main .dashboard-left .btn-create-group {
+  border-color: rgba(148, 163, 184, 0.16);
+  background: rgba(255, 255, 255, 0.92);
+  color: rgba(17, 24, 39, 0.95);
 }
 
 /* Dashboard: spójne kafle list (żeby nie były białe w dark mode) */
 .dashboard-main .split-item {
   background: rgba(255, 255, 255, 0.92);
   border-color: rgba(0, 0, 0, 0.08);
+  transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
 }
 
 .dashboard-main .split-item h3,
@@ -259,6 +454,18 @@ header {
   background: rgba(0, 0, 0, 0.03);
   border-color: rgba(0, 0, 0, 0.06);
   color: inherit;
+}
+
+/* Subtelny hover tylko dla środkowej listy */
+.dashboard-center .my-waiting-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.10);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+body.dark-theme .dashboard-center .my-waiting-item:hover {
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.40);
+  border-color: rgba(255, 255, 255, 0.14);
 }
 
 body.dark-theme .dashboard-main .split-item {
@@ -294,8 +501,29 @@ body.dark-theme .dashboard-main .split-details-box {
 }
 
 .dashboard-left {
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
   padding-right: 6px;
+}
+
+/* Nie pozwól, by długie treści wypychały lewą kolumnę na boki */
+.dashboard-left .dashboard-card,
+.dashboard-left .create-spill,
+.dashboard-left .friends-list {
+  min-width: 0;
+}
+
+.dashboard-left input,
+.dashboard-left button,
+.dashboard-left select,
+.dashboard-left textarea {
+  max-width: 100%;
+}
+
+.dashboard-left #friends-list div,
+.dashboard-left .group-members-list label {
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .dashboard-center {
@@ -323,13 +551,47 @@ body.dark-theme .dashboard-main .split-details-box {
   min-height: 0;
 }
 
-/* ok. 2 karty widoczne (wysokość przybliżona), reszta scroll */
-.right-todo {
+/* Domyślnie: sekcje nie rozpychają się na pustą przestrzeń */
+
+/* Dynamiczny prawy panel:
+   - gdy są płatności: historia ma ~2 karty, reszta idzie na listę do opłacenia
+   - gdy brak płatności: sekcja todo się kurczy, historia wypełnia panel
+*/
+.right-panel.has-todo .todo-section {
+  flex: 0 0 auto;
+}
+
+.right-panel.has-todo .todo-section .right-scroll {
   max-height: 340px;
 }
 
-.right-history {
-  max-height: 340px;
+.right-panel.has-todo .history-section {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+.right-panel.has-todo .history-section .right-scroll {
+  flex: 1 1 auto;
+  max-height: none;
+}
+
+.right-panel.no-todo .todo-section {
+  flex: 0 0 auto;
+}
+
+.right-panel.no-todo .todo-section .right-scroll {
+  flex: 0 0 auto;
+  max-height: 120px;
+}
+
+.right-panel.no-todo .history-section {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+.right-panel.no-todo .history-section .right-scroll {
+  flex: 1 1 auto;
+  max-height: none;
 }
 
 .stats-row {
@@ -1161,7 +1423,9 @@ main:not(.dashboard-main) {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  max-height: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow-x: hidden;
   overflow-y: auto;
   padding-right: 6px;
 }
@@ -1222,6 +1486,22 @@ main:not(.dashboard-main) {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+/* Dashboard (środek): pokaż kwoty przy użytkownikach */
+.dashboard-center .split-details-list li {
+  justify-content: space-between;
+}
+
+.dashboard-center .split-details-list li .share-user {
+  margin-right: auto;
+}
+
+.dashboard-center .split-details-list li .share-amount {
+  font-weight: 900;
+  font-size: 12px;
+  opacity: 0.85;
+  white-space: nowrap;
 }
 
 .share-marker {
@@ -1484,6 +1764,7 @@ body.dark-theme #bill-popup-close {
   text-align: center;
   font-weight: bold;
   margin-left: 10px;
+  appearance: textfield;
   -moz-appearance: textfield;
 }
 
@@ -1698,6 +1979,79 @@ body.dark-theme .notifications-panel {
 body.dark-theme .notifications-panel .notification-item {
   background: #2f2f2f;
   border-color: rgba(255, 255, 255, 0.10);
+}
+
+/* Popover akcji znajomego (zamiast systemowego confirm) */
+.friend-action-popover {
+  position: fixed;
+  width: 220px;
+  max-width: calc(100vw - 16px);
+  background: #fff;
+  color: #111;
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  border-radius: 14px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.18);
+  padding: 10px;
+  z-index: 500;
+}
+
+.friend-action-title {
+  font-weight: 900;
+  font-size: 13px;
+  margin-bottom: 8px;
+  opacity: 0.95;
+}
+
+.friend-action-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.friend-action-btn {
+  appearance: none;
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  background: rgba(0, 0, 0, 0.04);
+  color: inherit;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-weight: 900;
+  cursor: pointer;
+  text-align: center;
+}
+
+.friend-action-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.friend-action-remove {
+  color: #f44336;
+  background: rgba(244, 67, 54, 0.08);
+  border-color: rgba(244, 67, 54, 0.22);
+}
+
+.friend-action-cancel:hover,
+.friend-action-btn:hover {
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.10);
+}
+
+body.dark-theme .friend-action-popover {
+  background: #383838;
+  color: #ddd;
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45);
+}
+
+body.dark-theme .friend-action-btn {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+body.dark-theme .friend-action-remove {
+  color: #ff6b60;
+  background: rgba(244, 67, 54, 0.14);
+  border-color: rgba(244, 67, 54, 0.30);
 }
 
 body.dark-theme .notifications-empty {
