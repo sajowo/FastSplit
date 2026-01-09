@@ -712,7 +712,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const chooseBtn = document.getElementById('choose-friends-button');
     const closePopupBtn = document.getElementById('close-popup');
 
-    if (chooseBtn) chooseBtn.addEventListener('click', () => document.getElementById('popup-container').style.display = 'block');
+    if (chooseBtn) chooseBtn.addEventListener('click', () => document.getElementById('popup-container').style.display = 'flex');
     if (closePopupBtn) closePopupBtn.addEventListener('click', hidePopup);
     if (form) form.addEventListener('submit', handleFormSubmit);
 

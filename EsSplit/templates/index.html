@@ -379,11 +379,9 @@
     <div id="popup-content">
       <h2>Wybierz znajomych</h2>
       {% if my_groups %}
-      <div style="margin-bottom: 15px; background: #f9f9f9; padding: 10px; border-radius: 5px; border: 1px solid #eee;">
-        <label for="group-selector" style="font-weight: bold; display: block; margin-bottom: 5px;">Szybki wybór
-          (Grupa):</label>
-        <select id="group-selector" onchange="selectGroupMembers(this)"
-          style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+      <div class="popup-quick-select">
+        <label for="group-selector">Szybki wybór (Grupa):</label>
+        <select id="group-selector" onchange="selectGroupMembers(this)">
           <option value="">-- Wybierz grupę --</option>
           {% for group in my_groups %}
           <option value="{% for member in group.members.all %}{{ member.id }},{% endfor %}">
