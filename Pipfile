@@ -5,6 +5,8 @@ name = "pypi"
 
 [packages]
 django = "*"
+django-axes = "*"
+django-recaptcha = "*"
 
 [dev-packages]
 
