@@ -277,6 +277,7 @@ header {
   align-items: center;
   gap: 10px;
   min-width: 0;
+  padding-bottom: 5px;
 }
 
 .dashboard-main .dashboard-left .friends-title h2 {
@@ -1756,7 +1757,7 @@ body.dark-theme #selected-friends li::before {
 }
 
 .group-members-list {
-  max-height: 150px;
+  max-height: 220px;
   overflow-y: auto;
   border: 1px solid #ddd;
   padding: 10px;
