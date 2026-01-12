@@ -3,8 +3,10 @@
 import os
 import sys
 
-# Naprawia błąd SSL na Macu (związany z recaptcha)
-os.environ['PYTHONHTTPSVERIFY'] = '0'
+# Dev-only: jeśli masz problem z SSL na macOS, możesz ustawić
+# PYTHONHTTPSVERIFY_DISABLE=1 (nie zalecane poza lokalnym dev)
+if os.getenv("PYTHONHTTPSVERIFY_DISABLE") in {"1", "true", "TRUE", "yes", "YES"}:
+    os.environ["PYTHONHTTPSVERIFY"] = "0"
 
 def main():
     """Run administrative tasks."""

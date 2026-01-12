@@ -8,13 +8,30 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
+def _env_bool(name: str, default: bool = False) -> bool:
+    val = os.getenv(name)
+    if val is None:
+        return default
+    return val.strip().lower() in {"1", "true", "yes", "y", "on"}
+
+
+def _env_csv(name: str, default: list[str] | None = None) -> list[str]:
+    val = os.getenv(name)
+    if val is None:
+        return default or []
+    return [item.strip() for item in val.split(",") if item.strip()]
+
+
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-6$a=(1$50&jqoqou0@9rv9q784ue_c9(9i9o1es5@f8bepf0_)'
+SECRET_KEY = os.getenv(
+    "DJANGO_SECRET_KEY",
+    "django-insecure-6$a=(1$50&jqoqou0@9rv9q784ue_c9(9i9o1es5@f8bepf0_)",
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = _env_bool("DJANGO_DEBUG", True)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = _env_csv("DJANGO_ALLOWED_HOSTS", [])
 
 
 # Application definition
@@ -165,7 +182,7 @@ LOGGING = {
 # ==========================================
 
 # 1. AXES (Blokowanie po 3 nieudanych próbach)
-AXES_ENABLED = False
+AXES_ENABLED = _env_bool("AXES_ENABLED", False)
 AXES_FAILURE_LIMIT = 3
 AXES_COOLOFF_TIME = 0.25
 AXES_RESET_ON_SUCCESS = True
@@ -178,9 +195,15 @@ LOGIN_LOCKOUT_SCHEDULE_MINUTES = [1, 5, 10, 15]
 AXES_LOCK_OUT_BY = 'combination_user_and_ip' 
 
 # 2. RECAPTCHA (Google v2 Checkbox - klucze testowe)
-RECAPTCHA_PUBLIC_KEY = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'
-RECAPTCHA_PRIVATE_KEY = '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe'
-RECAPTCHA_USE_SSL = False 
+RECAPTCHA_PUBLIC_KEY = os.getenv(
+    "RECAPTCHA_PUBLIC_KEY",
+    "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI",
+)
+RECAPTCHA_PRIVATE_KEY = os.getenv(
+    "RECAPTCHA_PRIVATE_KEY",
+    "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe",
+)
+RECAPTCHA_USE_SSL = _env_bool("RECAPTCHA_USE_SSL", False)
 
 # 3. WYCISZENIE BŁĘDÓW (Naprawia Error przy migracji)
 # Pozwalamy na używanie kluczy testowych Google w trybie developerskim
