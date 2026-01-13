@@ -1,0 +1,95 @@
+# Render Blueprint Configuration for FastSplit Django App
+# https://render.com/docs/blueprint-spec
+
+services:
+  # Main web service
+  - type: web
+    name: fastsplit
+    runtime: python
+    plan: free  # Use 'starter' or higher for production workloads
+    
+    # Build configuration
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.txt
+      mkdir -p static
+      python manage.py collectstatic --no-input
+    
+    # Start command - uses gunicorn to serve the Django app
+    startCommand: gunicorn FastSplit.wsgi:application --bind 0.0.0.0:$PORT
+    
+    # Health check endpoint (optional but recommended)
+    healthCheckPath: /
+    
+    # Environment variables
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      
+      - key: DJANGO_SECRET_KEY
+        generateValue: true  # Render will auto-generate a secure key
+      
+      - key: DJANGO_DEBUG
+        value: 0  # Always False in production
+      
+      - key: DJANGO_ALLOWED_HOSTS
+        sync: false  # Set manually in Render dashboard
+        # Example value: fastsplit.onrender.com,www.fastsplit.com
+      
+      - key: CSRF_TRUSTED_ORIGINS
+        sync: false  # Set manually in Render dashboard
+        # Example value: https://fastsplit.onrender.com,https://www.fastsplit.com
+      
+      # Optional: Axes configuration (login rate limiting)
+      - key: AXES_ENABLED
+        value: 1  # Enable in production for security
+      
+      # Optional: reCAPTCHA keys (get from Google reCAPTCHA admin)
+      - key: RECAPTCHA_PUBLIC_KEY
+        sync: false
+      
+      - key: RECAPTCHA_PRIVATE_KEY
+        sync: false
+      
+      - key: RECAPTCHA_USE_SSL
+        value: 1
+
+# Notes:
+# 1. Static Files: This config uses WhiteNoise to serve static files directly from the app.
+#    WhiteNoise is enabled in settings.py and handles static file serving efficiently.
+#    
+#    Alternative: You can use a separate Render Static Site for static files:
+#    - Uncomment the static site service below
+#    - Update STATIC_URL in settings.py to point to the static site URL
+#    - Remove WhiteNoise middleware from settings.py
+#
+# 2. Database: This uses SQLite (db.sqlite3) which is suitable for development only.
+#    For production, add a PostgreSQL database:
+#    
+#    databases:
+#      - name: fastsplit-db
+#        plan: free  # or 'starter' for production
+#    
+#    Then update settings.py to use DATABASE_URL environment variable.
+#
+# 3. After deployment:
+#    - Set DJANGO_ALLOWED_HOSTS to include your Render URL (e.g., fastsplit.onrender.com)
+#    - Set CSRF_TRUSTED_ORIGINS to include https://fastsplit.onrender.com
+#    - Run migrations via Render Shell: python manage.py migrate
+#    - Create superuser via Render Shell: python manage.py createsuperuser
+#
+# 4. For production workloads, upgrade from 'free' plan to avoid spin-down delays.
+
+# Uncomment this section if you prefer to serve static files via a separate static site:
+#  - type: static
+#    name: fastsplit-static
+#    buildCommand: |
+#      pip install --upgrade pip
+#      pip install -r requirements.txt
+#      mkdir -p static
+#      python manage.py collectstatic --no-input
+#    staticPublishPath: ./staticfiles
+#    headers:
+#      - path: /*
+#        name: Cache-Control
+#        value: public, max-age=31536000, immutable

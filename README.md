@@ -2,6 +2,64 @@
 
 Aplikacja webowa (Django) do dzielenia rachunków i rozliczeń między znajomymi.
 
+## Deployment na Render (Produkcja)
+
+FastSplit można łatwo wdrożyć na [Render](https://render.com) używając Blueprint.
+
+### Szybkie wdrożenie (1 klik)
+
+1. Fork tego repozytorium na swoje konto GitHub
+2. Zaloguj się na [Render](https://render.com)
+3. Kliknij **New** → **Blueprint**
+4. Połącz swoje konto GitHub i wybierz fork FastSplit
+5. Render automatycznie wykryje `render.yaml` i wdroży aplikację
+
+### Konfiguracja zmiennych środowiskowych
+
+Po wdrożeniu, ustaw następujące zmienne w Render Dashboard:
+
+**Wymagane:**
+- `DJANGO_ALLOWED_HOSTS` - Twoja domena Render, np. `fastsplit.onrender.com`
+- `CSRF_TRUSTED_ORIGINS` - URL z https, np. `https://fastsplit.onrender.com`
+
+**Opcjonalne (dla dodatkowego bezpieczeństwa):**
+- `RECAPTCHA_PUBLIC_KEY` - Klucz publiczny Google reCAPTCHA v2
+- `RECAPTCHA_PRIVATE_KEY` - Klucz prywatny Google reCAPTCHA v2
+
+**Automatycznie generowane przez Render:**
+- `DJANGO_SECRET_KEY` - Render wygeneruje bezpieczny klucz
+- `DJANGO_DEBUG` - Ustawione na `0` (False) w produkcji
+
+### Pierwsze uruchomienie
+
+Po wdrożeniu aplikacji, uruchom migracje i utwórz konto admina:
+
+1. Otwórz **Shell** w Render Dashboard dla swojego serwisu
+2. Uruchom migracje:
+   ```bash
+   python manage.py migrate
+   ```
+3. Utwórz konto superusera:
+   ```bash
+   python manage.py createsuperuser
+   ```
+
+### Architektura wdrożenia
+
+- **Web Service**: Działa na gunicorn, obsługuje requesty Django
+- **Static Files**: Serwowane przez WhiteNoise bezpośrednio z aplikacji
+- **Database**: SQLite (tylko dla demo; dla produkcji zalecane PostgreSQL)
+
+### Uwagi produkcyjne
+
+- Free tier Render ma spin-down po bezczynności (opóźnienie pierwszego requesta)
+- Dla produkcji zalecamy:
+  - Plan Starter lub wyższy (bez spin-down)
+  - PostgreSQL zamiast SQLite
+  - Własną domenę + SSL (automatyczny na Render)
+
+---
+
 ## Najszybciej (1 komenda)
 
 Projekt da się uruchomić jedną komendą – skrypt sam tworzy `.venv`, instaluje zależności, robi migracje i odpala serwer.
