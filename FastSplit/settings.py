@@ -33,6 +33,18 @@ DEBUG = _env_bool("DJANGO_DEBUG", True)
 
 ALLOWED_HOSTS = _env_csv("DJANGO_ALLOWED_HOSTS", [])
 
+# CSRF trusted origins for Render deployment
+# Can be set via CSRF_TRUSTED_ORIGINS env var (comma-separated)
+# Or auto-configured from RENDER_EXTERNAL_HOSTNAME
+CSRF_TRUSTED_ORIGINS = _env_csv("CSRF_TRUSTED_ORIGINS", [])
+if not CSRF_TRUSTED_ORIGINS and os.getenv("RENDER_EXTERNAL_HOSTNAME"):
+    # Automatically configure for Render if RENDER_EXTERNAL_HOSTNAME is set
+    render_hostname = os.getenv("RENDER_EXTERNAL_HOSTNAME")
+    CSRF_TRUSTED_ORIGINS = [f"https://{render_hostname}"]
+
+# Render uses a proxy, so we need to trust X-Forwarded-Proto header
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 
 # Application definition
 
@@ -54,6 +66,9 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # --- WHITENOISE MIDDLEWARE (Serve static files in production) ---
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+    # ----------------------------------------------------------------
     'django.contrib.sessions.middleware.SessionMiddleware',
     
     # --- AXES MIDDLEWARE (Musi być wysoko, przed uwierzytelnianiem) ---
@@ -153,6 +168,16 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
+
+# WhiteNoise configuration for serving static files in production
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
