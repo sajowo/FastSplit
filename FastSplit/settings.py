@@ -198,20 +198,20 @@ LOGIN_LOCKOUT_SCHEDULE_MINUTES = [1, 5, 10, 15]
 # Zmiana składni na nowszą (naprawia Warning):
 AXES_LOCK_OUT_BY = 'combination_user_and_ip' 
 
-# 2. RECAPTCHA (Google v2 Checkbox - klucze testowe)
+# 2. RECAPTCHA (Google v2 Checkbox - klucze produkcyjne)
 RECAPTCHA_PUBLIC_KEY = os.getenv(
     "RECAPTCHA_PUBLIC_KEY",
-    "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI",
+    "6Lc5sUksAAAAAGPArQ8yi6zBtxIdMRkg-pbHZVQP",
 )
 RECAPTCHA_PRIVATE_KEY = os.getenv(
     "RECAPTCHA_PRIVATE_KEY",
-    "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe",
+    "6Lc5sUksAAAAAD1qk76onFmaSv703nW_racq1ppQ",
 )
 RECAPTCHA_USE_SSL = _env_bool("RECAPTCHA_USE_SSL", False)
 
 # 3. WYCISZENIE BŁĘDÓW (Naprawia Error przy migracji)
 # Pozwalamy na używanie kluczy testowych Google w trybie developerskim
-SILENCED_SYSTEM_CHECKS = ['django_recaptcha.recaptcha_test_key_error']
+# SILENCED_SYSTEM_CHECKS = ['django_recaptcha.recaptcha_test_key_error']  # Nie potrzebny - używamy prawdziwych kluczy
 
 # 4. SECURITY HEADERS (Ochrona przed atakami XSS, Clickjacking, MIME sniffing)
 # Content Security Policy (CSP) - wysyłana przez middleware django-csp
