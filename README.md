@@ -208,6 +208,31 @@ Potem: http://127.0.0.1:8000/admin/
   - `django-recaptcha` (`django_recaptcha`) – reCAPTCHA (w ustawieniach są **testowe klucze Google** + wyciszony check).
 - Jeśli masz problem z SSL na macOS przy reCAPTCHA, możesz ustawić `PYTHONHTTPSVERIFY_DISABLE=1` (dev-only).
 
+## Zabezpieczenia haseł
+
+W aplikacji zastosowano mechanizm walidacji haseł oparty na wbudowanych walidatorach frameworka Django.
+
+### Zastosowane walidatory:
+
+- **UserAttributeSimilarityValidator**  
+  Zabrania używania haseł podobnych do nazwy użytkownika czy adresu e-mail.
+
+- **MinimumLengthValidator** (min. 8 znaków)  
+  Wymusza minimalną długość hasła (zwiększa odporność na brute force).
+
+- **CommonPasswordValidator**  
+  Blokuje popularne i łatwe do odgadnięcia hasła (np. 123456, password).
+
+- **NumericPasswordValidator**  
+  Zabrania używania haseł składających się wyłącznie z cyfr.
+
+### Dodatkowe wymagania:
+
+- Hasło musi zawierać co najmniej jedną **wielką literę** (A-Z)
+- Hasło musi zawierać co najmniej jeden **znak specjalny** (np. !, @, #, $)
+
+Wszystkie walidacje są wykonywane zarówno po stronie serwera (Django), jak i w formularzu rejestracji.
+
 ## Zmienne środowiskowe (opcjonalnie)
 
 Możesz skopiować `.env.example` do `.env` i ustawić własne wartości. Najważniejsze:

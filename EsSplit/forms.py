@@ -1,5 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 from django_recaptcha.fields import ReCaptchaField
 from django_recaptcha.widgets import ReCaptchaV2Checkbox
 import re
@@ -41,21 +43,22 @@ class RegisterForm(forms.ModelForm):
     # --- ULEPSZONA WALIDACJA HASŁA ---
     def clean_password(self):
         password = self.cleaned_data.get('password')
-        errors = [] # Lista na błędy
         
-        if len(password) < 8:
-            errors.append("Hasło jest za krótkie (min. 8 znaków).")
+        # Użyj wbudowanych walidatorów Django
+        try:
+            validate_password(password, user=None)
+        except ValidationError as e:
+            raise forms.ValidationError(e.messages)
         
-        if not any(char.isdigit() for char in password):
-            errors.append("Brakuje cyfry (0-9).")
-            
+        # Dodatkowe wymagania: wielka litera i znak specjalny
+        errors = []
+        
         if not any(char.isupper() for char in password):
-            errors.append("Brakuje dużej litery (A-Z).")
+            errors.append("Hasło musi zawierać co najmniej jedną wielką literę (A-Z).")
             
-        if not re.search(r"[ !#$%&'()*+,-./:;<=>?@[\]^_`{|}~]", password):
-             errors.append("Brakuje znaku specjalnego (np. !, @, #, $).")
+        if not re.search(r"[!@#$%^&*()_+\-=\[\]{};':\"\\|,.<>/?]", password):
+            errors.append("Hasło musi zawierać co najmniej jeden znak specjalny (np. !, @, #, $).")
 
-        # Jeśli są błędy, wyrzucamy wszystkie naraz
         if errors:
             raise forms.ValidationError(errors)
 
