@@ -65,6 +65,10 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    
+    # --- CSP MIDDLEWARE (Wysyła Content Security Policy nagłówkami HTTP) ---
+    'csp.middleware.CSPMiddleware',
+    # -----------------------------------------------------------------------
 ]
 
 # --- KONFIGURACJA BACKENDÓW LOGOWANIA (Wymagane dla Axes) ---
@@ -208,3 +212,38 @@ RECAPTCHA_USE_SSL = _env_bool("RECAPTCHA_USE_SSL", False)
 # 3. WYCISZENIE BŁĘDÓW (Naprawia Error przy migracji)
 # Pozwalamy na używanie kluczy testowych Google w trybie developerskim
 SILENCED_SYSTEM_CHECKS = ['django_recaptcha.recaptcha_test_key_error']
+
+# 4. SECURITY HEADERS (Ochrona przed atakami XSS, Clickjacking, MIME sniffing)
+# Content Security Policy (CSP) - wysyłana przez middleware django-csp
+CSP_DEFAULT_SRC = ("'self'",)
+CSP_SCRIPT_SRC = (
+    "'self'",
+    "https://code.jquery.com",
+    "https://code.jquery.com/ui",
+    "https://www.google.com/recaptcha/",
+    "https://www.gstatic.com/recaptcha/",
+    "'unsafe-inline'",
+)
+CSP_STYLE_SRC = (
+    "'self'",
+    "https://cdnjs.cloudflare.com",
+    "https://www.google.com/recaptcha/",
+    "'unsafe-inline'",
+)
+CSP_IMG_SRC = ("'self'", "data:", "https:", "https://www.gstatic.com")
+CSP_FONT_SRC = ("'self'", "https://cdnjs.cloudflare.com")
+CSP_CONNECT_SRC = ("'self'", "https:", "https://www.google.com/recaptcha/")
+CSP_FRAME_SRC = ("https://www.google.com/recaptcha/",)
+CSP_FRAME_ANCESTORS = ("'self'",)
+
+# Wysyłaj rzeczywisty nagłówek CSP (nie Report-Only)
+CSP_REPORT_ONLY = False
+
+# X-Content-Type-Options - Zapobiega MIME type sniffing
+SECURE_CONTENT_TYPE_NOSNIFF = True
+
+# X-Frame-Options - Zapobiega clickjacking (już mamy middleware)
+X_FRAME_OPTIONS = 'DENY'
+
+# X-XSS-Protection - Wyłącza XSS protection w przeglądarce (CSP jest lepszy)
+SECURE_BROWSER_XSS_FILTER = False
