@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="utf-8">
+    <title>O nas</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+    <link rel="stylesheet" href="{% static 'css/accessibility.css' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'img/favv16.png' %}">
+</head>
+
+<body>
+    <div class="a11y-font-controls a11y-font-controls--fixed" role="group" aria-label="Rozmiar czcionki">
+        <button type="button" class="a11y-font-btn" data-font-scale="0.95" aria-pressed="false"
+            aria-label="Zmniejsz czcionkę">A-</button>
+        <button type="button" class="a11y-font-btn" data-font-scale="1" aria-pressed="true"
+            aria-label="Domyślny rozmiar">A</button>
+        <button type="button" class="a11y-font-btn" data-font-scale="1.1" aria-pressed="false"
+            aria-label="Zwiększ czcionkę">A+</button>
+    </div>
+
+    <div class="center a11y-card" style="max-width: 720px;">
+        <a class="a11y-back-btn a11y-back-btn--in-card" data-fastsplit-back
+            href="{% if request.user.is_authenticated %}{% url 'index' %}{% else %}{% url 'login' %}{% endif %}"
+            aria-label="Wróć">
+            <span aria-hidden="true" style="font-size: 18px; font-weight: 900; line-height: 1;">←</span>
+        </a>
+
+        <h1>O nas</h1>
+
+        <div style="color:#333; line-height: 1.6;">
+            <p>FastSplit to aplikacja do prostego dzielenia rachunków i rozliczeń w grupie (np. wyjścia, wspólne zakupy,
+                wyjazdy).</p>
+            <p>Stawiamy na czytelny interfejs, szybkie dodawanie znajomych oraz przejrzysty podgląd kto, za co i ile
+                jest winny.</p>
+            <p style="margin-bottom: 0;">Jeśli chcesz dowiedzieć się więcej, zajrzyj do FAQ albo do regulaminu.</p>
+        </div>
+
+        <div class="a11y-info-links">
+            <a href="{% url 'faq' %}">FAQ</a>
+            <span class="sep">•</span>
+            <a href="{% url 'terms' %}">Regulamin</a>
+        </div>
+
+    </div>
+
+    <script src="{% static 'js/accessibility.js' %}"></script>
+</body>
+
+</html>

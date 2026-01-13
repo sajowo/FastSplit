@@ -11,6 +11,11 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('signup/', views.register, name='signup'),
 
+    # Strony informacyjne
+    path('faq/', views.faq_view, name='faq'),
+    path('o-nas/', views.about_view, name='about'),
+    path('regulamin/', views.terms_view, name='terms'),
+
     # Axes lockout (strona blokady logowania)
     path('lockout/', views.lockout_view, name='lockout'),
     

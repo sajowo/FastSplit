@@ -1,0 +1,128 @@
+/* A11y: font size controls + small info links (minimal, theme-consistent) */
+
+html {
+    font-size: calc(100% * var(--fastsplit-font-scale, 1));
+}
+
+.a11y-font-controls {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.a11y-font-controls--fixed {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    z-index: 2000;
+}
+
+.a11y-back-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: #fff;
+    background: #3f51b5;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
+}
+
+.a11y-back-btn:hover {
+    background: #3546a6;
+}
+
+.a11y-back-btn:focus-visible {
+    outline: 3px solid rgba(255, 255, 255, 0.5);
+    outline-offset: 2px;
+}
+
+/* Back button inside the white card (info pages) */
+.a11y-card {
+    position: relative;
+}
+
+.a11y-back-btn--in-card {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+}
+
+.a11y-font-btn {
+    appearance: none;
+    border: none;
+    cursor: pointer;
+    border-radius: 999px;
+    padding: 6px 10px;
+    font-weight: 800;
+    line-height: 1;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.18);
+}
+
+.a11y-font-btn:hover {
+    background: rgba(0, 0, 0, 0.26);
+}
+
+.a11y-font-btn[aria-pressed="true"] {
+    background: rgba(0, 0, 0, 0.36);
+}
+
+/* Linki informacyjne (login / rejestracja / info pages) */
+.a11y-info-links {
+    margin-top: 14px;
+    text-align: center;
+    font-size: 14px;
+    color: #666;
+}
+
+.a11y-info-links a {
+    color: #2691d9;
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.a11y-info-links a:hover {
+    text-decoration: underline;
+}
+
+.a11y-info-links .sep {
+    margin: 0 8px;
+    opacity: 0.6;
+}
+
+/* Topbar links (dashboard) */
+.topbar-links {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.topbar-link {
+    color: rgba(255, 255, 255, 0.9);
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 6px 10px;
+    border-radius: 999px;
+}
+
+.topbar-link:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+
+@media (max-width: 520px) {
+    .topbar-links {
+        display: none;
+    }
+}

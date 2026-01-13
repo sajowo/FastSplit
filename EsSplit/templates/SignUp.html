@@ -6,11 +6,23 @@
     <title>Rejestracja</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/test.css' %}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-p7QstapH7YLAqVzR+C7kWgjHHwKVw3+wBzlnvjWorldIJYRtUknUIP0EjAnvCbxaayQvMsZ0MY3BWfBmuscZLSw==" crossorigin="anonymous">
+    <link rel="stylesheet" href="{% static 'css/accessibility.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        integrity="sha512-p7QstapH7YLAqVzR+C7kWgjHHwKVw3+wBzlnvjWorldIJYRtUknUIP0EjAnvCbxaayQvMsZ0MY3BWfBmuscZLSw=="
+        crossorigin="anonymous">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 
 <body>
+    <div class="a11y-font-controls a11y-font-controls--fixed" role="group" aria-label="Rozmiar czcionki">
+        <button type="button" class="a11y-font-btn" data-font-scale="0.95" aria-pressed="false"
+            aria-label="Zmniejsz czcionkę">A-</button>
+        <button type="button" class="a11y-font-btn" data-font-scale="1" aria-pressed="true"
+            aria-label="Domyślny rozmiar">A</button>
+        <button type="button" class="a11y-font-btn" data-font-scale="1.1" aria-pressed="false"
+            aria-label="Zwiększ czcionkę">A+</button>
+    </div>
+
     <div class="registration-container">
         <form method="post" class="registration-form">
 
@@ -74,8 +86,8 @@
             <div class="checkbox-group">
                 <input type="checkbox" id="terms" name="terms" required>
                 <label for="terms">
-                    Akceptuję <a href="#" class="link-accent">Regulamin</a> oraz <a href="#"
-                        class="link-accent">Politykę Prywatności</a> serwisu FastSplit.
+                    Akceptuję <a href="{% url 'terms' %}" class="link-accent">Regulamin</a> oraz <a
+                        href="{% url 'terms' %}#privacy" class="link-accent">Politykę Prywatności</a> serwisu FastSplit.
                 </label>
             </div>
 
@@ -84,8 +96,18 @@
             <div class="login-link">
                 Masz już konto? <a href="{% url 'login' %}">Zaloguj się tutaj</a>
             </div>
+
+            <div class="a11y-info-links">
+                <a href="{% url 'faq' %}">FAQ</a>
+                <span class="sep">•</span>
+                <a href="{% url 'about' %}">O nas</a>
+                <span class="sep">•</span>
+                <a href="{% url 'terms' %}">Regulamin</a>
+            </div>
         </form>
     </div>
+
+    <script src="{% static 'js/accessibility.js' %}"></script>
 </body>
 
 </html>

@@ -25,6 +25,22 @@ from axes.helpers import get_client_ip_address
 
 logger = logging.getLogger(__name__)
 
+
+# --- STRONY INFORMACYJNE ---
+@never_cache
+def faq_view(request):
+    return render(request, 'faq.html')
+
+
+@never_cache
+def about_view(request):
+    return render(request, 'about.html')
+
+
+@never_cache
+def terms_view(request):
+    return render(request, 'terms.html')
+
 # --- WIDOK GŁÓWNY (DASHBOARD) ---
 @never_cache
 def index(request):

@@ -6,6 +6,7 @@
     <title>Podziel Rachunek {% block title %}{% endblock %}</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/login.css' %}">
+    <link rel="stylesheet" href="{% static 'css/accessibility.css' %}">
     <link rel="icon" type="image/x-icon" href="{% static 'img/favv16.png' %}">
 
     <style>
@@ -23,6 +24,15 @@
 </head>
 
 <body>
+    <div class="a11y-font-controls a11y-font-controls--fixed" role="group" aria-label="Rozmiar czcionki">
+        <button type="button" class="a11y-font-btn" data-font-scale="0.95" aria-pressed="false"
+            aria-label="Zmniejsz czcionkę">A-</button>
+        <button type="button" class="a11y-font-btn" data-font-scale="1" aria-pressed="true"
+            aria-label="Domyślny rozmiar">A</button>
+        <button type="button" class="a11y-font-btn" data-font-scale="1.1" aria-pressed="false"
+            aria-label="Zwiększ czcionkę">A+</button>
+    </div>
+
     <div class="center">
         <h1>Witaj!</h1>
 
@@ -70,8 +80,18 @@
 
             <input type="submit" value="Zaloguj się">
             <div class="users_signup">Nie masz konta? <a href="{% url 'signup' %}">Zarejestruj się</a></div>
+
+            <div class="a11y-info-links">
+                <a href="{% url 'faq' %}">FAQ</a>
+                <span class="sep">•</span>
+                <a href="{% url 'about' %}">O nas</a>
+                <span class="sep">•</span>
+                <a href="{% url 'terms' %}">Regulamin</a>
+            </div>
         </form>
     </div>
+
+    <script src="{% static 'js/accessibility.js' %}"></script>
 </body>
 
 </html>

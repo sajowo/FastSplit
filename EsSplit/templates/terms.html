@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="utf-8">
+    <title>Regulamin</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+    <link rel="stylesheet" href="{% static 'css/accessibility.css' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'img/favv16.png' %}">
+</head>
+
+<body>
+    <div class="a11y-font-controls a11y-font-controls--fixed" role="group" aria-label="Rozmiar czcionki">
+        <button type="button" class="a11y-font-btn" data-font-scale="0.95" aria-pressed="false"
+            aria-label="Zmniejsz czcionkę">A-</button>
+        <button type="button" class="a11y-font-btn" data-font-scale="1" aria-pressed="true"
+            aria-label="Domyślny rozmiar">A</button>
+        <button type="button" class="a11y-font-btn" data-font-scale="1.1" aria-pressed="false"
+            aria-label="Zwiększ czcionkę">A+</button>
+    </div>
+
+    <div class="center a11y-card" style="max-width: 820px;">
+        <a class="a11y-back-btn a11y-back-btn--in-card" data-fastsplit-back
+            href="{% if request.user.is_authenticated %}{% url 'index' %}{% else %}{% url 'login' %}{% endif %}"
+            aria-label="Wróć">
+            <span aria-hidden="true" style="font-size: 18px; font-weight: 900; line-height: 1;">←</span>
+        </a>
+
+        <h1>Regulamin</h1>
+
+        <div style="color:#333; line-height: 1.6;">
+            <h3 style="margin-bottom: 6px;">1. Informacje ogólne</h3>
+            <p style="margin-top: 0;">FastSplit służy do tworzenia rozliczeń oraz dzielenia kosztów pomiędzy
+                użytkowników.</p>
+
+            <h3 style="margin-bottom: 6px;">2. Konto i bezpieczeństwo</h3>
+            <p style="margin-top: 0;">Użytkownik odpowiada za bezpieczeństwo swojego konta, w tym hasła oraz danych
+                logowania.</p>
+
+            <h3 style="margin-bottom: 6px;">3. Odpowiedzialność</h3>
+            <p style="margin-top: 0;">Aplikacja prezentuje podziały kwot na podstawie danych podanych przez
+                użytkowników. Ostateczna odpowiedzialność za rozliczenia pozostaje po stronie użytkowników.</p>
+
+            <h3 id="privacy" style="margin-bottom: 6px;">4. Polityka prywatności (skrót)</h3>
+            <p style="margin-top: 0;">Przetwarzamy dane niezbędne do działania serwisu (np. e-mail, dane profilu,
+                informacje o rozliczeniach). Dane nie są udostępniane innym użytkownikom poza zakresem wynikającym z
+                funkcji aplikacji (np. nazwa użytkownika w rozliczeniu).</p>
+
+            <h3 style="margin-bottom: 6px;">5. Kontakt</h3>
+            <p style="margin-top: 0; margin-bottom: 0;">W sprawach dotyczących działania serwisu skontaktuj się z
+                administratorem.</p>
+        </div>
+
+        <div class="a11y-info-links">
+            <a href="{% url 'faq' %}">FAQ</a>
+            <span class="sep">•</span>
+            <a href="{% url 'about' %}">O nas</a>
+        </div>
+
+    </div>
+
+    <script src="{% static 'js/accessibility.js' %}"></script>
+</body>
+
+</html>

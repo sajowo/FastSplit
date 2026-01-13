@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="utf-8">
+    <title>FAQ</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+    <link rel="stylesheet" href="{% static 'css/accessibility.css' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'img/favv16.png' %}">
+</head>
+
+<body>
+    <div class="a11y-font-controls a11y-font-controls--fixed" role="group" aria-label="Rozmiar czcionki">
+        <button type="button" class="a11y-font-btn" data-font-scale="0.95" aria-pressed="false"
+            aria-label="Zmniejsz czcionkę">A-</button>
+        <button type="button" class="a11y-font-btn" data-font-scale="1" aria-pressed="true"
+            aria-label="Domyślny rozmiar">A</button>
+        <button type="button" class="a11y-font-btn" data-font-scale="1.1" aria-pressed="false"
+            aria-label="Zwiększ czcionkę">A+</button>
+    </div>
+
+    <div class="center a11y-card" style="max-width: 720px;">
+        <a class="a11y-back-btn a11y-back-btn--in-card" data-fastsplit-back
+            href="{% if request.user.is_authenticated %}{% url 'index' %}{% else %}{% url 'login' %}{% endif %}"
+            aria-label="Wróć">
+            <span aria-hidden="true" style="font-size: 18px; font-weight: 900; line-height: 1;">←</span>
+        </a>
+
+        <h1>FAQ</h1>
+
+        <div style="color:#333; line-height: 1.6;">
+            <h3 style="margin-bottom: 6px;">Jak działa FastSplit?</h3>
+            <p style="margin-top: 0;">Tworzysz rachunek, wybierasz znajomych i dzielisz kwotę. System zapisuje udziały i
+                statusy rozliczeń.</p>
+
+            <h3 style="margin-bottom: 6px;">Czy muszę zakładać konto?</h3>
+            <p style="margin-top: 0;">Tak — konto jest potrzebne do zapisywania rozliczeń i powiązania ich z
+                użytkownikiem.</p>
+
+            <h3 style="margin-bottom: 6px;">Dlaczego widzę CAPTCHA?</h3>
+            <p style="margin-top: 0;">CAPTCHA chroni logowanie przed automatycznymi próbami (botami) i nadużyciami.</p>
+
+            <h3 style="margin-bottom: 6px;">Co jeśli pomylę się w rozliczeniu?</h3>
+            <p style="margin-top: 0;">Możesz utworzyć nowe rozliczenie lub skontaktować się z osobami w rozliczeniu, aby
+                je skorygować.</p>
+
+            <h3 style="margin-bottom: 6px;">Czy mogę zmienić rozmiar czcionki?</h3>
+            <p style="margin-top: 0;">Tak — użyj przycisków A-/A/A+ w prawym górnym rogu. Ustawienie zapamięta się na
+                urządzeniu.</p>
+        </div>
+
+        <div class="a11y-info-links">
+            <a href="{% url 'about' %}">O nas</a>
+            <span class="sep">•</span>
+            <a href="{% url 'terms' %}">Regulamin</a>
+        </div>
+
+    </div>
+
+    <script src="{% static 'js/accessibility.js' %}"></script>
+</body>
+
+</html>

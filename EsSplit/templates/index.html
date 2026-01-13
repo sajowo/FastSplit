@@ -7,6 +7,7 @@
   <title>Podziel Rachunek</title>
   {% load static %}
   <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+  <link rel="stylesheet" href="{% static 'css/accessibility.css' %}" />
   <link rel="icon" type="image/x-icon" href="{% static 'img/favv16.png' %}" />
 </head>
 
@@ -55,6 +56,21 @@
       </div>
 
       <div class="topbar-right">
+        <div class="topbar-links" aria-label="Linki informacyjne">
+          <a class="topbar-link" href="{% url 'faq' %}">FAQ</a>
+          <a class="topbar-link" href="{% url 'about' %}">O nas</a>
+          <a class="topbar-link" href="{% url 'terms' %}">Regulamin</a>
+        </div>
+
+        <div class="a11y-font-controls" role="group" aria-label="Rozmiar czcionki">
+          <button type="button" class="a11y-font-btn" data-font-scale="0.95" aria-pressed="false"
+            aria-label="Zmniejsz czcionkę">A-</button>
+          <button type="button" class="a11y-font-btn" data-font-scale="1" aria-pressed="true"
+            aria-label="Domyślny rozmiar">A</button>
+          <button type="button" class="a11y-font-btn" data-font-scale="1.1" aria-pressed="false"
+            aria-label="Zwiększ czcionkę">A+</button>
+        </div>
+
         <div class="notifications">
           <button type="button" class="icon-btn" id="notifications-toggle" aria-expanded="false"
             aria-controls="notifications-panel" aria-label="Powiadomienia">
@@ -431,9 +447,12 @@
     </div>
   </div>
 
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>
-  <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js" integrity="sha256-lSjKY0/srUM+c9hlrcpC2e4IxXrZZLLVxMZ/8L0GkY=" crossorigin="anonymous"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+    integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>
+  <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"
+    integrity="sha256-lSjKY0/srUM+c9hlrcpC2e4IxXrZZLLVxMZ/8L0GkY=" crossorigin="anonymous"></script>
   <script src="{% static 'js/scripts.js' %}"></script>
+  <script src="{% static 'js/accessibility.js' %}"></script>
 </body>
 
 </html>
