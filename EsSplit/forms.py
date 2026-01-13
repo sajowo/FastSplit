@@ -21,6 +21,23 @@ class RegisterForm(forms.ModelForm):
         # Usunąłem 'username' z fields, bo i tak generujesz go automatycznie w views.py!
         # Jeśli jednak chcesz, żeby użytkownik sam wpisywał nick, przywróć 'username'.
 
+    def clean_email(self):
+        email = (self.cleaned_data.get('email') or '').strip().lower()
+        if not email:
+            return email
+
+        # Django's default User does not enforce unique email.
+        # Enforce it here to avoid ambiguous logins and MultipleObjectsReturned.
+        exists = (
+            User.objects
+            .filter(email__iexact=email)
+            .exclude(pk=getattr(self.instance, 'pk', None))
+            .exists()
+        )
+        if exists:
+            raise forms.ValidationError("Konto z tym adresem e-mail już istnieje.")
+        return email
+
     # --- ULEPSZONA WALIDACJA HASŁA ---
     def clean_password(self):
         password = self.cleaned_data.get('password')

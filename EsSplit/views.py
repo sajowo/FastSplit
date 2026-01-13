@@ -239,11 +239,19 @@ def login_view(request):
             User = get_user_model()
             
             # Logika szukania username po emailu
-            try:
-                user_obj = User.objects.get(email=email)
-                username_to_check = user_obj.username
-            except User.DoesNotExist:
+            # NOTE: Email is not unique in Django's default User model.
+            # We enforce uniqueness on registration, but also handle legacy duplicates here.
+            user_qs = User.objects.filter(email__iexact=email_norm).order_by('id')
+            if user_qs.count() == 1:
+                username_to_check = user_qs.first().username
+            elif user_qs.count() == 0:
                 username_to_check = "nieistniejacy_uzytkownik_xyz"
+            else:
+                messages.error(
+                    request,
+                    'Wykryto kilka kont z tym samym e-mailem. Skontaktuj się z administratorem, aby scalić konto.'
+                )
+                return render(request, 'login.html', {'form': form})
 
             # Używamy authenticate (Wymagane dla Axes)
             user = authenticate(request, username=username_to_check, password=password)
