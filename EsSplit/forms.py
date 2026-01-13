@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User
-from django_recaptcha.fields import ReCaptchaField
-from django_recaptcha.widgets import ReCaptchaV2Checkbox
+#from django_recaptcha.fields import ReCaptchaField
+#from django_recaptcha.widgets import ReCaptchaV2Checkbox
 import re
 
 # --- Formularz Rejestracji ---
@@ -13,7 +13,7 @@ class RegisterForm(forms.ModelForm):
     )
     password_confirm = forms.CharField(widget=forms.PasswordInput, label="Potwierdź hasło")
     
-    captcha = ReCaptchaField(widget=ReCaptchaV2Checkbox)
+    #captcha = ReCaptchaField(widget=ReCaptchaV2Checkbox)
 
     class Meta:
         model = User
@@ -57,4 +57,4 @@ class RegisterForm(forms.ModelForm):
 class LoginForm(forms.Form):
     email = forms.EmailField(label="Email Address")
     password = forms.CharField(widget=forms.PasswordInput, label="Password")
-    captcha = ReCaptchaField(widget=ReCaptchaV2Checkbox)
+    #captcha = ReCaptchaField(widget=ReCaptchaV2Checkbox)
