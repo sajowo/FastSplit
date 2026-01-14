@@ -454,8 +454,15 @@ document.addEventListener('DOMContentLoaded', function () {
     const updateBadge = (count) => {
         if (!notificationsBadge) return;
         const n = Number(count) || 0;
-        notificationsBadge.textContent = String(n);
-        notificationsBadge.hidden = n <= 0;
+        if (n <= 0) {
+            notificationsBadge.hidden = true;
+            notificationsBadge.style.display = 'none';
+            notificationsBadge.textContent = '';
+        } else {
+            notificationsBadge.hidden = false;
+            notificationsBadge.style.display = '';
+            notificationsBadge.textContent = String(n);
+        }
     };
 
     const fetchBillNotifications = async () => {
@@ -479,14 +486,12 @@ document.addEventListener('DOMContentLoaded', function () {
             // Render listy
             renderBillNotifications(pending);
 
-            // Badge: tylko dla rachunków (friend_requests już są w HTML; tutaj dokładamy pending bills)
-            // Najprościej: ustawiamy badge na max(istniejący, pending.length) jeśli nie umiemy odczytać friend_requests.
-            // Gdy badge już ma liczbę z serwera (notifications_count), podbijamy o różnicę.
-            const currentBadge = notificationsBadge && !notificationsBadge.hidden ? Number(notificationsBadge.textContent) || 0 : 0;
-            const computed = Math.max(currentBadge, pending.length);
-            updateBadge(computed);
-
-            if (hasNew) {
+            // Nie aktualizuj badge jeśli panel powiadomień jest otwarty (użytkownik właśnie czyta)
+            const panelIsOpen = notificationsPanel && !notificationsPanel.hidden;
+            if (!panelIsOpen && hasNew) {
+                // Dodaj nowe powiadomienia do badge
+                const currentBadge = notificationsBadge && !notificationsBadge.hidden ? Number(notificationsBadge.textContent) || 0 : 0;
+                updateBadge(currentBadge + pending.filter(p => !seen.has(String(p.bill_id))).length || pending.length);
                 setSeenBills(seen);
                 showToast('Masz nowe rozliczenie do akceptacji.', 'info');
             }
@@ -511,9 +516,20 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!notificationsToggle || !notificationsPanel) return;
         notificationsPanel.hidden = false;
         notificationsToggle.setAttribute('aria-expanded', 'true');
-        // Ukryj badge po otwarciu powiadomień (użytkownik je "przeczytał")
-        if (notificationsBadge) {
-            notificationsBadge.hidden = true;
+        // Ukryj badge i ustaw na 0 po otwarciu powiadomień (użytkownik je "przeczytał")
+        updateBadge(0);
+        // Wyślij request do serwera, żeby oznaczyć powiadomienia jako przeczytane
+        if (csrfToken) {
+            fetch('/notifications/mark-read/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                credentials: 'same-origin',
+            }).catch(() => {
+                // ignore errors
+            });
         }
     };
 

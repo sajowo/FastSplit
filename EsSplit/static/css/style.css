@@ -2280,3 +2280,11 @@ body.dark-theme #popup-friends-list {
 body.dark-theme #popup-friends-list li:hover {
   background: rgba(255, 255, 255, 0.06);
 }
+
+
+/* Ukryj badge powiadomień gdy jest pusty lub hidden */
+.notifications-badge[hidden],
+.notifications-badge:empty {
+  display: none !important;
+  visibility: hidden !important;
+}

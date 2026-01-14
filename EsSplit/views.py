@@ -17,7 +17,7 @@ from django.views.decorators.cache import never_cache
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Sum, Value, DecimalField
 from django.db.models.functions import Coalesce
-from .models import Person, Friend, Bill, FriendRequest, Group, BillShare, LoginLockout
+from .models import Person, Friend, Bill, FriendRequest, Group, BillShare, LoginLockout, NotificationReadStatus
 
 from datetime import timedelta
 
@@ -49,6 +49,13 @@ def index(request):
         friend_requests = FriendRequest.objects.filter(to_user=request.user)
         my_groups = Group.objects.filter(creator=request.user)
 
+        # Pobierz timestamp ostatniego odczytu powiadomień
+        try:
+            notification_status = NotificationReadStatus.objects.get(user=request.user)
+            last_read_at = notification_status.read_at
+        except NotificationReadStatus.DoesNotExist:
+            last_read_at = None
+
         rejected_bill_shares_qs = (
             BillShare.objects
             .select_related('bill', 'user')
@@ -75,6 +82,19 @@ def index(request):
 
         rejected_bill_shares_for_creator = list(rejected_bill_shares_qs[:5])
         paid_bill_shares_for_creator = list(paid_bill_shares_qs[:5])
+
+        # Oblicz liczbę nieprzeczytanych powiadomień (nowszych niż last_read_at)
+        if last_read_at:
+            unread_friend_requests = friend_requests.filter(created_at__gt=last_read_at).count()
+            unread_rejected = rejected_bill_shares_qs.filter(bill__date__gt=last_read_at).count()
+            unread_paid = paid_bill_shares_qs.filter(bill__date__gt=last_read_at).count()
+        else:
+            # Jeśli nigdy nie odczytano, wszystkie są nieprzeczytane
+            unread_friend_requests = friend_requests.count()
+            unread_rejected = rejected_bill_shares_qs.count()
+            unread_paid = paid_bill_shares_qs.count()
+
+        notifications_count = unread_friend_requests + unread_rejected + unread_paid
 
         def decorate_bill_for_user(bill: Bill):
             if request.user == bill.creator:
@@ -203,7 +223,7 @@ def index(request):
             'friend_requests': friend_requests,
             'rejected_bill_shares_for_creator': rejected_bill_shares_for_creator,
             'paid_bill_shares_for_creator': paid_bill_shares_for_creator,
-            'notifications_count': friend_requests.count() + rejected_bill_shares_qs.count() + paid_bill_shares_qs.count(),
+            'notifications_count': notifications_count,
             'my_groups': my_groups,
             'todo_bills': todo_bills,
             'history_bills': history_bills,
@@ -604,7 +624,7 @@ def create_spill(request):
                             bill=bill,
                             user=user,
                             amount_owed=float(user_amount),
-                            accepted=True
+                            accepted=False  # Użytkownik musi zaakceptować
                         )
             
             bill.save()
@@ -792,3 +812,13 @@ def get_pending_bill_notifications(request):
         })
 
     return JsonResponse({'pending': data})
+
+
+@login_required
+@require_POST
+def mark_notifications_read(request):
+    """Oznacza powiadomienia jako przeczytane (zapisuje timestamp)."""
+    status, _ = NotificationReadStatus.objects.get_or_create(user=request.user)
+    status.read_at = timezone.now()
+    status.save(update_fields=['read_at'])
+    return JsonResponse({'ok': True})

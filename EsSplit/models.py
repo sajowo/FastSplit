@@ -102,3 +102,12 @@ class LoginLockout(models.Model):
 
     def __str__(self):
         return f"{self.ip_address} / {self.email} (lvl={self.lockout_level}, failures={self.failures})"
+
+
+class NotificationReadStatus(models.Model):
+    """Przechowuje timestamp ostatniego odczytania powiadomień przez użytkownika."""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='notification_status')
+    read_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.user.username} - read_at: {self.read_at}"

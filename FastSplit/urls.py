@@ -37,4 +37,5 @@ urlpatterns = [
     path('bill/<int:bill_id>/reject/', views.reject_bill_share, name='reject_bill_share'),
     path('bill/<int:bill_id>/pay/', views.pay_bill_share, name='pay_bill_share'),
     path('notifications/pending-bills/', views.get_pending_bill_notifications, name='pending_bill_notifications'),
+    path('notifications/mark-read/', views.mark_notifications_read, name='mark_notifications_read'),
 ]
