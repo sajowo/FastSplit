@@ -511,6 +511,10 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!notificationsToggle || !notificationsPanel) return;
         notificationsPanel.hidden = false;
         notificationsToggle.setAttribute('aria-expanded', 'true');
+        // Ukryj badge po otwarciu powiadomień (użytkownik je "przeczytał")
+        if (notificationsBadge) {
+            notificationsBadge.hidden = true;
+        }
     };
 
     const toggleNotifications = () => {
@@ -1060,7 +1064,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         const selectedFriendsIds = Array.from(document.querySelectorAll('#selected-friends li')).map(li => li.dataset.id);
-        const csrftoken = getCookie('csrftoken') || $('input[name="csrfmiddlewaretoken"]').val();
+        const csrftoken = getCookie('csrftoken') || (document.querySelector('input[name="csrfmiddlewaretoken"]') || {}).value;
 
         if (!csrftoken) {
             showToast("Błąd CSRF!", "error");
@@ -1068,19 +1072,27 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        $.ajax({
-            url: '/create_spill/',
-            type: 'POST',
+        const formData = new FormData();
+        formData.append('amount', amount);
+        formData.append('tip', tip);
+        formData.append('description', description);
+        formData.append('custom_splits', JSON.stringify(customSplits));
+        selectedFriendsIds.forEach(id => formData.append('friends[]', id));
+
+        fetch('/create_spill/', {
+            method: 'POST',
             headers: { 'X-CSRFToken': csrftoken },
-            mode: 'same-origin',
-            data: {
-                'amount': amount,
-                'tip': tip,
-                'description': description, // 2. Wysyłamy nazwę
-                'friends[]': selectedFriendsIds,
-                'custom_splits': JSON.stringify(customSplits)
-            },
-            success: function (response) {
+            body: formData
+        })
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        throw new Error(response.status + ' ' + text);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
                 showToast("✅ Rachunek utworzony pomyślnie!", "success");
 
                 // Czyścimy wszystko
@@ -1093,12 +1105,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 // Odśwież, żeby od razu zobaczyć nowy rachunek w prawym panelu
                 setTimeout(() => window.location.reload(), 700);
-            },
-            error: function (xhr) {
-                showToast("❌ Błąd: " + xhr.status + " " + xhr.responseText, "error");
+            })
+            .catch(error => {
+                showToast("❌ Błąd: " + error.message, "error");
                 if (submitBtn) submitBtn.disabled = false;
-            }
-        });
+            });
     }
 
 });

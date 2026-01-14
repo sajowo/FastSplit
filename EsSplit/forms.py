@@ -44,12 +44,6 @@ class RegisterForm(forms.ModelForm):
     def clean_password(self):
         password = self.cleaned_data.get('password')
         
-        # Użyj wbudowanych walidatorów Django
-        try:
-            validate_password(password, user=None)
-        except ValidationError as e:
-            raise forms.ValidationError(e.messages)
-        
         # Dodatkowe wymagania: wielka litera i znak specjalny
         errors = []
         
@@ -71,6 +65,21 @@ class RegisterForm(forms.ModelForm):
         
         if password and password_confirm and password != password_confirm:
             self.add_error('password_confirm', "Hasła nie są identyczne.")
+        
+        # Walidacja hasła z danymi użytkownika (dla UserAttributeSimilarityValidator)
+        if password:
+            # Tworzymy tymczasowy obiekt użytkownika z danymi z formularza
+            temp_user = User(
+                first_name=cleaned_data.get('first_name', ''),
+                last_name=cleaned_data.get('last_name', ''),
+                email=cleaned_data.get('email', ''),
+                username=cleaned_data.get('email', '')  # username będzie generowany z email
+            )
+            try:
+                validate_password(password, user=temp_user)
+            except ValidationError as e:
+                self.add_error('password', e.messages)
+        
         return cleaned_data
 
 # --- Formularz Logowania ---
