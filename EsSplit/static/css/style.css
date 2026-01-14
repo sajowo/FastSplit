@@ -464,18 +464,21 @@ body.dark-theme .dashboard-main .dashboard-left .btn-create-group {
   border-color: rgba(0, 0, 0, 0.12);
 }
 
-body.dark-theme .dashboard-center .my-waiting-item:hover {
+body.dark-theme .dashboard-center .my-waiting-item:hover,
+html.dark-theme body .dashboard-center .my-waiting-item:hover {
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.40);
   border-color: rgba(255, 255, 255, 0.14);
 }
 
-body.dark-theme .dashboard-main .split-item {
+body.dark-theme .dashboard-main .split-item,
+html.dark-theme body .dashboard-main .split-item {
   background: rgba(17, 24, 39, 0.72);
   border-color: rgba(148, 163, 184, 0.16);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
 }
 
-body.dark-theme .dashboard-main .split-details-box {
+body.dark-theme .dashboard-main .split-details-box,
+html.dark-theme body .dashboard-main .split-details-box {
   background: rgba(255, 255, 255, 0.06);
   border-color: rgba(148, 163, 184, 0.14);
   color: rgba(229, 231, 235, 0.92);
@@ -658,12 +661,18 @@ body.dark-theme .dashboard-main .split-details-box {
 }
 
 /* --- DARK THEME dla nowego dashboardu --- */
-body.dark-theme {
+body.dark-theme,
+html.dark-theme body {
   background-color: #0b1220;
   color: #e5e7eb;
 }
 
-body.dark-theme .topbar {
+html.dark-theme {
+  background-color: #0b1220;
+}
+
+body.dark-theme .topbar,
+html.dark-theme body .topbar {
   background: rgba(11, 18, 32, 0.78);
   border-bottom-color: rgba(255, 255, 255, 0.10);
 }
@@ -783,13 +792,15 @@ body.dark-theme .logout-link {
   max-width: 140px;
 }
 
-body.dark-theme .dashboard-card {
+body.dark-theme .dashboard-card,
+html.dark-theme body .dashboard-card {
   background-color: rgba(17, 24, 39, 0.78);
   border-color: rgba(148, 163, 184, 0.16);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
 }
 
-body.dark-theme .stat-card {
+body.dark-theme .stat-card,
+html.dark-theme body .stat-card {
   background-color: rgba(17, 24, 39, 0.60);
   border-color: rgba(148, 163, 184, 0.16);
 }
@@ -2062,7 +2073,8 @@ body.dark-theme main:not(.dashboard-main) .create-spill button[type="submit"]:ho
   background-color: #2196f3;
 }
 
-body.dark-theme #friends-list div {
+body.dark-theme #friends-list div,
+html.dark-theme body #friends-list div {
   background-color: #383838;
   color: #ddd;
   border-color: rgba(255, 255, 255, 0.12);
@@ -2070,13 +2082,16 @@ body.dark-theme #friends-list div {
 }
 
 body.dark-theme .create-spill input[type="number"],
-body.dark-theme .create-spill input[type="text"] {
+body.dark-theme .create-spill input[type="text"],
+html.dark-theme body .create-spill input[type="number"],
+html.dark-theme body .create-spill input[type="text"] {
   background: #383838;
   color: #ddd;
   border-color: rgba(255, 255, 255, 0.12);
 }
 
-body.dark-theme .create-spill input::placeholder {
+body.dark-theme .create-spill input::placeholder,
+html.dark-theme body .create-spill input::placeholder {
   color: rgba(221, 221, 221, 0.7);
 }
 
@@ -2086,14 +2101,17 @@ body.dark-theme .split-details-box {
   border-color: rgba(255, 255, 255, 0.10);
 }
 
-body.dark-theme .action-link {
+body.dark-theme .action-link,
+html.dark-theme body .action-link {
   background: #383838;
   border-color: rgba(255, 255, 255, 0.12);
   color: #ddd;
 }
 
 body.dark-theme .split-status,
-body.dark-theme .split-date {
+body.dark-theme .split-date,
+html.dark-theme body .split-status,
+html.dark-theme body .split-date {
   color: rgba(221, 221, 221, 0.75);
 }
 

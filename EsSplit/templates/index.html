@@ -5,6 +5,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Podziel Rachunek</title>
+  <script>
+    (function () {
+      var saved = null;
+      try { saved = localStorage.getItem('fastsplit_theme'); } catch (e) { }
+      var isDark = saved === 'dark' || (saved !== 'light' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      if (isDark) document.documentElement.classList.add('dark-theme');
+    })();
+  </script>
   {% load static %}
   <link rel="stylesheet" href="{% static 'css/style.css' %}" />
   <link rel="stylesheet" href="{% static 'css/accessibility.css' %}" />

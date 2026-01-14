@@ -39,6 +39,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const setTheme = (isDark) => {
         body.classList.toggle('dark-theme', Boolean(isDark));
+        document.documentElement.classList.toggle('dark-theme', Boolean(isDark));
         if (themeSwitch) themeSwitch.checked = Boolean(isDark);
     };
 
