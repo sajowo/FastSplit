@@ -17,9 +17,14 @@ from django.views.decorators.cache import never_cache
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Sum, Value, DecimalField
 from django.db.models.functions import Coalesce
-from .models import Person, Friend, Bill, FriendRequest, Group, BillShare, LoginLockout, NotificationReadStatus
+from .models import Person, Friend, Bill, FriendRequest, Group, BillShare, LoginLockout, NotificationReadStatus, UserTOTP
 
 from datetime import timedelta
+import pyotp
+import qrcode
+import qrcode.image.svg
+from io import BytesIO
+import base64
 
 from axes.helpers import get_client_ip_address
 
@@ -293,6 +298,22 @@ def login_view(request):
             user = authenticate(request, username=username_to_check, password=password)
 
             if user is not None:
+                # Sprawdź czy user ma włączone 2FA
+                try:
+                    totp = user.totp
+                    if totp.is_enabled:
+                        # Zapisz user ID w sesji i przekieruj na weryfikację 2FA
+                        request.session['pending_2fa_user_id'] = user.id
+                        
+                        # Reset blokady po poprawnym haśle
+                        lock_rec.failures = 0
+                        lock_rec.save(update_fields=['failures', 'updated_at'])
+                        
+                        return redirect('verify_2fa')
+                except UserTOTP.DoesNotExist:
+                    pass
+                
+                # Brak 2FA - normalne logowanie
                 login(request, user)
                 logger.info("Logowanie udane")
 
@@ -408,7 +429,10 @@ def register(request):
             
             login(request, user)
             messages.success(request, 'Konto utworzone!')
-            return redirect('index')
+            
+            # Przekieruj na konfigurację 2FA
+            request.session['pending_2fa_setup'] = True
+            return redirect('setup_2fa')
         else:
             messages.error(request, 'Formularz zawiera błędy. Sprawdź poniżej.')
     else:
@@ -822,3 +846,264 @@ def mark_notifications_read(request):
     status.read_at = timezone.now()
     status.save(update_fields=['read_at'])
     return JsonResponse({'ok': True})
+
+
+# --- 2FA (TOTP) ---
+
+def generate_qr_code_base64(uri: str) -> str:
+    """Generuje QR kod jako base64 PNG."""
+    qr = qrcode.QRCode(version=1, box_size=6, border=2)
+    qr.add_data(uri)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="black", back_color="white")
+    buffer = BytesIO()
+    img.save(buffer, format='PNG')
+    return base64.b64encode(buffer.getvalue()).decode('utf-8')
+
+
+@never_cache
+def setup_2fa_view(request):
+    """
+    Strona konfiguracji 2FA - pokazywana po rejestracji lub z ustawień.
+    Użytkownik może pominąć (skip) lub skonfigurować.
+    """
+    if not request.user.is_authenticated:
+        return redirect('login')
+
+    # Sprawdź czy user już ma włączone 2FA
+    try:
+        totp = request.user.totp
+        if totp.is_enabled:
+            messages.info(request, "Masz już włączone 2FA.")
+            return redirect('index')
+    except UserTOTP.DoesNotExist:
+        totp = None
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        if action == 'skip':
+            # Użytkownik pomija konfigurację 2FA
+            request.session.pop('pending_2fa_setup', None)
+            messages.info(request, "Pominięto konfigurację 2FA. Możesz ją włączyć później w ustawieniach.")
+            return redirect('index')
+
+        elif action == 'generate':
+            # Generuj nowy sekret
+            totp = UserTOTP.create_for_user(request.user)
+            uri = totp.get_provisioning_uri()
+            qr_base64 = generate_qr_code_base64(uri)
+            
+            return render(request, 'setup_2fa.html', {
+                'step': 'scan',
+                'qr_code': qr_base64,
+                'secret': totp.secret,
+                'show_skip': request.session.get('pending_2fa_setup', False),
+            })
+
+        elif action == 'verify':
+            # Weryfikuj kod i włącz 2FA
+            code = request.POST.get('code', '').strip()
+            
+            if not totp:
+                try:
+                    totp = request.user.totp
+                except UserTOTP.DoesNotExist:
+                    messages.error(request, "Najpierw wygeneruj kod QR.")
+                    return redirect('setup_2fa')
+
+            if totp.get_totp().verify(code, valid_window=1):
+                totp.is_enabled = True
+                backup_codes = totp.generate_backup_codes()
+                totp.save()
+                
+                request.session.pop('pending_2fa_setup', None)
+                
+                return render(request, 'setup_2fa.html', {
+                    'step': 'success',
+                    'backup_codes': backup_codes,
+                })
+            else:
+                messages.error(request, "Nieprawidłowy kod. Spróbuj ponownie.")
+                uri = totp.get_provisioning_uri()
+                qr_base64 = generate_qr_code_base64(uri)
+                return render(request, 'setup_2fa.html', {
+                    'step': 'scan',
+                    'qr_code': qr_base64,
+                    'secret': totp.secret,
+                    'show_skip': request.session.get('pending_2fa_setup', False),
+                })
+
+    # GET - pokaż stronę startową
+    return render(request, 'setup_2fa.html', {
+        'step': 'start',
+        'show_skip': request.session.get('pending_2fa_setup', False),
+    })
+
+
+@never_cache
+def verify_2fa_view(request):
+    """
+    Strona weryfikacji kodu 2FA po zalogowaniu.
+    User jest już "częściowo" zalogowany (w sesji).
+    """
+    pending_user_id = request.session.get('pending_2fa_user_id')
+    
+    if not pending_user_id:
+        return redirect('login')
+
+    if request.method == 'POST':
+        code = request.POST.get('code', '').strip()
+        
+        try:
+            user = User.objects.get(id=pending_user_id)
+            totp = user.totp
+        except (User.DoesNotExist, UserTOTP.DoesNotExist):
+            messages.error(request, "Błąd weryfikacji. Zaloguj się ponownie.")
+            request.session.pop('pending_2fa_user_id', None)
+            return redirect('login')
+
+        if totp.verify_code(code):
+            # Kod poprawny - zaloguj użytkownika
+            request.session.pop('pending_2fa_user_id', None)
+            user.backend = 'django.contrib.auth.backends.ModelBackend'
+            login(request, user)
+            messages.success(request, "Zalogowano pomyślnie!")
+            return redirect('index')
+        else:
+            messages.error(request, "Nieprawidłowy kod. Spróbuj ponownie lub użyj kodu zapasowego.")
+
+    return render(request, 'verify_2fa.html')
+
+
+@login_required
+@never_cache
+def disable_2fa_view(request):
+    """Wyłącza 2FA dla użytkownika."""
+    try:
+        totp = request.user.totp
+    except UserTOTP.DoesNotExist:
+        messages.info(request, "Nie masz włączonego 2FA.")
+        return redirect('index')
+
+    if not totp.is_enabled:
+        messages.info(request, "2FA nie jest włączone.")
+        return redirect('index')
+
+    if request.method == 'POST':
+        code = request.POST.get('code', '').strip()
+        
+        if totp.verify_code(code):
+            totp.is_enabled = False
+            totp.backup_codes = ''
+            totp.save()
+            messages.success(request, "Wyłączono weryfikację dwuetapową.")
+            return redirect('index')
+        else:
+            messages.error(request, "Nieprawidłowy kod.")
+
+    return render(request, 'disable_2fa.html')
+
+
+# --- USTAWIENIA PROFILU ---
+
+@login_required
+@never_cache
+def settings_view(request):
+    """Strona ustawień profilu użytkownika."""
+    try:
+        person = request.user.person
+    except Person.DoesNotExist:
+        person = Person.objects.create(
+            user=request.user,
+            first_name=request.user.first_name or '',
+            last_name=request.user.last_name or ''
+        )
+
+    # Sprawdź status 2FA
+    try:
+        totp = request.user.totp
+        has_2fa = totp.is_enabled
+    except UserTOTP.DoesNotExist:
+        has_2fa = False
+
+    # Sprawdź czy można zmienić nazwę użytkownika (raz na 30 dni)
+    can_change_username = True
+    days_until_change = 0
+    if person.username_changed_at:
+        days_since_change = (timezone.now() - person.username_changed_at).days
+        if days_since_change < 30:
+            can_change_username = False
+            days_until_change = 30 - days_since_change
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        if action == 'update_username':
+            if not can_change_username:
+                messages.error(request, f'Możesz zmienić nazwę użytkownika za {days_until_change} dni.')
+                return redirect('settings')
+            
+            new_username = request.POST.get('username', '').strip()
+            
+            if not new_username:
+                messages.error(request, 'Nazwa użytkownika nie może być pusta.')
+            elif len(new_username) < 3:
+                messages.error(request, 'Nazwa użytkownika musi mieć co najmniej 3 znaki.')
+            elif len(new_username) > 30:
+                messages.error(request, 'Nazwa użytkownika może mieć maksymalnie 30 znaków.')
+            elif not new_username.replace('_', '').isalnum():
+                messages.error(request, 'Nazwa użytkownika może zawierać tylko litery, cyfry i podkreślenia.')
+            elif User.objects.filter(username__iexact=new_username).exclude(id=request.user.id).exists():
+                messages.error(request, 'Ta nazwa użytkownika jest już zajęta.')
+            elif new_username == request.user.username:
+                messages.info(request, 'To jest Twoja aktualna nazwa użytkownika.')
+            else:
+                request.user.username = new_username
+                request.user.save(update_fields=['username'])
+                person.username_changed_at = timezone.now()
+                person.save(update_fields=['username_changed_at'])
+                messages.success(request, 'Nazwa użytkownika została zmieniona.')
+            return redirect('settings')
+
+        elif action == 'update_avatar':
+            if 'avatar' in request.FILES:
+                avatar_file = request.FILES['avatar']
+                
+                # Walidacja rozmiaru (max 2MB)
+                if avatar_file.size > 2 * 1024 * 1024:
+                    messages.error(request, 'Plik jest za duży. Maksymalny rozmiar to 2MB.')
+                    return redirect('settings')
+                
+                # Walidacja typu
+                allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+                if avatar_file.content_type not in allowed_types:
+                    messages.error(request, 'Dozwolone formaty: JPG, PNG, GIF, WEBP.')
+                    return redirect('settings')
+                
+                # Usuń stary avatar jeśli istnieje
+                if person.avatar:
+                    person.avatar.delete(save=False)
+                
+                person.avatar = avatar_file
+                person.save()
+                messages.success(request, 'Avatar został zaktualizowany.')
+            else:
+                messages.error(request, 'Nie wybrano pliku.')
+            return redirect('settings')
+
+        elif action == 'remove_avatar':
+            if person.avatar:
+                person.avatar.delete(save=False)
+                person.avatar = None
+                person.save()
+                messages.success(request, 'Avatar został usunięty.')
+            return redirect('settings')
+
+    context = {
+        'person': person,
+        'has_2fa': has_2fa,
+        'can_change_username': can_change_username,
+        'days_until_change': days_until_change,
+    }
+    return render(request, 'settings.html', context)

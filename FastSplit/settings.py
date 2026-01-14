@@ -92,7 +92,7 @@ INSTALLED_APPS = [
     # Security / hardening
     "axes",
     "django_recaptcha",
-    "csp",
+    # "csp",  # Uncomment when django-csp is properly installed
 
     # Project apps
     "EsSplit",
@@ -112,8 +112,8 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 
-    # Content Security Policy headers
-    "csp.middleware.CSPMiddleware",
+    # Content Security Policy headers (uncomment when django-csp works)
+    # "csp.middleware.CSPMiddleware",
 ]
 
 AUTHENTICATION_BACKENDS = [
@@ -180,6 +180,10 @@ STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
 ]
+
+# Media files (uploads)
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

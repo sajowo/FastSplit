@@ -155,10 +155,18 @@
 
         <div class="user-chip">
           {% if request.user.is_authenticated %}
-          <div class="user-meta">
-            <div class="user-name">{{ request.user.first_name|default:request.user.username }}</div>
-          </div>
-          <div class="user-avatar">{{ request.user.username|slice:":2"|upper }}</div>
+          <a href="{% url 'settings' %}" class="user-profile-link" title="Ustawienia profilu">
+            <div class="user-meta">
+              <div class="user-name">{{ request.user.first_name|default:request.user.username }}</div>
+            </div>
+            <div class="user-avatar">
+              {% if request.user.person.avatar %}
+              <img src="{{ request.user.person.avatar.url }}" alt="Avatar" class="avatar-img">
+              {% else %}
+              {{ request.user.username|slice:":2"|upper }}
+              {% endif %}
+            </div>
+          </a>
           <input type="hidden" id="logged-in-user-id" value="{{ request.user.id }}" />
           <input type="hidden" id="logged-in-user-name" value="{{ request.user.username }}" />
           <a href="{% url 'logout' %}" class="logout-link">Wyloguj się</a>

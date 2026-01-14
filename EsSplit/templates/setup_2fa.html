@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Konfiguracja 2FA - FastSplit</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+    <link rel="stylesheet" href="{% static 'css/accessibility.css' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'img/favv16.png' %}">
+    <style>
+        .center {
+            max-width: 420px;
+        }
+
+        .center h1 {
+            font-size: 1.5rem;
+            margin-bottom: 16px;
+        }
+
+        .center p {
+            color: #666;
+            line-height: 1.6;
+            text-align: left;
+            margin-bottom: 16px;
+        }
+
+        .center ul {
+            color: #666;
+            margin: 0 0 20px 20px;
+            padding: 0;
+        }
+
+        .qr-code-wrapper {
+            text-align: center;
+            margin: 20px 0;
+            padding: 16px;
+            background: #f5f5f5;
+            border-radius: 12px;
+        }
+
+        .qr-code-wrapper img {
+            max-width: 180px;
+        }
+
+        .secret-key {
+            font-family: monospace;
+            background: #f3f4f6;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1rem;
+            letter-spacing: 2px;
+            word-break: break-all;
+            margin-bottom: 20px;
+        }
+
+        .code-input {
+            width: 100%;
+            padding: 14px;
+            font-size: 1.2rem;
+            text-align: center;
+            letter-spacing: 8px;
+            border: 2px solid #adadad;
+            border-radius: 10px;
+            margin-bottom: 16px;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        .code-input:focus {
+            border-color: #2691d9;
+        }
+
+        .btn-primary {
+            width: 100%;
+            height: 50px;
+            border: 1px solid #2691d9;
+            background-color: #2691d9;
+            border-radius: 15px;
+            font-size: 16px;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            outline: none;
+            transition: background-color 0.2s ease;
+            margin-bottom: 10px;
+        }
+
+        .btn-primary:hover {
+            background-color: #2196F3;
+        }
+
+        .btn-secondary {
+            width: 100%;
+            height: 50px;
+            background: transparent;
+            color: #666;
+            border: 2px solid #ddd;
+            border-radius: 15px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            border-color: #2691d9;
+            color: #2691d9;
+        }
+
+        .backup-codes {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin: 16px 0;
+        }
+
+        .backup-code {
+            font-family: monospace;
+            background: #f3f4f6;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 0.95rem;
+        }
+
+        .warning-box {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 16px 0;
+            color: #92400e;
+            font-size: 0.9rem;
+        }
+
+        .success-icon {
+            font-size: 3rem;
+            text-align: center;
+            margin: 16px 0;
+        }
+
+        .error-message {
+            background-color: #ffdddd;
+            color: #d8000c;
+            border: 1px solid #d8000c;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .success-message {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .link-btn {
+            display: block;
+            width: 100%;
+            height: 50px;
+            line-height: 50px;
+            text-align: center;
+            text-decoration: none;
+            background-color: #2691d9;
+            color: white;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: 700;
+            transition: background-color 0.2s ease;
+        }
+
+        .link-btn:hover {
+            background-color: #2196F3;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="a11y-font-controls a11y-font-controls--fixed" role="group" aria-label="Rozmiar czcionki">
+        <button type="button" class="a11y-font-btn" data-font-scale="0.85" aria-pressed="false"
+            aria-label="Zmniejsz czcionkę">A-</button>
+        <button type="button" class="a11y-font-btn" data-font-scale="1" aria-pressed="true"
+            aria-label="Domyślny rozmiar">A</button>
+        <button type="button" class="a11y-font-btn" data-font-scale="1.25" aria-pressed="false"
+            aria-label="Zwiększ czcionkę">A+</button>
+    </div>
+
+    <div class="center">
+        {% if messages %}
+        {% for message in messages %}
+        <div class="{% if 'error' in message.tags %}error-message{% else %}success-message{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        {% if step == 'start' %}
+        <h1>🔐 Weryfikacja dwuetapowa</h1>
+        <p>Zwiększ bezpieczeństwo swojego konta dodając weryfikację dwuetapową (2FA).
+            Przy każdym logowaniu będziesz musiał podać kod z aplikacji authenticator.</p>
+
+        <p><strong>Potrzebujesz:</strong></p>
+        <ul>
+            <li>Microsoft Authenticator, Google Authenticator lub podobnej aplikacji</li>
+        </ul>
+
+        <form method="POST">
+            {% csrf_token %}
+            <button type="submit" name="action" value="generate" class="btn-primary">
+                Skonfiguruj 2FA
+            </button>
+            {% if show_skip %}
+            <button type="submit" name="action" value="skip" class="btn-secondary">
+                Pomiń na razie
+            </button>
+            {% else %}
+            <a href="{% url 'index' %}" class="btn-secondary"
+                style="display:block;text-align:center;line-height:46px;text-decoration:none;">
+                Anuluj
+            </a>
+            {% endif %}
+        </form>
+
+        {% elif step == 'scan' %}
+        <h1>📱 Zeskanuj kod QR</h1>
+        <p>Otwórz aplikację authenticator i zeskanuj poniższy kod QR:</p>
+
+        <div class="qr-code-wrapper">
+            <img src="data:image/png;base64,{{ qr_code }}" alt="Kod QR do zeskanowania">
+        </div>
+
+        <p>Lub wpisz ręcznie ten klucz:</p>
+        <div class="secret-key">{{ secret }}</div>
+
+        <form method="POST">
+            {% csrf_token %}
+            <p style="margin-bottom:10px;"><strong>Wpisz 6-cyfrowy kod z aplikacji:</strong></p>
+            <input type="text" name="code" class="code-input" maxlength="6" pattern="[0-9]{6}" placeholder="000000"
+                autocomplete="off" inputmode="numeric" required>
+            <button type="submit" name="action" value="verify" class="btn-primary">
+                Zweryfikuj i włącz 2FA
+            </button>
+        </form>
+        {% if show_skip %}
+        <form method="POST" style="margin-top:10px;">
+            {% csrf_token %}
+            <button type="submit" name="action" value="skip" class="btn-secondary">
+                Pomiń na razie
+            </button>
+        </form>
+        {% endif %}
+
+        {% elif step == 'success' %}
+        <div class="success-icon">✅</div>
+        <h1 style="text-align:center;">2FA włączone!</h1>
+        <p style="text-align:center;">Weryfikacja dwuetapowa została pomyślnie skonfigurowana.</p>
+
+        <div class="warning-box">
+            <strong>⚠️ Zapisz kody zapasowe!</strong><br>
+            Jeśli stracisz dostęp do telefonu, użyj jednego z poniższych kodów.
+            Każdy kod można użyć tylko raz.
+        </div>
+
+        <div class="backup-codes">
+            {% for code in backup_codes %}
+            <div class="backup-code">{{ code }}</div>
+            {% endfor %}
+        </div>
+
+        <a href="{% url 'index' %}" class="link-btn">
+            Przejdź do aplikacji
+        </a>
+        {% endif %}
+    </div>
+
+    <script src="{% static 'js/accessibility.js' %}"></script>
+</body>
+
+</html>

@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ustawienia - FastSplit</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/accessibility.css' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'img/favv16.png' %}">
+    <script>
+        (function () {
+            var saved = null;
+            try { saved = localStorage.getItem('fastsplit_theme'); } catch (e) { }
+            var isDark = saved === 'dark' || (saved !== 'light' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            if (isDark) document.documentElement.classList.add('dark-theme');
+        })();
+    </script>
+    <style>
+        .settings-container {
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .settings-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .settings-header h1 {
+            margin: 0;
+            font-size: 1.8rem;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #3f51b5;
+            text-decoration: none;
+            font-size: 0.95rem;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        html.dark-theme .back-link,
+        body.dark-theme .back-link {
+            color: #818cf8;
+        }
+
+        .settings-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        }
+
+        html.dark-theme .settings-card,
+        body.dark-theme .settings-card {
+            background: rgba(17, 24, 39, 0.9);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .settings-card h2 {
+            margin: 0 0 20px 0;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .settings-card h2 .icon {
+            font-size: 1.4rem;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        html.dark-theme .form-group label,
+        body.dark-theme .form-group label {
+            color: #d1d5db;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 1rem;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #3f51b5;
+        }
+
+        html.dark-theme .form-input,
+        body.dark-theme .form-input {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #3f51b5;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: #303f9f;
+        }
+
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .btn-secondary:hover {
+            background: #d1d5db;
+        }
+
+        html.dark-theme .btn-secondary,
+        body.dark-theme .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #d1d5db;
+        }
+
+        .btn-danger {
+            background: #dc2626;
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: #fff;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .avatar-section {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 16px;
+        }
+
+        .avatar-preview {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #3f51b5;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: 700;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .avatar-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .avatar-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+        }
+
+        .two-fa-status {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            background: #f3f4f6;
+            border-radius: 10px;
+            margin-bottom: 16px;
+        }
+
+        html.dark-theme .two-fa-status,
+        body.dark-theme .two-fa-status {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .two-fa-status .status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .status-badge.enabled {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .status-badge.disabled {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .messages {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 20px 0;
+        }
+
+        .messages li {
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .messages .error {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .messages .success {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .messages .info {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+
+        .current-username {
+            color: #6b7280;
+            font-size: 0.9rem;
+            margin-bottom: 12px;
+        }
+
+        html.dark-theme .current-username,
+        body.dark-theme .current-username {
+            color: #9ca3af;
+        }
+
+        .hint-text {
+            color: #6b7280;
+            font-size: 0.85rem;
+            margin-top: 12px;
+            margin-bottom: 0;
+        }
+
+        html.dark-theme .hint-text,
+        body.dark-theme .hint-text {
+            color: #9ca3af;
+        }
+
+        .change-blocked {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            background: #fef3c7;
+            border-radius: 10px;
+            color: #92400e;
+        }
+
+        html.dark-theme .change-blocked,
+        body.dark-theme .change-blocked {
+            background: rgba(245, 158, 11, 0.15);
+            color: #fbbf24;
+        }
+
+        .change-blocked .blocked-icon {
+            font-size: 1.5rem;
+        }
+
+        .change-blocked p {
+            margin: 0;
+            color: inherit;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="settings-container">
+        <div class="settings-header">
+            <a href="{% url 'index' %}" class="back-link">← Powrót</a>
+            <h1>⚙️ Ustawienia</h1>
+        </div>
+
+        {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+            <li class="{{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        <!-- Nazwa użytkownika -->
+        <div class="settings-card">
+            <h2><span class="icon">👤</span> Nazwa użytkownika</h2>
+            <p class="current-username">Aktualna nazwa: <strong>{{ request.user.username }}</strong></p>
+            {% if can_change_username %}
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="update_username">
+                <div class="form-group">
+                    <label for="username">Nowa nazwa użytkownika</label>
+                    <input type="text" id="username" name="username" class="form-input"
+                        value="{{ request.user.username }}" minlength="3" maxlength="30" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Zapisz</button>
+            </form>
+            <p class="hint-text">Nazwę użytkownika można zmienić raz na 30 dni.</p>
+            {% else %}
+            <div class="change-blocked">
+                <span class="blocked-icon">🔒</span>
+                <p>Możesz zmienić nazwę użytkownika za <strong>{{ days_until_change }}</strong> dni.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Avatar -->
+        <div class="settings-card">
+            <h2><span class="icon">🖼️</span> Avatar</h2>
+            <div class="avatar-section">
+                <div class="avatar-preview">
+                    {% if person.avatar %}
+                    <img src="{{ person.avatar.url }}" alt="Avatar">
+                    {% else %}
+                    {{ request.user.username|slice:":2"|upper }}
+                    {% endif %}
+                </div>
+                <div class="avatar-actions">
+                    <form method="POST" enctype="multipart/form-data" style="display:inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="update_avatar">
+                        <div class="file-input-wrapper">
+                            <button type="button" class="btn btn-secondary">Wybierz plik</button>
+                            <input type="file" name="avatar" accept="image/jpeg,image/png,image/gif,image/webp"
+                                onchange="this.form.submit()">
+                        </div>
+                    </form>
+                    {% if person.avatar %}
+                    <form method="POST" style="display:inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="remove_avatar">
+                        <button type="submit" class="btn btn-danger">Usuń avatar</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+            <p style="color:#6b7280;font-size:0.85rem;margin:0;">Dozwolone formaty: JPG, PNG, GIF, WEBP. Maks. 2MB.</p>
+        </div>
+
+        <!-- 2FA -->
+        <div class="settings-card">
+            <h2><span class="icon">🔐</span> Weryfikacja dwuetapowa (2FA)</h2>
+            <div class="two-fa-status">
+                <div class="status">
+                    <span>Status:</span>
+                    {% if has_2fa %}
+                    <span class="status-badge enabled">Włączone</span>
+                    {% else %}
+                    <span class="status-badge disabled">Wyłączone</span>
+                    {% endif %}
+                </div>
+                {% if has_2fa %}
+                <a href="{% url 'disable_2fa' %}" class="btn btn-danger">Wyłącz 2FA</a>
+                {% else %}
+                <a href="{% url 'setup_2fa' %}" class="btn btn-success">Włącz 2FA</a>
+                {% endif %}
+            </div>
+            <p style="color:#6b7280;font-size:0.9rem;margin:0;">
+                {% if has_2fa %}
+                Twoje konto jest chronione weryfikacją dwuetapową.
+                {% else %}
+                Włącz 2FA, aby zwiększyć bezpieczeństwo swojego konta.
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+    <script src="{% static 'js/accessibility.js' %}"></script>
+    <script>
+        // Theme sync
+        const themeSwitch = document.getElementById('theme-switch');
+        const body = document.body;
+        const saved = localStorage.getItem('fastsplit_theme');
+        if (saved === 'dark') {
+            body.classList.add('dark-theme');
+        }
+    </script>
+</body>
+
+</html>

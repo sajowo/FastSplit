@@ -61,7 +61,7 @@
             <div class="form-row">
                 <div class="input-group">
                     <label>Hasło</label>
-                    <input type="password" name="password" required placeholder="••••••••">
+                    <input type="password" name="password" id="password-input" required placeholder="••••••••">
                     {% if form.password.errors %}
                     <div class="error-msg">{{ form.password.errors.0 }}</div>
                     {% endif %}
@@ -69,11 +69,39 @@
 
                 <div class="input-group">
                     <label>Powtórz hasło</label>
-                    <input type="password" name="password_confirm" required placeholder="••••••••">
+                    <input type="password" name="password_confirm" id="password-confirm-input" required
+                        placeholder="••••••••">
                     {% if form.password_confirm.errors %}
                     <div class="error-msg">{{ form.password_confirm.errors.0 }}</div>
                     {% endif %}
                 </div>
+            </div>
+
+            <!-- Wymagania hasła -->
+            <div class="password-requirements" id="password-requirements">
+                <div class="requirements-header">Wymagania hasła:</div>
+                <ul class="requirements-list">
+                    <li id="req-length" class="requirement">
+                        <span class="req-icon">○</span>
+                        <span>Minimum 8 znaków</span>
+                    </li>
+                    <li id="req-not-common" class="requirement">
+                        <span class="req-icon">○</span>
+                        <span>Nie może być zbyt popularne</span>
+                    </li>
+                    <li id="req-not-numeric" class="requirement">
+                        <span class="req-icon">○</span>
+                        <span>Nie może składać się tylko z cyfr</span>
+                    </li>
+                    <li id="req-not-similar" class="requirement">
+                        <span class="req-icon">○</span>
+                        <span>Nie może być podobne do danych osobowych</span>
+                    </li>
+                    <li id="req-match" class="requirement">
+                        <span class="req-icon">○</span>
+                        <span>Hasła muszą być identyczne</span>
+                    </li>
+                </ul>
             </div>
 
             <div class="captcha-container">
@@ -108,6 +136,80 @@
     </div>
 
     <script src="{% static 'js/accessibility.js' %}"></script>
+    <script>
+        (function () {
+            const passwordInput = document.getElementById('password-input');
+            const confirmInput = document.getElementById('password-confirm-input');
+            const firstNameInput = document.querySelector('input[name="first_name"]');
+            const lastNameInput = document.querySelector('input[name="last_name"]');
+            const emailInput = document.querySelector('input[name="email"]');
+
+            const reqLength = document.getElementById('req-length');
+            const reqNotCommon = document.getElementById('req-not-common');
+            const reqNotNumeric = document.getElementById('req-not-numeric');
+            const reqNotSimilar = document.getElementById('req-not-similar');
+            const reqMatch = document.getElementById('req-match');
+
+            // Lista popularnych haseł (skrócona)
+            const commonPasswords = [
+                'password', '123456', '12345678', 'qwerty', 'abc123', 'monkey', 'master',
+                'dragon', 'letmein', 'login', 'admin', 'welcome', 'password1', 'haslo',
+                'haslo123', 'qwerty123', 'zaq12wsx', 'polska', 'warszawa', 'krakow'
+            ];
+
+            function setRequirement(element, passed) {
+                const icon = element.querySelector('.req-icon');
+                if (passed) {
+                    element.classList.add('passed');
+                    element.classList.remove('failed');
+                    icon.textContent = '✓';
+                } else {
+                    element.classList.remove('passed');
+                    element.classList.add('failed');
+                    icon.textContent = '○';
+                }
+            }
+
+            function validatePassword() {
+                const password = passwordInput.value;
+                const confirm = confirmInput.value;
+                const firstName = firstNameInput ? firstNameInput.value.toLowerCase() : '';
+                const lastName = lastNameInput ? lastNameInput.value.toLowerCase() : '';
+                const email = emailInput ? emailInput.value.toLowerCase().split('@')[0] : '';
+
+                // Min 8 znaków
+                setRequirement(reqLength, password.length >= 8);
+
+                // Nie popularne
+                const isCommon = commonPasswords.some(common =>
+                    password.toLowerCase().includes(common) || common.includes(password.toLowerCase())
+                );
+                setRequirement(reqNotCommon, password.length > 0 && !isCommon);
+
+                // Nie tylko cyfry
+                const isOnlyNumeric = /^\d+$/.test(password);
+                setRequirement(reqNotNumeric, password.length > 0 && !isOnlyNumeric);
+
+                // Nie podobne do danych osobowych
+                const pwLower = password.toLowerCase();
+                const isSimilar = (firstName && pwLower.includes(firstName) && firstName.length > 2) ||
+                    (lastName && pwLower.includes(lastName) && lastName.length > 2) ||
+                    (email && pwLower.includes(email) && email.length > 2);
+                setRequirement(reqNotSimilar, password.length > 0 && !isSimilar);
+
+                // Hasła identyczne
+                setRequirement(reqMatch, password.length > 0 && confirm.length > 0 && password === confirm);
+            }
+
+            if (passwordInput && confirmInput) {
+                passwordInput.addEventListener('input', validatePassword);
+                confirmInput.addEventListener('input', validatePassword);
+                if (firstNameInput) firstNameInput.addEventListener('input', validatePassword);
+                if (lastNameInput) lastNameInput.addEventListener('input', validatePassword);
+                if (emailInput) emailInput.addEventListener('input', validatePassword);
+            }
+        })();
+    </script>
 </body>
 
 </html>

@@ -270,3 +270,71 @@ body {
         /* Dodajemy margines, bo grid gap znika */
     }
 }
+
+
+/* --- WYMAGANIA HASŁA --- */
+.password-requirements {
+    background: #f8f9fa;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+}
+
+.requirements-header {
+    font-size: 14px;
+    font-weight: 700;
+    color: #374151;
+    margin-bottom: 12px;
+}
+
+.requirements-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 16px;
+}
+
+@media (max-width: 600px) {
+    .requirements-list {
+        grid-template-columns: 1fr;
+    }
+}
+
+.requirement {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #6b7280;
+    transition: color 0.2s;
+}
+
+.requirement .req-icon {
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    border-radius: 50%;
+    background: #e5e7eb;
+    color: #9ca3af;
+    flex-shrink: 0;
+    transition: all 0.2s;
+}
+
+.requirement.passed {
+    color: #059669;
+}
+
+.requirement.passed .req-icon {
+    background: #10b981;
+    color: #fff;
+}
+
+.requirement.failed {
+    color: #6b7280;
+}

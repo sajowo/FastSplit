@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weryfikacja 2FA - FastSplit</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+    <link rel="stylesheet" href="{% static 'css/accessibility.css' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'img/favv16.png' %}">
+    <style>
+        .lock-icon {
+            font-size: 3rem;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .center h1 {
+            margin-bottom: 10px;
+        }
+
+        .center p {
+            text-align: center;
+            color: #666;
+            margin-bottom: 24px;
+        }
+
+        .code-input {
+            width: 100%;
+            padding: 16px;
+            font-size: 1.5rem;
+            text-align: center;
+            letter-spacing: 10px;
+            border: 2px solid #adadad;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        .code-input:focus {
+            border-color: #2691d9;
+        }
+
+        .btn-primary {
+            width: 100%;
+            height: 50px;
+            border: 1px solid #2691d9;
+            background-color: #2691d9;
+            border-radius: 15px;
+            font-size: 16px;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            outline: none;
+            transition: background-color 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: #2196F3;
+        }
+
+        .help-text {
+            margin-top: 24px;
+            font-size: 0.85rem;
+            color: #888;
+            text-align: center;
+        }
+
+        .back-link {
+            display: block;
+            margin-top: 16px;
+            color: #2691d9;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .error-message {
+            background-color: #ffdddd;
+            color: #d8000c;
+            border: 1px solid #d8000c;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            font-size: 14px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="a11y-font-controls a11y-font-controls--fixed" role="group" aria-label="Rozmiar czcionki">
+        <button type="button" class="a11y-font-btn" data-font-scale="0.85" aria-pressed="false"
+            aria-label="Zmniejsz czcionkę">A-</button>
+        <button type="button" class="a11y-font-btn" data-font-scale="1" aria-pressed="true"
+            aria-label="Domyślny rozmiar">A</button>
+        <button type="button" class="a11y-font-btn" data-font-scale="1.25" aria-pressed="false"
+            aria-label="Zwiększ czcionkę">A+</button>
+    </div>
+
+    <div class="center">
+        <div class="lock-icon">🔐</div>
+        <h1>Weryfikacja dwuetapowa</h1>
+        <p>Wpisz 6-cyfrowy kod z aplikacji authenticator</p>
+
+        {% if messages %}
+        {% for message in messages %}
+        {% if 'error' in message.tags %}
+        <div class="error-message">{{ message }}</div>
+        {% endif %}
+        {% endfor %}
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+            <input type="text" name="code" class="code-input" maxlength="8" placeholder="000000" autocomplete="off"
+                inputmode="numeric" autofocus required>
+            <button type="submit" class="btn-primary">Zweryfikuj</button>
+        </form>
+
+        <p class="help-text">
+            Nie masz dostępu do telefonu?<br>
+            Użyj jednego z kodów zapasowych.
+        </p>
+
+        <a href="{% url 'login' %}" class="back-link">← Wróć do logowania</a>
+    </div>
+
+    <script src="{% static 'js/accessibility.js' %}"></script>
+    <script>
+        const input = document.querySelector('.code-input');
+        if (input) {
+            input.addEventListener('input', function () {
+                this.value = this.value.replace(/[^0-9A-Fa-f]/g, '').toUpperCase();
+            });
+        }
+    </script>
+</body>
+
+</html>

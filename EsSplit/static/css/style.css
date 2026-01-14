@@ -116,6 +116,26 @@ body {
   opacity: 0.65;
 }
 
+.user-profile-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: inherit;
+  padding: 4px 8px;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.user-profile-link:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+body.dark-theme .user-profile-link:hover,
+html.dark-theme body .user-profile-link:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
 .user-avatar {
   width: 40px;
   height: 40px;
@@ -127,6 +147,13 @@ body {
   color: #fff;
   background: linear-gradient(135deg, #3f51b5, #8e24aa);
   box-shadow: 0 0 0 3px rgba(63, 81, 181, 0.16);
+  overflow: hidden;
+}
+
+.user-avatar .avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 @media (min-width: 640px) {
