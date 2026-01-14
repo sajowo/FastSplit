@@ -4,7 +4,7 @@
     const clampScale = (value) => {
         const n = Number(value);
         if (!Number.isFinite(n)) return 1;
-        return Math.min(1.15, Math.max(0.9, n));
+        return Math.min(1.5, Math.max(0.75, n));
     };
 
     const applyScale = (scale) => {
