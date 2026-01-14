@@ -45,6 +45,7 @@ form .txt_field {
     position: relative;
     border-bottom: 2px solid #adadad;
     margin: 20px 0;
+    padding-top: 15px;
 }
 
 .txt_field input {
@@ -65,7 +66,7 @@ form .txt_field {
     transform: translateY(-50%);
     font-size: 16px;
     pointer-events: none;
-    transition: top 0.2s ease, color 0.2s ease;
+    transition: top 0.2s ease, color 0.2s ease, font-size 0.2s ease;
 }
 
 .txt_field span::before {
@@ -80,8 +81,10 @@ form .txt_field {
 }
 
 .txt_field input:focus~label,
-.txt_field input:valid~label {
-    top: -5px;
+.txt_field input:valid~label,
+.txt_field input:not(:placeholder-shown)~label {
+    top: 0;
+    font-size: 13px;
     color: #2691d9;
 }
 

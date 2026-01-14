@@ -1493,6 +1493,8 @@ body.dark-theme .mobile-menu-footer {
         position: relative;
         overflow: hidden;
         border-bottom: none;
+        display: flex;
+        flex-direction: column;
     }
 
     .txt_field label {
@@ -1503,6 +1505,7 @@ body.dark-theme .mobile-menu-footer {
         font-weight: 600;
         color: #555;
         margin-bottom: 8px;
+        order: -1;
     }
 
     .txt_field input {
