@@ -1187,3 +1187,139 @@ function selectGroupMembers(selectElement) {
         firstChecked.dispatchEvent(new Event('change', { bubbles: true }));
     }
 }
+
+
+// --- MOBILE MENU ---
+(function () {
+    const mobileMenuOverlay = document.getElementById('mobile-menu-overlay');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const mobileMenuClose = document.getElementById('mobile-menu-close');
+    const mobileThemeSwitch = document.getElementById('mobile-theme-switch');
+    const mainThemeSwitch = document.getElementById('theme-switch');
+
+    // User avatar as mobile menu trigger
+    const userAvatar = document.querySelector('.user-chip .user-avatar');
+
+    if (!mobileMenu) return;
+
+    const openMobileMenu = () => {
+        if (mobileMenuOverlay) mobileMenuOverlay.classList.add('active');
+        mobileMenu.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    };
+
+    const closeMobileMenu = () => {
+        if (mobileMenuOverlay) mobileMenuOverlay.classList.remove('active');
+        mobileMenu.classList.remove('active');
+        document.body.style.overflow = '';
+    };
+
+    // Avatar click opens mobile menu (only on mobile/tablet)
+    if (userAvatar) {
+        userAvatar.addEventListener('click', (e) => {
+            // Only trigger on mobile/tablet (when hamburger would be visible)
+            if (window.innerWidth <= 1024) {
+                e.preventDefault();
+                e.stopPropagation();
+                openMobileMenu();
+            }
+        });
+    }
+
+    if (mobileMenuClose) {
+        mobileMenuClose.addEventListener('click', (e) => {
+            e.preventDefault();
+            closeMobileMenu();
+        });
+    }
+
+    if (mobileMenuOverlay) {
+        mobileMenuOverlay.addEventListener('click', () => {
+            closeMobileMenu();
+        });
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && mobileMenu.classList.contains('active')) {
+            closeMobileMenu();
+        }
+    });
+
+    // Sync mobile theme switch with main theme switch
+    if (mobileThemeSwitch) {
+        const THEME_STORAGE_KEY = 'fastsplit_theme';
+
+        // Initialize mobile switch state
+        const saved = localStorage.getItem(THEME_STORAGE_KEY);
+        const isDark = saved === 'dark' || document.body.classList.contains('dark-theme');
+        mobileThemeSwitch.checked = isDark;
+
+        mobileThemeSwitch.addEventListener('change', () => {
+            const isDark = mobileThemeSwitch.checked;
+            document.body.classList.toggle('dark-theme', isDark);
+            document.documentElement.classList.toggle('dark-theme', isDark);
+
+            if (mainThemeSwitch) mainThemeSwitch.checked = isDark;
+
+            try {
+                localStorage.setItem(THEME_STORAGE_KEY, isDark ? 'dark' : 'light');
+            } catch (e) {
+                // ignore
+            }
+        });
+
+        // Sync when main switch changes
+        if (mainThemeSwitch) {
+            mainThemeSwitch.addEventListener('change', () => {
+                mobileThemeSwitch.checked = mainThemeSwitch.checked;
+            });
+        }
+    }
+
+    // Close menu on window resize (if going to desktop)
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            if (window.innerWidth > 768 && mobileMenu.classList.contains('active')) {
+                closeMobileMenu();
+            }
+        }, 100);
+    });
+})();
+
+
+// --- MOBILE COLLAPSIBLE SECTIONS ---
+(function () {
+    const initCollapsibleSections = () => {
+        const mobileSections = document.querySelectorAll('.mobile-section.collapsible-section');
+
+        if (!mobileSections.length) return;
+
+        // Toggle click handlers
+        mobileSections.forEach(section => {
+            const toggleBtn = section.querySelector('.section-toggle-btn');
+
+            if (toggleBtn) {
+                // Remove any existing listeners to prevent duplicates
+                const newToggleBtn = toggleBtn.cloneNode(true);
+                toggleBtn.parentNode.replaceChild(newToggleBtn, toggleBtn);
+
+                newToggleBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const isExpanded = section.classList.toggle('expanded');
+                    newToggleBtn.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+                });
+            }
+        });
+    };
+
+    // Run on DOMContentLoaded
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initCollapsibleSections);
+    } else {
+        // DOM already loaded
+        initCollapsibleSections();
+    }
+})();

@@ -16,6 +16,7 @@
   {% load static %}
   <link rel="stylesheet" href="{% static 'css/style.css' %}" />
   <link rel="stylesheet" href="{% static 'css/accessibility.css' %}" />
+  <link rel="stylesheet" href="{% static 'css/mobile.css' %}" />
   <link rel="icon" type="image/x-icon" href="{% static 'img/favv16.png' %}" />
 </head>
 
@@ -78,6 +79,12 @@
           <button type="button" class="a11y-font-btn" data-font-scale="1.25" aria-pressed="false"
             aria-label="Zwiększ czcionkę">A+</button>
         </div>
+
+        <button type="button" class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="Menu">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
+          </svg>
+        </button>
 
         <div class="notifications">
           <button type="button" class="icon-btn" id="notifications-toggle" aria-expanded="false"
@@ -274,6 +281,139 @@
           </section>
         </div>
 
+        <!-- Mobile collapsible sections container -->
+        <div class="mobile-sections-container">
+          <!-- Stats row for mobile -->
+          <div class="stats-row">
+            <div class="stat-card stat-card-receive">
+              <p class="stat-label">Do odebrania</p>
+              <p class="stat-value">{{ amount_to_receive|floatformat:2 }} <span>PLN</span></p>
+            </div>
+            <div class="stat-card stat-card-pay">
+              <p class="stat-label">Do zapłacenia</p>
+              <p class="stat-value">{{ amount_to_pay|floatformat:2 }} <span>PLN</span></p>
+            </div>
+          </div>
+
+          <div class="mobile-section collapsible-section" data-section="todo">
+            <button type="button" class="section-toggle-btn" aria-expanded="false">
+              <span class="section-toggle-title">💰 Do opłacenia</span>
+              <span class="section-toggle-count">{{ todo_bills|length }}</span>
+              <span class="section-toggle-icon" aria-hidden="true">▼</span>
+            </button>
+            <div class="section-content">
+              {% if todo_bills %}
+              {% for bill in todo_bills %}
+              <div class="split-item bill-pending">
+                <h3>{{ bill.creator.username }} <small class="split-status">(Oczekujący)</small></h3>
+                <p>{{ bill.description }} - <strong>{{ bill.display_amount }}</strong></p>
+                <p class="split-date">{{ bill.date|date:"d M Y, H:i" }}</p>
+                <div class="actions">
+                  <form action="{% url 'pay_bill_share' bill.id %}" method="POST" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="action-link action-positive">💸 Opłać</button>
+                  </form>
+                  <form action="{% url 'reject_bill_share' bill.id %}" method="POST" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="action-link action-negative">❌ Odrzuć</button>
+                  </form>
+                </div>
+              </div>
+              {% endfor %}
+              {% else %}
+              <div class="empty-state">Brak rachunków do opłacenia.</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="mobile-section collapsible-section" data-section="active">
+            <button type="button" class="section-toggle-btn" aria-expanded="false">
+              <span class="section-toggle-title">📋 Aktywne rozliczenia</span>
+              <span class="section-toggle-count">{{ my_waiting_bills|length }}</span>
+              <span class="section-toggle-icon" aria-hidden="true">▼</span>
+            </button>
+            <div class="section-content">
+              {% if my_waiting_bills %}
+              {% for bill in my_waiting_bills %}
+              <div class="split-item bill-pending my-waiting-item">
+                <h3>{{ bill.description }}
+                  {% if bill.waiting_rejected %}
+                  <small class="split-status">({{ bill.waiting_paid }}/{{ bill.waiting_total }} opłacone, {{
+                    bill.waiting_rejected|length }} odrzucone)</small>
+                  {% else %}
+                  <small class="split-status">({{ bill.waiting_paid }}/{{ bill.waiting_total }} opłacone)</small>
+                  {% endif %}
+                </h3>
+                <p><strong>{{ bill.amount }} PLN (Całość)</strong></p>
+                {% if bill.waiting_paid_shares %}
+                <div class="split-details-box">
+                  <strong>Opłacili:</strong>
+                  <ul class="split-details-list">
+                    {% for s in bill.waiting_paid_shares %}
+                    <li><span class="share-marker share-paid">✅</span><span class="share-user">{{ s.user.username
+                        }}</span><span class="share-amount">{{ s.amount_owed|floatformat:2 }} PLN</span></li>
+                    {% endfor %}
+                  </ul>
+                </div>
+                {% endif %}
+                {% if bill.waiting_unpaid %}
+                <div class="split-details-box">
+                  <strong>Oczekuję na:</strong>
+                  <ul class="split-details-list">
+                    {% for s in bill.waiting_unpaid %}
+                    <li><span class="share-marker share-pending">⏳</span><span class="share-user">{{ s.user.username
+                        }}</span><span class="share-amount">{{ s.amount_owed|floatformat:2 }} PLN</span></li>
+                    {% endfor %}
+                  </ul>
+                </div>
+                {% endif %}
+                {% if bill.waiting_rejected %}
+                <div class="split-details-box">
+                  <strong>Odrzucili:</strong>
+                  <ul class="split-details-list">
+                    {% for s in bill.waiting_rejected %}
+                    <li><span class="share-marker share-rejected">❌</span>{{ s.user.username }}</li>
+                    {% endfor %}
+                  </ul>
+                </div>
+                {% endif %}
+                <p class="split-date">{{ bill.date|date:"d M Y, H:i" }}</p>
+                <div class="actions">
+                  <a href="{% url 'update_bill' bill.id 'PAID' %}" class="action-link action-positive">✅ Sfinalizuj</a>
+                  <a href="{% url 'update_bill' bill.id 'REJECTED' %}" class="action-link action-negative">❌ Odrzuć</a>
+                </div>
+              </div>
+              {% endfor %}
+              {% else %}
+              <div class="empty-state">Brak oczekujących rozliczeń.</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="mobile-section collapsible-section" data-section="history">
+            <button type="button" class="section-toggle-btn" aria-expanded="false">
+              <span class="section-toggle-title">📜 Historia</span>
+              <span class="section-toggle-count">{{ history_bills|length }}</span>
+              <span class="section-toggle-icon" aria-hidden="true">▼</span>
+            </button>
+            <div class="section-content">
+              {% if history_bills %}
+              {% for bill in history_bills %}
+              <div
+                class="split-item {% if bill.user_effective_status == 'PAID' %}bill-paid{% elif bill.user_effective_status == 'REJECTED' %}bill-rejected{% else %}bill-pending{% endif %}">
+                <h3>{{ bill.creator.username }} <small class="split-status">({{ bill.user_status_label }})</small></h3>
+                <p>{{ bill.description }} - <strong>{{ bill.display_amount|default:bill.amount_per_person }}</strong>
+                </p>
+                <p class="split-date">{{ bill.date|date:"d M Y, H:i" }}</p>
+              </div>
+              {% endfor %}
+              {% else %}
+              <div class="empty-state">Brak historii.</div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
         <section class="my-waiting dashboard-card dashboard-center">
           <h2>Aktywne rozliczenia</h2>
           {% if my_waiting_bills %}
@@ -389,7 +529,7 @@
             </div>
           </div>
 
-          <div class="right-section history-section" style="margin-top: 18px;">
+          <div class="right-section history-section">
             <h2>Historia (ostatnie 8)</h2>
             <div class="right-scroll right-history">
               {% if history_bills %}
@@ -467,6 +607,119 @@
       </div>
     </div>
   </div>
+
+  <!-- Mobile Menu Overlay -->
+  <div class="mobile-menu-overlay" id="mobile-menu-overlay"></div>
+
+  <!-- Mobile Menu -->
+  <nav class="mobile-menu" id="mobile-menu" aria-label="Menu mobilne">
+    <div class="mobile-menu-header">
+      <div class="brand">
+        <img class="brand-logo" src="{% static 'img/logo.png' %}" alt="FastSplit" style="width:32px;height:32px;" />
+      </div>
+      <button type="button" class="mobile-menu-close" id="mobile-menu-close" aria-label="Zamknij menu">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true">
+          <path
+            d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+        </svg>
+      </button>
+    </div>
+
+    {% if request.user.is_authenticated %}
+    <div class="mobile-menu-user">
+      <div class="user-avatar">
+        {% if request.user.person.avatar %}
+        <img src="{{ request.user.person.avatar.url }}" alt="Avatar" class="avatar-img">
+        {% else %}
+        {{ request.user.username|slice:":2"|upper }}
+        {% endif %}
+      </div>
+      <div class="mobile-menu-user-info">
+        <div class="mobile-menu-user-name">{{ request.user.first_name|default:request.user.username }}</div>
+        <div class="mobile-menu-user-email">{{ request.user.email }}</div>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="mobile-menu-search">
+      <form method="POST" action="{% url 'search_user' %}">
+        {% csrf_token %}
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+          <path
+            d="M10 2a8 8 0 1 0 4.9 14.3l4.4 4.4 1.4-1.4-4.4-4.4A8 8 0 0 0 10 2Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z" />
+        </svg>
+        <input type="text" name="username" placeholder="Szukaj użytkownika..." autocomplete="off" />
+        <button type="submit" aria-label="Szukaj">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+            <path
+              d="M10 2a8 8 0 1 0 4.9 14.3l4.4 4.4 1.4-1.4-4.4-4.4A8 8 0 0 0 10 2Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z" />
+          </svg>
+        </button>
+      </form>
+    </div>
+
+    <div class="mobile-menu-nav">
+      <a href="{% url 'index' %}">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
+          <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+        </svg>
+        Strona główna
+      </a>
+      <a href="{% url 'settings' %}">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
+          <path
+            d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" />
+        </svg>
+        Ustawienia
+      </a>
+      <a href="{% url 'faq' %}">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
+          <path
+            d="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z" />
+        </svg>
+        FAQ
+      </a>
+      <a href="{% url 'about' %}">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
+        </svg>
+        O nas
+      </a>
+      <a href="{% url 'terms' %}">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
+          <path
+            d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
+        </svg>
+        Regulamin
+      </a>
+    </div>
+
+    <div class="mobile-menu-footer">
+      <div class="theme-toggle">
+        <span>Tryb ciemny</span>
+        <label class="switch">
+          <input type="checkbox" id="mobile-theme-switch" />
+          <span class="slider round"></span>
+        </label>
+      </div>
+
+      <div class="a11y-font-controls" role="group" aria-label="Rozmiar czcionki"
+        style="display:flex;gap:8px;margin-top:12px;">
+        <button type="button" class="a11y-font-btn" data-font-scale="0.85" aria-pressed="false"
+          aria-label="Zmniejsz czcionkę">A-</button>
+        <button type="button" class="a11y-font-btn" data-font-scale="1" aria-pressed="true"
+          aria-label="Domyślny rozmiar">A</button>
+        <button type="button" class="a11y-font-btn" data-font-scale="1.25" aria-pressed="false"
+          aria-label="Zwiększ czcionkę">A+</button>
+      </div>
+
+      {% if request.user.is_authenticated %}
+      <a href="{% url 'logout' %}" class="mobile-menu-logout">Wyloguj się</a>
+      {% else %}
+      <a href="{% url 'login' %}" class="mobile-menu-logout" style="background:#3f51b5;">Zaloguj się</a>
+      {% endif %}
+    </div>
+  </nav>
 
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"
     integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>

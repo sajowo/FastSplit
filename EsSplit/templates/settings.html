@@ -8,6 +8,7 @@
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <link rel="stylesheet" href="{% static 'css/accessibility.css' %}">
+    <link rel="stylesheet" href="{% static 'css/mobile.css' %}">
     <link rel="icon" type="image/x-icon" href="{% static 'img/favv16.png' %}">
     <script>
         (function () {
@@ -29,6 +30,7 @@
             align-items: center;
             gap: 16px;
             margin-bottom: 32px;
+            flex-wrap: wrap;
         }
 
         .settings-header h1 {
@@ -39,19 +41,56 @@
         .back-link {
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 6px;
             color: #3f51b5;
             text-decoration: none;
             font-size: 0.95rem;
+            padding: 10px 16px;
+            border-radius: 12px;
+            background: rgba(63, 81, 181, 0.1);
+            font-weight: 600;
+            transition: all 0.2s ease;
         }
 
         .back-link:hover {
-            text-decoration: underline;
+            background: rgba(63, 81, 181, 0.2);
+            text-decoration: none;
         }
 
         html.dark-theme .back-link,
         body.dark-theme .back-link {
             color: #818cf8;
+            background: rgba(129, 140, 248, 0.15);
+        }
+
+        html.dark-theme .back-link:hover,
+        body.dark-theme .back-link:hover {
+            background: rgba(129, 140, 248, 0.25);
+        }
+
+        @media (max-width: 768px) {
+            .settings-container {
+                margin: 20px auto;
+                padding: 0 16px;
+            }
+
+            .settings-header {
+                flex-direction: row;
+                align-items: center;
+                gap: 12px;
+                margin-bottom: 24px;
+            }
+
+            .settings-header h1 {
+                font-size: 1.4rem;
+                flex: 1;
+            }
+
+            .back-link {
+                padding: 12px 16px;
+                font-size: 0.9rem;
+            }
         }
 
         .settings-card {
@@ -338,8 +377,8 @@
 <body>
     <div class="settings-container">
         <div class="settings-header">
-            <a href="{% url 'index' %}" class="back-link">← Powrót</a>
             <h1>⚙️ Ustawienia</h1>
+            <a href="{% url 'index' %}" class="back-link">← Powrót</a>
         </div>
 
         {% if messages %}
