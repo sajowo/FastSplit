@@ -2,6 +2,35 @@
    MOBILE RESPONSIVENESS - FastSplit
    =========================================== */
 
+/* --- MOBILE VIEWPORT FIX - Full screen without bars --- */
+@supports (height: 100dvh) {
+
+    html,
+    body {
+        height: 100dvh;
+        min-height: 100dvh;
+    }
+}
+
+html {
+    height: 100%;
+    height: -webkit-fill-available;
+}
+
+body {
+    min-height: 100%;
+    min-height: -webkit-fill-available;
+    margin: 0;
+    padding: 0;
+    /* Extend content to edges on iOS */
+    padding-top: env(safe-area-inset-top, 0);
+}
+
+/* Topbar extends to top edge */
+.topbar {
+    padding-top: env(safe-area-inset-top, 0);
+}
+
 /* --- MOBILE NAVIGATION --- */
 .mobile-menu-toggle {
     display: none;
@@ -48,12 +77,16 @@
     right: -100%;
     width: min(320px, 85vw);
     height: 100vh;
+    height: 100dvh;
+    /* Dynamic viewport height for mobile browsers */
     background: #fff;
     z-index: 1001;
     transition: right 0.3s ease;
     display: flex;
     flex-direction: column;
     overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
 }
 
 .mobile-menu.active {
@@ -215,7 +248,10 @@ body.dark-theme .mobile-menu-nav a:hover {
 
 .mobile-menu-footer {
     padding: 16px;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 20px));
     border-top: 1px solid rgba(0, 0, 0, 0.1);
+    margin-top: auto;
+    flex-shrink: 0;
 }
 
 body.dark-theme .mobile-menu-footer {
@@ -234,6 +270,7 @@ body.dark-theme .mobile-menu-footer {
     width: 100%;
     padding: 14px;
     margin-top: 12px;
+    margin-bottom: 8px;
     border-radius: 12px;
     background: #f44336;
     color: #fff;
@@ -558,6 +595,70 @@ body.dark-theme .mobile-menu-footer {
         justify-content: flex-start;
     }
 
+    /* Split details in mobile sections */
+    .mobile-section .split-details-box {
+        margin-top: 10px;
+        padding: 10px;
+        background: rgba(0, 0, 0, 0.03);
+        border-radius: 8px;
+    }
+
+    body.dark-theme .mobile-section .split-details-box,
+    html.dark-theme body .mobile-section .split-details-box {
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .mobile-section .split-details-box strong {
+        font-size: 0.8rem;
+        color: #6b7280;
+        display: block;
+        margin-bottom: 6px;
+    }
+
+    body.dark-theme .mobile-section .split-details-box strong,
+    html.dark-theme body .mobile-section .split-details-box strong {
+        color: #9ca3af;
+    }
+
+    .mobile-section .split-details-list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .mobile-section .split-details-list li {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 0;
+        font-size: 0.85rem;
+    }
+
+    .mobile-section .split-details-list .share-user {
+        flex: 1;
+        color: #e5e7eb;
+    }
+
+    body:not(.dark-theme) .mobile-section .split-details-list .share-user {
+        color: #374151;
+    }
+
+    .mobile-section .split-details-list .share-amount {
+        font-weight: 700;
+        font-size: 0.8rem;
+        color: #60a5fa;
+    }
+
+    body:not(.dark-theme) .mobile-section .split-details-list .share-amount {
+        color: #2563eb;
+    }
+
+    .mobile-section .split-details-list .share-marker {
+        font-size: 0.9rem;
+        width: 20px;
+        flex-shrink: 0;
+    }
+
     .mobile-section .actions {
         justify-content: flex-start;
         gap: 8px;
@@ -719,27 +820,26 @@ body.dark-theme .mobile-menu-footer {
     /* --- NOTIFICATIONS PANEL --- */
     .notifications-panel {
         position: fixed;
-        left: 0;
-        right: 0;
-        top: 64px;
+        left: 12px;
+        right: 12px;
+        top: 70px;
         bottom: auto;
-        width: 100%;
+        width: auto;
         max-width: 100%;
-        max-height: calc(100vh - 74px);
-        border-radius: 0 0 16px 16px;
+        max-height: calc(100vh - 90px);
+        border-radius: 16px;
         padding: 16px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
         z-index: 1100;
         animation: slideDownNotifications 0.25s ease;
         overflow-y: auto;
         background: #1e293b;
-        border: none;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     body:not(.dark-theme) .notifications-panel {
         background: #fff;
-        border-top-color: rgba(0, 0, 0, 0.1);
+        border-color: rgba(0, 0, 0, 0.1);
     }
 
     @keyframes slideDownNotifications {
@@ -865,7 +965,7 @@ body.dark-theme .mobile-menu-footer {
     .notifications::before {
         content: '';
         position: fixed;
-        top: 64px;
+        top: 0;
         left: 0;
         right: 0;
         bottom: 0;
@@ -1049,8 +1149,10 @@ body.dark-theme .mobile-menu-footer {
 
     /* Notifications panel - adjust for smaller topbar */
     .notifications-panel {
-        top: 56px;
-        max-height: calc(100vh - 66px);
+        top: 62px;
+        left: 10px;
+        right: 10px;
+        max-height: calc(100vh - 80px);
     }
 
     .dashboard-main {
@@ -1384,43 +1486,55 @@ body.dark-theme .mobile-menu-footer {
         width: 100%;
     }
 
-    /* Login form fields - fix line overflow */
+    /* Login form fields - static labels instead of floating */
     .txt_field {
-        margin: 24px 0;
+        margin: 20px 0;
         width: 100%;
         position: relative;
         overflow: hidden;
+        border-bottom: none;
+    }
+
+    .txt_field label {
+        position: static;
+        transform: none;
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        color: #555;
+        margin-bottom: 8px;
     }
 
     .txt_field input {
         width: 100%;
-        height: 48px;
+        height: 50px;
         font-size: 16px;
-        padding: 0 8px;
+        padding: 12px 14px;
         box-sizing: border-box;
+        border: 1px solid #ddd;
+        border-radius: 12px;
+        background: #f8f9fa;
+        outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s;
     }
 
-    /* Fix the blue underline - constrain it within the field */
+    .txt_field input:focus {
+        border-color: #2691d9;
+        box-shadow: 0 0 0 3px rgba(38, 145, 217, 0.15);
+        background: #fff;
+    }
+
+    .txt_field input::placeholder {
+        color: #aaa;
+    }
+
+    /* Hide the animated underline on mobile */
     .txt_field span {
-        display: block;
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        height: 2px;
-        overflow: hidden;
+        display: none;
     }
 
     .txt_field span::before {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 2px;
-    }
-
-    .txt_field label {
-        font-size: 15px;
+        display: none;
     }
 
     /* Login submit button */
@@ -1708,5 +1822,314 @@ body.dark-theme .mobile-menu-footer {
     body:has(.center) .a11y-info-links a:hover,
     body:has(.registration-container) .a11y-info-links a:hover {
         background: rgba(0, 0, 0, 0.1);
+    }
+}
+
+
+/* ===========================================
+   INFO PAGES MOBILE (FAQ, About, Terms)
+   =========================================== */
+@media (max-width: 768px) {
+
+    /* Info pages body */
+    body:has(.a11y-card) {
+        padding: 16px;
+        height: auto;
+        min-height: 100vh;
+        overflow: auto;
+    }
+
+    /* Info card */
+    .center.a11y-card {
+        width: 100%;
+        max-width: 100% !important;
+        padding: 24px 20px;
+        border-radius: 16px;
+        margin: 0;
+    }
+
+    .a11y-card h1 {
+        font-size: 1.5em;
+        margin-bottom: 20px;
+    }
+
+    .a11y-card h3 {
+        font-size: 1rem;
+        margin-top: 20px;
+    }
+
+    .a11y-card p {
+        font-size: 0.95rem;
+    }
+
+    /* Back button in card */
+    .a11y-back-btn--in-card {
+        position: static;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        margin-bottom: 16px;
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.05);
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .a11y-back-btn--in-card:hover {
+        background: rgba(0, 0, 0, 0.1);
+    }
+
+    /* Info links */
+    .a11y-card .a11y-info-links {
+        margin-top: 24px;
+        padding-top: 20px;
+        border-top: 1px solid rgba(0, 0, 0, 0.1);
+    }
+}
+
+@media (max-width: 480px) {
+    body:has(.a11y-card) {
+        padding: 12px;
+    }
+
+    .center.a11y-card {
+        padding: 20px 16px;
+    }
+
+    .a11y-card h1 {
+        font-size: 1.3em;
+    }
+
+    .a11y-card h3 {
+        font-size: 0.95rem;
+    }
+
+    .a11y-card p {
+        font-size: 0.9rem;
+    }
+}
+
+/* ===========================================
+   SETTINGS PAGE MOBILE
+   =========================================== */
+@media (max-width: 768px) {
+
+    /* Settings page body - enable scroll */
+    body:has(.settings-container) {
+        min-height: 100vh;
+        height: auto;
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .settings-container {
+        margin: 16px auto;
+        padding: 0 16px;
+        padding-bottom: 40px;
+    }
+
+    .settings-header {
+        flex-direction: row;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    .settings-header h1 {
+        font-size: 1.3rem;
+        flex: 1;
+        margin: 0;
+    }
+
+    .back-link {
+        padding: 10px 14px;
+        font-size: 0.85rem;
+        white-space: nowrap;
+    }
+
+    .settings-card {
+        padding: 20px 16px;
+        border-radius: 14px;
+        margin-bottom: 16px;
+    }
+
+    .settings-card h2 {
+        font-size: 1.05rem;
+        margin-bottom: 16px;
+    }
+
+    .settings-card h2 .icon {
+        font-size: 1.2rem;
+    }
+
+    .form-group {
+        margin-bottom: 14px;
+    }
+
+    .form-group label {
+        font-size: 0.9rem;
+        margin-bottom: 6px;
+    }
+
+    .form-input {
+        padding: 12px;
+        font-size: 16px;
+        border-radius: 10px;
+    }
+
+    .btn {
+        padding: 12px 20px;
+        font-size: 0.95rem;
+        border-radius: 10px;
+        width: 100%;
+    }
+
+    .avatar-section {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .avatar-preview {
+        width: 70px;
+        height: 70px;
+        font-size: 1.5rem;
+    }
+
+    .avatar-actions {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 10px;
+        width: 100%;
+    }
+
+    .avatar-actions form {
+        flex: 1;
+        min-width: 120px;
+    }
+
+    .avatar-actions .btn {
+        width: 100%;
+    }
+
+    .two-fa-status {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 14px;
+        padding: 14px;
+    }
+
+    .two-fa-status .status {
+        width: 100%;
+    }
+
+    .two-fa-status .btn {
+        width: 100%;
+    }
+
+    .current-username {
+        font-size: 0.85rem;
+    }
+
+    .hint-text {
+        font-size: 0.8rem;
+    }
+
+    .change-blocked {
+        flex-direction: column;
+        text-align: center;
+        padding: 16px;
+    }
+
+    .change-blocked .blocked-icon {
+        font-size: 2rem;
+    }
+
+    /* Messages */
+    .messages li {
+        padding: 12px 14px;
+        font-size: 0.9rem;
+        border-radius: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .settings-container {
+        padding: 0 12px;
+        padding-bottom: 32px;
+    }
+
+    .settings-header h1 {
+        font-size: 1.2rem;
+    }
+
+    .settings-card {
+        padding: 16px 14px;
+    }
+
+    .settings-card h2 {
+        font-size: 1rem;
+    }
+
+    .avatar-preview {
+        width: 60px;
+        height: 60px;
+        font-size: 1.3rem;
+    }
+}
+
+/* ===========================================
+   2FA PAGES MOBILE (setup, disable, verify)
+   =========================================== */
+@media (max-width: 768px) {
+
+    body:has(.two-fa-container),
+    body:has(.verify-container) {
+        min-height: 100vh;
+        height: auto;
+        overflow-y: auto;
+        padding: 16px;
+    }
+
+    .two-fa-container,
+    .verify-container {
+        width: 100%;
+        max-width: 100%;
+        padding: 24px 20px;
+        border-radius: 16px;
+        margin: 0 auto;
+    }
+
+    .two-fa-container h1,
+    .verify-container h1 {
+        font-size: 1.4rem;
+    }
+
+    .qr-code-container {
+        padding: 16px;
+    }
+
+    .qr-code-container img {
+        max-width: 180px;
+    }
+
+    .secret-key {
+        font-size: 0.85rem;
+        word-break: break-all;
+    }
+
+    .two-fa-form input[type="text"] {
+        font-size: 1.5rem;
+        letter-spacing: 8px;
+        padding: 14px;
+    }
+
+    .two-fa-form button,
+    .verify-container button {
+        width: 100%;
+        padding: 14px;
     }
 }

@@ -3,7 +3,10 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#465BC7">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <title>Podziel Rachunek {% block title %}{% endblock %}</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/login.css' %}">
@@ -66,14 +69,14 @@
 
 
             <div class="txt_field">
-                <input type="text" name="email" required>
-                <span></span>
                 <label>Adres email</label>
+                <input type="text" name="email" required placeholder="jan.kowalski@email.pl">
+                <span></span>
             </div>
             <div class="txt_field">
-                <input type="password" name="password" required>
-                <span></span>
                 <label>Hasło</label>
+                <input type="password" name="password" required placeholder="••••••••">
+                <span></span>
             </div>
 
             <div style="margin: 20px 0; display: flex; justify-content: center;">

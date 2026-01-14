@@ -3,7 +3,11 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#3f51b5" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Podziel Rachunek</title>
   <script>
     (function () {
@@ -11,6 +15,15 @@
       try { saved = localStorage.getItem('fastsplit_theme'); } catch (e) { }
       var isDark = saved === 'dark' || (saved !== 'light' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
       if (isDark) document.documentElement.classList.add('dark-theme');
+      // Update theme-color meta tag based on saved preference
+      var themeColor = isDark ? '#0b1220' : '#3f51b5';
+      var metaTheme = document.querySelector('meta[name="theme-color"]:not([media])');
+      if (!metaTheme) {
+        metaTheme = document.createElement('meta');
+        metaTheme.name = 'theme-color';
+        document.head.appendChild(metaTheme);
+      }
+      metaTheme.content = themeColor;
     })();
   </script>
   {% load static %}
@@ -350,8 +363,11 @@
                   <strong>Opłacili:</strong>
                   <ul class="split-details-list">
                     {% for s in bill.waiting_paid_shares %}
-                    <li><span class="share-marker share-paid">✅</span><span class="share-user">{{ s.user.username
-                        }}</span><span class="share-amount">{{ s.amount_owed|floatformat:2 }} PLN</span></li>
+                    <li>
+                      <span class="share-marker share-paid">✅</span>
+                      <span class="share-user">{{ s.user.username }}</span>
+                      <span class="share-amount">{{ s.amount_owed|floatformat:2 }} PLN</span>
+                    </li>
                     {% endfor %}
                   </ul>
                 </div>
@@ -361,8 +377,11 @@
                   <strong>Oczekuję na:</strong>
                   <ul class="split-details-list">
                     {% for s in bill.waiting_unpaid %}
-                    <li><span class="share-marker share-pending">⏳</span><span class="share-user">{{ s.user.username
-                        }}</span><span class="share-amount">{{ s.amount_owed|floatformat:2 }} PLN</span></li>
+                    <li>
+                      <span class="share-marker share-pending">⏳</span>
+                      <span class="share-user">{{ s.user.username }}</span>
+                      <span class="share-amount">{{ s.amount_owed|floatformat:2 }} PLN</span>
+                    </li>
                     {% endfor %}
                   </ul>
                 </div>
@@ -372,7 +391,10 @@
                   <strong>Odrzucili:</strong>
                   <ul class="split-details-list">
                     {% for s in bill.waiting_rejected %}
-                    <li><span class="share-marker share-rejected">❌</span>{{ s.user.username }}</li>
+                    <li>
+                      <span class="share-marker share-rejected">❌</span>
+                      <span class="share-user">{{ s.user.username }}</span>
+                    </li>
                     {% endfor %}
                   </ul>
                 </div>

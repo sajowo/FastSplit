@@ -37,10 +37,22 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const THEME_STORAGE_KEY = 'fastsplit_theme'; // 'dark' | 'light'
 
+    const updateThemeColor = (isDark) => {
+        const themeColor = isDark ? '#0b1220' : '#3f51b5';
+        let metaTheme = document.querySelector('meta[name="theme-color"]:not([media])');
+        if (!metaTheme) {
+            metaTheme = document.createElement('meta');
+            metaTheme.name = 'theme-color';
+            document.head.appendChild(metaTheme);
+        }
+        metaTheme.content = themeColor;
+    };
+
     const setTheme = (isDark) => {
         body.classList.toggle('dark-theme', Boolean(isDark));
         document.documentElement.classList.toggle('dark-theme', Boolean(isDark));
         if (themeSwitch) themeSwitch.checked = Boolean(isDark);
+        updateThemeColor(isDark);
     };
 
     const getAutoTheme = () => {
