@@ -407,9 +407,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         const remainingItems = billNotificationsList.querySelectorAll('.notification-item').length;
                         if (remainingItems === 0) billNotificationsEmpty.hidden = false;
 
-                        // Badge: zmniejsz o 1, ale nie poniżej 0
-                        const currentBadge = notificationsBadge && !notificationsBadge.hidden ? Number(notificationsBadge.textContent) || 0 : 0;
-                        updateBadge(Math.max(0, currentBadge - 1));
+                        // Odśwież licznik powiadomień z serwera
+                        fetchNotificationsCount();
 
                         showToast('Zaakceptowano rozliczenie.', 'success');
                         // Odśwież, żeby prawy panel pokazał zaakceptowane PENDING
@@ -449,8 +448,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         const remainingItems = billNotificationsList.querySelectorAll('.notification-item').length;
                         if (remainingItems === 0) billNotificationsEmpty.hidden = false;
 
-                        const currentBadge = notificationsBadge && !notificationsBadge.hidden ? Number(notificationsBadge.textContent) || 0 : 0;
-                        updateBadge(Math.max(0, currentBadge - 1));
+                        // Odśwież licznik powiadomień z serwera
+                        fetchNotificationsCount();
 
                         showToast('Odrzucono rozliczenie.', 'info');
                         window.location.reload();
@@ -478,6 +477,27 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
 
+    // Funkcja do pobierania całkowitej liczby powiadomień
+    const fetchNotificationsCount = async () => {
+        if (!notificationsBadge) return;
+        try {
+            const res = await fetch('/notifications/count/', {
+                headers: { 'Accept': 'application/json' },
+                credentials: 'same-origin'
+            });
+            if (!res.ok) return;
+            const data = await res.json();
+
+            // Nie aktualizuj badge jeśli panel powiadomień jest otwarty
+            const panelIsOpen = notificationsPanel && !notificationsPanel.hidden;
+            if (!panelIsOpen) {
+                updateBadge(data.count || 0);
+            }
+        } catch (e) {
+            // ignore
+        }
+    };
+
     const fetchBillNotifications = async () => {
         if (!billNotificationsList || !billNotificationsEmpty) return;
         try {
@@ -499,12 +519,8 @@ document.addEventListener('DOMContentLoaded', function () {
             // Render listy
             renderBillNotifications(pending);
 
-            // Nie aktualizuj badge jeśli panel powiadomień jest otwarty (użytkownik właśnie czyta)
-            const panelIsOpen = notificationsPanel && !notificationsPanel.hidden;
-            if (!panelIsOpen && hasNew) {
-                // Dodaj nowe powiadomienia do badge
-                const currentBadge = notificationsBadge && !notificationsBadge.hidden ? Number(notificationsBadge.textContent) || 0 : 0;
-                updateBadge(currentBadge + pending.filter(p => !seen.has(String(p.bill_id))).length || pending.length);
+            // Jeśli są nowe powiadomienia, pokaż toast
+            if (hasNew) {
                 setSeenBills(seen);
                 showToast('Masz nowe rozliczenie do akceptacji.', 'info');
             }
@@ -517,6 +533,12 @@ document.addEventListener('DOMContentLoaded', function () {
     if (billNotificationsList && billNotificationsEmpty) {
         fetchBillNotifications();
         setInterval(fetchBillNotifications, 10000);
+    }
+
+    // Odświeżaj licznik powiadomień co 10 sekund
+    if (notificationsBadge) {
+        fetchNotificationsCount();
+        setInterval(fetchNotificationsCount, 10000);
     }
 
     const closeNotifications = () => {

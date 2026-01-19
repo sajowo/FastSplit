@@ -61,6 +61,7 @@ def index(request):
         except NotificationReadStatus.DoesNotExist:
             last_read_at = None
 
+        # Powiadomienia dla twórcy: odrzucone i opłacone udziały w AKTYWNYCH (PENDING) rachunkach
         rejected_bill_shares_qs = (
             BillShare.objects
             .select_related('bill', 'user')
@@ -89,6 +90,8 @@ def index(request):
         paid_bill_shares_for_creator = list(paid_bill_shares_qs[:5])
 
         # Oblicz liczbę nieprzeczytanych powiadomień (nowszych niż last_read_at)
+        # WAŻNE: Liczymy tylko powiadomienia z rachunków, które nadal są PENDING
+        # Po sfinalizowaniu/odrzuceniu rachunku przez twórcę, te powiadomienia znikają
         if last_read_at:
             unread_friend_requests = friend_requests.filter(created_at__gt=last_read_at).count()
             unread_rejected = rejected_bill_shares_qs.filter(bill__date__gt=last_read_at).count()
@@ -663,6 +666,8 @@ def create_spill(request):
     return JsonResponse({'message': 'Zła metoda'}, status=400)
 
 # --- STATUSY RACHUNKU ---
+@never_cache
+@login_required
 def update_bill_status(request, bill_id, new_status):
     bill = get_object_or_404(Bill, id=bill_id)
     
@@ -680,17 +685,17 @@ def update_bill_status(request, bill_id, new_status):
 
     if new_status == 'REJECTED':
         bill.status = Bill.Status.REJECTED
-        bill.save()
+        bill.save(update_fields=['status'])
         messages.info(request, "Rachunek odrzucony.")
         
     elif new_status == 'PAID':
         bill.status = Bill.Status.PAID
-        bill.save()
+        bill.save(update_fields=['status'])
         messages.success(request, "Sfinalizowano!")
 
     elif new_status == 'PENDING':
          bill.status = Bill.Status.PENDING
-         bill.save()
+         bill.save(update_fields=['status'])
 
     return redirect('index')
 
@@ -846,6 +851,76 @@ def mark_notifications_read(request):
     status.read_at = timezone.now()
     status.save(update_fields=['read_at'])
     return JsonResponse({'ok': True})
+
+
+@login_required
+@require_GET
+def get_notifications_count(request):
+    """Zwraca całkowitą liczbę nieprzeczytanych powiadomień."""
+    friend_requests = FriendRequest.objects.filter(to_user=request.user)
+    
+    # Pobierz timestamp ostatniego odczytu powiadomień
+    try:
+        notification_status = NotificationReadStatus.objects.get(user=request.user)
+        last_read_at = notification_status.read_at
+    except NotificationReadStatus.DoesNotExist:
+        last_read_at = None
+
+    # Powiadomienia dla twórcy: odrzucone i opłacone udziały w AKTYWNYCH (PENDING) rachunkach
+    rejected_bill_shares_qs = (
+        BillShare.objects
+        .filter(
+            bill__creator=request.user,
+            bill__status=Bill.Status.PENDING,
+            rejected=True,
+        )
+    )
+
+    paid_bill_shares_qs = (
+        BillShare.objects
+        .filter(
+            bill__creator=request.user,
+            bill__status=Bill.Status.PENDING,
+            paid=True,
+            rejected=False,
+        )
+        .exclude(user=request.user)
+    )
+
+    # Nowe rozliczenia do akceptacji
+    pending_bill_shares_qs = (
+        BillShare.objects
+        .filter(
+            user=request.user,
+            bill__status=Bill.Status.PENDING,
+            accepted=False,
+            rejected=False,
+        )
+        .exclude(bill__creator=request.user)
+    )
+
+    # Oblicz liczbę nieprzeczytanych powiadomień
+    if last_read_at:
+        unread_friend_requests = friend_requests.filter(created_at__gt=last_read_at).count()
+        unread_rejected = rejected_bill_shares_qs.filter(bill__date__gt=last_read_at).count()
+        unread_paid = paid_bill_shares_qs.filter(bill__date__gt=last_read_at).count()
+        unread_pending_bills = pending_bill_shares_qs.filter(bill__date__gt=last_read_at).count()
+    else:
+        # Jeśli nigdy nie odczytano, wszystkie są nieprzeczytane
+        unread_friend_requests = friend_requests.count()
+        unread_rejected = rejected_bill_shares_qs.count()
+        unread_paid = paid_bill_shares_qs.count()
+        unread_pending_bills = pending_bill_shares_qs.count()
+
+    notifications_count = unread_friend_requests + unread_rejected + unread_paid + unread_pending_bills
+
+    return JsonResponse({
+        'count': notifications_count,
+        'friend_requests': unread_friend_requests,
+        'rejected': unread_rejected,
+        'paid': unread_paid,
+        'pending_bills': unread_pending_bills,
+    })
 
 
 # --- 2FA (TOTP) ---

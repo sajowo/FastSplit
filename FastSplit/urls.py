@@ -48,6 +48,7 @@ urlpatterns = [
     path('bill/<int:bill_id>/pay/', views.pay_bill_share, name='pay_bill_share'),
     path('notifications/pending-bills/', views.get_pending_bill_notifications, name='pending_bill_notifications'),
     path('notifications/mark-read/', views.mark_notifications_read, name='mark_notifications_read'),
+    path('notifications/count/', views.get_notifications_count, name='notifications_count'),
 ]
 
 # Serve media files in development
