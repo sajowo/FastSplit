@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zielony Kontrast - FastSplit</title>
+    <link rel="stylesheet" href="EsSplit/static/css/accessibility.css">
+    <style>
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            margin: 0;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .demo-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 968px) {
+            .comparison {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .demo-card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .demo-card h2 {
+            margin-top: 0;
+            color: #3f51b5;
+            border-bottom: 2px solid #3f51b5;
+            padding-bottom: 10px;
+        }
+
+        .demo-card p {
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .demo-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            margin: 15px 0;
+        }
+
+        .demo-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 15px 0;
+        }
+
+        .demo-btn {
+            padding: 10px 20px;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .demo-btn.primary {
+            background: #3f51b5;
+            color: white;
+        }
+
+        .demo-btn.success {
+            background: #10b981;
+            color: white;
+        }
+
+        .demo-btn.danger {
+            background: #dc2626;
+            color: white;
+        }
+
+        .demo-link {
+            color: #2196F3;
+            text-decoration: none;
+        }
+
+        .info-box {
+            background: #f0f4ff;
+            border-left: 4px solid #3f51b5;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .badge {
+            display: inline-block;
+            position: absolute;
+            top: -15px;
+            left: 20px;
+            background: #3f51b5;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .demo-card {
+            position: relative;
+            margin-top: 20px;
+        }
+
+        .features {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .features h2 {
+            color: #3f51b5;
+            margin-top: 0;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .feature-item {
+            padding: 15px;
+            background: #f0f4ff;
+            border-radius: 8px;
+            border-left: 4px solid #3f51b5;
+        }
+
+        .feature-item h3 {
+            color: #3f51b5;
+            margin: 0 0 10px 0;
+            font-size: 16px;
+        }
+
+        .feature-item p {
+            margin: 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .matrix-note {
+            background: #000000;
+            color: #00ff00;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #00ff00;
+            margin-top: 20px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="a11y-font-controls a11y-font-controls--fixed" role="group" aria-label="Rozmiar czcionki">
+        <button type="button" class="a11y-font-btn" data-font-scale="0.85" aria-pressed="false"
+            aria-label="Zmniejsz czcionkę">A-</button>
+        <button type="button" class="a11y-font-btn" data-font-scale="1" aria-pressed="true"
+            aria-label="Domyślny rozmiar">A</button>
+        <button type="button" class="a11y-font-btn" data-font-scale="1.25" aria-pressed="false"
+            aria-label="Zwiększ czcionkę">A+</button>
+        <span class="a11y-separator"></span>
+        <button type="button" class="a11y-contrast-btn" data-contrast-toggle aria-pressed="false"
+            aria-label="Przełącz wysoki kontrast">◐</button>
+    </div>
+
+    <div class="demo-container">
+        <div class="header">
+            <h1>🟢 Tryb Wysokiego Kontrastu Matrix</h1>
+            <p>Czarne tło z limonkowymi elementami - inspirowane stroną PIP</p>
+            <p style="font-size: 18px; margin-top: 20px;">👆 Kliknij przycisk <strong>◐</strong> w prawym górnym rogu,
+                aby włączyć!</p>
+        </div>
+
+        <div class="comparison">
+            <!-- Normal -->
+            <div class="demo-card">
+                <span class="badge">Normalny Widok</span>
+                <h2>Przykładowa Karta</h2>
+                <p>To jest przykładowy tekst. <strong>Ważne informacje</strong> są wyróżnione.</p>
+                <p>Kwota do zapłaty: <strong style="color: #2563eb;">150,00 PLN</strong></p>
+
+                <input type="text" class="demo-input" placeholder="Wpisz tekst...">
+
+                <div class="demo-buttons">
+                    <button class="demo-btn primary">Zapisz</button>
+                    <button class="demo-btn success">Akceptuj</button>
+                    <button class="demo-btn danger">Usuń</button>
+                </div>
+
+                <p>Sprawdź <a href="#" class="demo-link">ten link</a> dla więcej informacji.</p>
+
+                <div class="info-box">
+                    <strong>Wskazówka:</strong> To jest przykładowe powiadomienie.
+                </div>
+            </div>
+
+            <!-- High Contrast Preview -->
+            <div class="demo-card" style="background: #000000; border: 2px solid #00ff00;">
+                <span class="badge" style="background: #00ff00; color: #000000;">Podgląd Matrix</span>
+                <h2 style="color: #00ff00; font-weight: 900; border-bottom: 2px solid #00ff00;">Przykładowa Karta</h2>
+                <p style="color: #00ff00; font-weight: 700;">To jest przykładowy tekst. <strong
+                        style="font-weight: 900;">Ważne informacje</strong> są wyróżnione.</p>
+                <p style="color: #00ff00; font-weight: 700;">Kwota do zapłaty: <strong style="font-weight: 900;">150,00
+                        PLN</strong></p>
+
+                <input type="text" class="demo-input" placeholder="Wpisz tekst..."
+                    style="background: #000000; color: #00ff00; border: 2px solid #00ff00; font-weight: 700;">
+
+                <div class="demo-buttons">
+                    <button class="demo-btn"
+                        style="background: #00ff00; color: #000000; border: 2px solid #00ff00; font-weight: 900;">Zapisz</button>
+                    <button class="demo-btn"
+                        style="background: #00ff00; color: #000000; border: 2px solid #00ff00; font-weight: 900;">Akceptuj</button>
+                    <button class="demo-btn"
+                        style="background: #00ff00; color: #000000; border: 2px solid #00ff00; font-weight: 900;">Usuń</button>
+                </div>
+
+                <p style="color: #00ff00; font-weight: 700;">Sprawdź <a href="#"
+                        style="color: #00ff00; text-decoration: underline; text-decoration-thickness: 2px; font-weight: 900;">ten
+                        link</a> dla więcej informacji.</p>
+
+                <div
+                    style="background: #000000; border: 2px solid #00ff00; padding: 15px; margin: 15px 0; border-radius: 4px;">
+                    <strong style="color: #00ff00; font-weight: 900;">Wskazówka:</strong> <span
+                        style="color: #00ff00; font-weight: 700;">To jest przykładowe powiadomienie.</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="features">
+            <h2>Charakterystyka Trybu Matrix</h2>
+
+            <div class="feature-grid">
+                <div class="feature-item">
+                    <h3>⚫ Czarne Tło</h3>
+                    <p>Głębokie czarne (#000000) dla maksymalnego kontrastu</p>
+                </div>
+
+                <div class="feature-item">
+                    <h3>🟢 Limonkowe Elementy</h3>
+                    <p>Jaskrawy zielony (#00ff00) dla tekstu i ramek</p>
+                </div>
+
+                <div class="feature-item">
+                    <h3>📊 Kontrast 15:1+</h3>
+                    <p>Wysoki współczynnik kontrastu WCAG AAA</p>
+                </div>
+
+                <div class="feature-item">
+                    <h3>✍️ Pogrubiony Tekst</h3>
+                    <p>Font-weight: 700-900 dla lepszej czytelności</p>
+                </div>
+
+                <div class="feature-item">
+                    <h3>🔲 Wyraźne Ramki</h3>
+                    <p>2px limonkowe ramki dla oddzielenia</p>
+                </div>
+
+                <div class="feature-item">
+                    <h3>🔗 Podkreślone Linki</h3>
+                    <p>2px podkreślenie dla lepszej widoczności</p>
+                </div>
+
+                <div class="feature-item">
+                    <h3>🎯 Odwrócone Przyciski</h3>
+                    <p>Limonkowe tło z czarnym tekstem</p>
+                </div>
+
+                <div class="feature-item">
+                    <h3>♿ WCAG AAA</h3>
+                    <p>Pełna zgodność z najwyższymi standardami</p>
+                </div>
+            </div>
+
+            <div class="matrix-note">
+                <h3 style="margin-top: 0; font-weight: 900;">💚 Inspirowane stroną PIP</h3>
+                <p style="margin: 0; font-weight: 700;">Ten tryb kontrastu został zaprojektowany w stylu strony
+                    Państwowej Inspekcji Pracy - czarne tło z jaskrawymi zielonymi elementami. Zapewnia doskonałą
+                    czytelność w ciemnych pomieszczeniach i jest przyjazny dla oczu podczas długiej pracy.</p>
+            </div>
+
+            <div
+                style="margin-top: 30px; padding: 20px; background: #d1fae5; border-radius: 8px; border-left: 4px solid #10b981;">
+                <h3 style="color: #059669; margin-top: 0;">✅ Dla kogo jest ten tryb?</h3>
+                <ul style="color: #065f46; margin: 0; padding-left: 20px;">
+                    <li>Osoby z problemami wzroku</li>
+                    <li>Użytkownicy preferujący ciemne motywy</li>
+                    <li>Praca w ciemnych pomieszczeniach</li>
+                    <li>Zgodność z wymogami dostępności WCAG AAA</li>
+                    <li>Osoby wrażliwe na jasne kolory</li>
+                    <li>Fani stylu "Matrix" / cyberpunk</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="EsSplit/static/js/accessibility.js"></script>
+</body>
+
+</html>

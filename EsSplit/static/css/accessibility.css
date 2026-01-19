@@ -16,6 +16,14 @@ html {
     -webkit-backdrop-filter: blur(10px);
 }
 
+/* Separator between font controls and contrast button */
+.a11y-separator {
+    width: 1px;
+    height: 24px;
+    background: rgba(255, 255, 255, 0.25);
+    margin: 0 2px;
+}
+
 .a11y-font-controls--fixed {
     position: fixed;
     top: 12px;
@@ -75,6 +83,330 @@ html {
 
 .a11y-font-btn[aria-pressed="true"] {
     background: rgba(0, 0, 0, 0.36);
+}
+
+/* Contrast toggle button */
+.a11y-contrast-btn {
+    appearance: none;
+    border: none;
+    cursor: pointer;
+    border-radius: 999px;
+    padding: 8px 12px;
+    font-weight: 700;
+    line-height: 1;
+    font-size: 18px;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.a11y-contrast-btn:hover {
+    background: rgba(0, 0, 0, 0.26);
+}
+
+.a11y-contrast-btn[aria-pressed="true"] {
+    background: rgba(0, 0, 0, 0.36);
+}
+
+/* High contrast mode - Black background with lime green elements */
+html.high-contrast,
+body.high-contrast {
+    background: #000000 !important;
+    color: #00ff00 !important;
+}
+
+/* All backgrounds to black */
+html.high-contrast *:not(.a11y-font-btn):not(.a11y-contrast-btn):not(.a11y-separator),
+body.high-contrast *:not(.a11y-font-btn):not(.a11y-contrast-btn):not(.a11y-separator) {
+    background-color: #000000 !important;
+    color: #00ff00 !important;
+    border-color: #00ff00 !important;
+}
+
+/* Text - all lime green, bold */
+html.high-contrast,
+html.high-contrast *,
+body.high-contrast,
+body.high-contrast * {
+    color: #00ff00 !important;
+    font-weight: 700 !important;
+    text-shadow: none !important;
+}
+
+/* Headings - extra bold */
+html.high-contrast h1,
+html.high-contrast h2,
+html.high-contrast h3,
+html.high-contrast h4,
+html.high-contrast h5,
+html.high-contrast h6,
+html.high-contrast strong,
+html.high-contrast b,
+body.high-contrast h1,
+body.high-contrast h2,
+body.high-contrast h3,
+body.high-contrast h4,
+body.high-contrast h5,
+body.high-contrast h6,
+body.high-contrast strong,
+body.high-contrast b {
+    font-weight: 900 !important;
+    color: #00ff00 !important;
+}
+
+/* Links - lime green, underlined */
+html.high-contrast a,
+body.high-contrast a {
+    color: #00ff00 !important;
+    text-decoration: underline !important;
+    text-decoration-thickness: 2px !important;
+    text-underline-offset: 3px !important;
+    font-weight: 900 !important;
+}
+
+html.high-contrast a:hover,
+body.high-contrast a:hover {
+    color: #33ff33 !important;
+    text-decoration-thickness: 3px !important;
+}
+
+/* Buttons - lime green background, black text */
+html.high-contrast button:not(.a11y-font-btn):not(.a11y-contrast-btn),
+html.high-contrast .btn,
+html.high-contrast input[type="submit"],
+html.high-contrast input[type="button"],
+body.high-contrast button:not(.a11y-font-btn):not(.a11y-contrast-btn),
+body.high-contrast .btn,
+body.high-contrast input[type="submit"],
+body.high-contrast input[type="button"] {
+    background: #00ff00 !important;
+    color: #000000 !important;
+    border: 2px solid #00ff00 !important;
+    font-weight: 900 !important;
+    box-shadow: none !important;
+}
+
+html.high-contrast button:hover:not(.a11y-font-btn):not(.a11y-contrast-btn),
+html.high-contrast .btn:hover,
+body.high-contrast button:hover:not(.a11y-font-btn):not(.a11y-contrast-btn),
+body.high-contrast .btn:hover {
+    background: #33ff33 !important;
+    border-color: #33ff33 !important;
+}
+
+/* Input fields - black background, lime green border and text */
+html.high-contrast input:not([type="checkbox"]):not([type="radio"]),
+html.high-contrast textarea,
+html.high-contrast select,
+body.high-contrast input:not([type="checkbox"]):not([type="radio"]),
+body.high-contrast textarea,
+body.high-contrast select {
+    background: #000000 !important;
+    color: #00ff00 !important;
+    border: 2px solid #00ff00 !important;
+    font-weight: 700 !important;
+}
+
+html.high-contrast input::placeholder,
+html.high-contrast textarea::placeholder,
+body.high-contrast input::placeholder,
+body.high-contrast textarea::placeholder {
+    color: #00aa00 !important;
+    opacity: 1 !important;
+}
+
+/* Focus states - bright lime green border */
+html.high-contrast *:focus,
+body.high-contrast *:focus {
+    outline: 3px solid #00ff00 !important;
+    outline-offset: 2px !important;
+}
+
+html.high-contrast input:focus,
+html.high-contrast textarea:focus,
+html.high-contrast select:focus,
+body.high-contrast input:focus,
+body.high-contrast textarea:focus,
+body.high-contrast select:focus {
+    border-color: #33ff33 !important;
+    box-shadow: 0 0 0 3px rgba(0, 255, 0, 0.3) !important;
+}
+
+/* Cards and containers - black with lime green borders */
+html.high-contrast .split-item,
+html.high-contrast .dashboard-left,
+html.high-contrast .dashboard-center,
+html.high-contrast .dashboard-right,
+html.high-contrast .settings-card,
+html.high-contrast .registration-container,
+html.high-contrast .center,
+html.high-contrast .test-container,
+body.high-contrast .split-item,
+body.high-contrast .dashboard-left,
+body.high-contrast .dashboard-center,
+body.high-contrast .dashboard-right,
+body.high-contrast .settings-card,
+body.high-contrast .registration-container,
+body.high-contrast .center,
+body.high-contrast .test-container {
+    background: #000000 !important;
+    border: 2px solid #00ff00 !important;
+    box-shadow: none !important;
+}
+
+/* Topbar - black background, lime green text */
+html.high-contrast .topbar,
+body.high-contrast .topbar {
+    background: #000000 !important;
+    color: #00ff00 !important;
+    border-bottom: 2px solid #00ff00 !important;
+}
+
+html.high-contrast .topbar *,
+body.high-contrast .topbar * {
+    color: #00ff00 !important;
+}
+
+/* Mobile menu - black background */
+html.high-contrast .mobile-menu,
+body.high-contrast .mobile-menu {
+    background: #000000 !important;
+    border-left: 2px solid #00ff00 !important;
+}
+
+/* Avatar - lime green background, black text */
+html.high-contrast .user-avatar,
+body.high-contrast .user-avatar {
+    background: #00ff00 !important;
+    color: #000000 !important;
+    border: 2px solid #00ff00 !important;
+}
+
+/* Status badges - lime green background, black text */
+html.high-contrast .status-badge,
+body.high-contrast .status-badge {
+    background: #00ff00 !important;
+    color: #000000 !important;
+    border: 2px solid #00ff00 !important;
+    font-weight: 900 !important;
+}
+
+/* Success elements - brighter green */
+html.high-contrast .btn-success,
+html.high-contrast .btn-accept,
+html.high-contrast .status-badge.enabled,
+body.high-contrast .btn-success,
+body.high-contrast .btn-accept,
+body.high-contrast .status-badge.enabled {
+    background: #00ff00 !important;
+    color: #000000 !important;
+}
+
+/* Danger elements - still visible in green but with different styling */
+html.high-contrast .btn-danger,
+body.high-contrast .btn-danger {
+    background: #000000 !important;
+    color: #00ff00 !important;
+    border: 3px solid #00ff00 !important;
+}
+
+/* Checkboxes and radio */
+html.high-contrast input[type="checkbox"],
+html.high-contrast input[type="radio"],
+body.high-contrast input[type="checkbox"],
+body.high-contrast input[type="radio"] {
+    accent-color: #00ff00 !important;
+    border: 2px solid #00ff00 !important;
+}
+
+/* Accessibility controls - keep visible */
+html.high-contrast .a11y-font-controls,
+body.high-contrast .a11y-font-controls {
+    background: rgba(0, 0, 0, 0.95) !important;
+    border: 2px solid #00ff00 !important;
+}
+
+html.high-contrast .a11y-font-btn,
+html.high-contrast .a11y-contrast-btn,
+body.high-contrast .a11y-font-btn,
+body.high-contrast .a11y-contrast-btn {
+    background: rgba(0, 255, 0, 0.15) !important;
+    color: #00ff00 !important;
+}
+
+html.high-contrast .a11y-font-btn:hover,
+html.high-contrast .a11y-contrast-btn:hover,
+body.high-contrast .a11y-font-btn:hover,
+body.high-contrast .a11y-contrast-btn:hover {
+    background: rgba(0, 255, 0, 0.25) !important;
+}
+
+html.high-contrast .a11y-font-btn[aria-pressed="true"],
+html.high-contrast .a11y-contrast-btn[aria-pressed="true"],
+body.high-contrast .a11y-font-btn[aria-pressed="true"],
+body.high-contrast .a11y-contrast-btn[aria-pressed="true"] {
+    background: rgba(0, 255, 0, 0.35) !important;
+}
+
+html.high-contrast .a11y-separator,
+body.high-contrast .a11y-separator {
+    background: rgba(0, 255, 0, 0.4) !important;
+}
+
+/* Remove all shadows */
+html.high-contrast *,
+body.high-contrast * {
+    box-shadow: none !important;
+}
+
+/* Images - add lime green border */
+html.high-contrast img,
+body.high-contrast img {
+    border: 2px solid #00ff00 !important;
+}
+
+/* Scrollbars */
+html.high-contrast ::-webkit-scrollbar-track,
+body.high-contrast ::-webkit-scrollbar-track {
+    background: #000000 !important;
+}
+
+html.high-contrast ::-webkit-scrollbar-thumb,
+body.high-contrast ::-webkit-scrollbar-thumb {
+    background: #00ff00 !important;
+    border: 2px solid #000000 !important;
+}
+
+/* Messages and notifications */
+html.high-contrast .messages li,
+html.high-contrast .notification-item,
+body.high-contrast .messages li,
+body.high-contrast .notification-item {
+    background: #000000 !important;
+    border: 2px solid #00ff00 !important;
+    color: #00ff00 !important;
+}
+
+/* Tables */
+html.high-contrast table,
+html.high-contrast th,
+html.high-contrast td,
+body.high-contrast table,
+body.high-contrast th,
+body.high-contrast td {
+    border-color: #00ff00 !important;
+}
+
+/* HR and separators */
+html.high-contrast hr,
+html.high-contrast .separator,
+body.high-contrast hr,
+body.high-contrast .separator {
+    border-color: #00ff00 !important;
+    background: #00ff00 !important;
 }
 
 /* Linki informacyjne (login / rejestracja / info pages) */

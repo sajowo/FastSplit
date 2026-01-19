@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Kontrastu - FastSplit</title>
+    <link rel="stylesheet" href="EsSplit/static/css/accessibility.css">
+    <style>
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .test-container {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .test-button {
+            background: #3f51b5;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .test-button:hover {
+            background: #303f9f;
+        }
+
+        .test-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        a {
+            color: #2196F3;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="a11y-font-controls a11y-font-controls--fixed" role="group" aria-label="Rozmiar czcionki">
+        <button type="button" class="a11y-font-btn" data-font-scale="0.85" aria-pressed="false"
+            aria-label="Zmniejsz czcionkę">A-</button>
+        <button type="button" class="a11y-font-btn" data-font-scale="1" aria-pressed="true"
+            aria-label="Domyślny rozmiar">A</button>
+        <button type="button" class="a11y-font-btn" data-font-scale="1.25" aria-pressed="false"
+            aria-label="Zwiększ czcionkę">A+</button>
+        <span class="a11y-separator"></span>
+        <button type="button" class="a11y-contrast-btn" data-contrast-toggle aria-pressed="false"
+            aria-label="Przełącz wysoki kontrast">◐</button>
+    </div>
+
+    <div class="test-container">
+        <h1>Test Dostępności FastSplit</h1>
+        <p>To jest strona testowa do sprawdzenia funkcji dostępności. Możesz przetestować:</p>
+        <ul>
+            <li>Zmianę rozmiaru czcionki (przyciski A-, A, A+)</li>
+            <li>Przełączanie wysokiego kontrastu (przycisk ◐)</li>
+        </ul>
+
+        <h2>Przykładowe elementy</h2>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore
+            magna aliqua.</p>
+
+        <p><strong>Ważna informacja:</strong> Kwota do zapłaty: <span style="color: #2563eb; font-weight: 700;">150,00
+                PLN</span></p>
+
+        <input type="text" class="test-input" placeholder="Przykładowe pole tekstowe">
+
+        <div style="margin: 20px 0;">
+            <button class="test-button">Przycisk podstawowy</button>
+            <button class="test-button btn-success" style="background: #10b981;">Zaakceptuj</button>
+            <button class="test-button btn-danger" style="background: #dc2626;">Usuń</button>
+        </div>
+
+        <p>Sprawdź też <a href="#">ten link testowy</a> w trybie wysokiego kontrastu.</p>
+
+        <div style="margin-top: 20px; padding: 15px; background: #f3f4f6; border-radius: 8px;">
+            <p style="margin: 0;"><strong>Status:</strong> <span class="status-badge enabled"
+                    style="background: #d1fae5; color: #059669; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem;">Aktywny</span>
+            </p>
+        </div>
+    </div>
+
+    <script src="EsSplit/static/js/accessibility.js"></script>
+</body>
+
+</html>

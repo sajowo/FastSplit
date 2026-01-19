@@ -1,5 +1,19 @@
 (function () {
     const STORAGE_KEY = 'fastsplit_font_scale';
+    const CONTRAST_KEY = 'fastsplit_high_contrast';
+
+    // Apply contrast immediately (before DOMContentLoaded)
+    try {
+        const contrastEnabled = localStorage.getItem(CONTRAST_KEY) === 'true';
+        if (contrastEnabled) {
+            document.documentElement.classList.add('high-contrast');
+            if (document.body) {
+                document.body.classList.add('high-contrast');
+            }
+        }
+    } catch (e) {
+        // ignore
+    }
 
     const clampScale = (value) => {
         const n = Number(value);
@@ -35,19 +49,65 @@
         }
     };
 
+    const getContrastMode = () => {
+        try {
+            return localStorage.getItem(CONTRAST_KEY) === 'true';
+        } catch (e) {
+            return false;
+        }
+    };
+
+    const saveContrastMode = (enabled) => {
+        try {
+            localStorage.setItem(CONTRAST_KEY, String(enabled));
+        } catch (e) {
+            // ignore
+        }
+    };
+
+    const applyContrastMode = (enabled) => {
+        if (enabled) {
+            document.documentElement.classList.add('high-contrast');
+            document.body.classList.add('high-contrast');
+        } else {
+            document.documentElement.classList.remove('high-contrast');
+            document.body.classList.remove('high-contrast');
+        }
+
+        // Update button state
+        const contrastBtn = document.querySelector('[data-contrast-toggle]');
+        if (contrastBtn) {
+            contrastBtn.setAttribute('aria-pressed', String(enabled));
+        }
+    };
+
     document.addEventListener('DOMContentLoaded', () => {
-        // Apply saved setting
+        // Apply saved font scale
         const saved = getSavedScale();
         if (saved) applyScale(saved);
         else applyScale(1);
 
-        // Wire controls (if present)
+        // Apply saved contrast mode
+        const contrastEnabled = getContrastMode();
+        applyContrastMode(contrastEnabled);
+
+        // Wire font controls (if present)
         document.addEventListener('click', (e) => {
             const btn = e.target && e.target.closest ? e.target.closest('[data-font-scale]') : null;
             if (!btn) return;
             const scale = btn.getAttribute('data-font-scale');
             applyScale(scale);
             saveScale(scale);
+        });
+
+        // Wire contrast toggle
+        document.addEventListener('click', (e) => {
+            const btn = e.target && e.target.closest ? e.target.closest('[data-contrast-toggle]') : null;
+            if (!btn) return;
+            const currentState = getContrastMode();
+            const newState = !currentState;
+            applyContrastMode(newState);
+            saveContrastMode(newState);
         });
 
         // Back button: always go to login (via href)

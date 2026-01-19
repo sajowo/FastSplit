@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Porównanie Trybów - FastSplit</title>
+    <link rel="stylesheet" href="EsSplit/static/css/accessibility.css">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f3f4f6;
+        }
+
+        .demo-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .demo-header h1 {
+            color: #3f51b5;
+            margin-bottom: 10px;
+        }
+
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .demo-card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .demo-card h2 {
+            margin-top: 0;
+            color: #333;
+            border-bottom: 2px solid #3f51b5;
+            padding-bottom: 10px;
+        }
+
+        .color-sample {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+
+        .color-box {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+            flex-shrink: 0;
+        }
+
+        .color-info {
+            flex: 1;
+        }
+
+        .color-name {
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .color-code {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .color-usage {
+            font-size: 12px;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        /* Dark theme simulation */
+        .demo-card.dark-sim {
+            background: #0b1220;
+            color: #e5e7eb;
+        }
+
+        .demo-card.dark-sim h2 {
+            color: #e5e7eb;
+            border-bottom-color: #5c6bc0;
+        }
+
+        .demo-card.dark-sim .color-sample {
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .demo-card.dark-sim .color-name {
+            color: #e5e7eb;
+        }
+
+        .demo-card.dark-sim .color-code {
+            color: #9ca3af;
+        }
+
+        /* High contrast simulation */
+        .demo-card.contrast-sim {
+            background: #000000;
+            color: #ffffff;
+            border: 3px solid #ffffff;
+        }
+
+        .demo-card.contrast-sim h2 {
+            color: #ffffff;
+            border-bottom-color: #fbbf24;
+        }
+
+        .demo-card.contrast-sim .color-sample {
+            background: #000000;
+            border: 2px solid #ffffff;
+        }
+
+        .demo-card.contrast-sim .color-name {
+            color: #ffffff;
+        }
+
+        .demo-card.contrast-sim .color-code {
+            color: #9ca3af;
+        }
+
+        .demo-card.contrast-sim .color-box {
+            border: 2px solid #ffffff;
+        }
+
+        .button-demo {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .demo-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .demo-btn.primary {
+            background: #3f51b5;
+            color: white;
+        }
+
+        .demo-btn.success {
+            background: #10b981;
+            color: white;
+        }
+
+        .demo-btn.danger {
+            background: #dc2626;
+            color: white;
+        }
+
+        /* Dark theme buttons */
+        .dark-sim .demo-btn.primary {
+            background: #5c6bc0;
+        }
+
+        /* High contrast buttons */
+        .contrast-sim .demo-btn.primary {
+            background: #5c6bc0;
+            border: 2px solid #ffffff;
+        }
+
+        .contrast-sim .demo-btn.success {
+            background: #10b981;
+            color: #000000;
+            border: 2px solid #ffffff;
+        }
+
+        .contrast-sim .demo-btn.danger {
+            background: #dc2626;
+            border: 2px solid #ffffff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="a11y-font-controls a11y-font-controls--fixed" role="group" aria-label="Rozmiar czcionki">
+        <button type="button" class="a11y-font-btn" data-font-scale="0.85" aria-pressed="false"
+            aria-label="Zmniejsz czcionkę">A-</button>
+        <button type="button" class="a11y-font-btn" data-font-scale="1" aria-pressed="true"
+            aria-label="Domyślny rozmiar">A</button>
+        <button type="button" class="a11y-font-btn" data-font-scale="1.25" aria-pressed="false"
+            aria-label="Zwiększ czcionkę">A+</button>
+        <span class="a11y-separator"></span>
+        <button type="button" class="a11y-contrast-btn" data-contrast-toggle aria-pressed="false"
+            aria-label="Przełącz wysoki kontrast">◐</button>
+    </div>
+
+    <div class="demo-header">
+        <h1>Porównanie Trybów Kolorystycznych FastSplit</h1>
+        <p>Wizualizacja palet kolorów w różnych trybach dostępności</p>
+    </div>
+
+    <div class="demo-grid">
+        <!-- Light Mode -->
+        <div class="demo-card">
+            <h2>🌞 Tryb Jasny (Light Mode)</h2>
+
+            <div class="color-sample">
+                <div class="color-box" style="background: #3f51b5;"></div>
+                <div class="color-info">
+                    <div class="color-name">Primary Blue</div>
+                    <div class="color-code">#3f51b5</div>
+                    <div class="color-usage">Przyciski, topbar, akcenty</div>
+                </div>
+            </div>
+
+            <div class="color-sample">
+                <div class="color-box" style="background: #2196F3;"></div>
+                <div class="color-info">
+                    <div class="color-name">Light Blue</div>
+                    <div class="color-code">#2196F3</div>
+                    <div class="color-usage">Hover, focus, linki</div>
+                </div>
+            </div>
+
+            <div class="color-sample">
+                <div class="color-box" style="background: #10b981;"></div>
+                <div class="color-info">
+                    <div class="color-name">Success Green</div>
+                    <div class="color-code">#10b981</div>
+                    <div class="color-usage">Sukces, akceptacja</div>
+                </div>
+            </div>
+
+            <div class="color-sample">
+                <div class="color-box" style="background: #dc2626;"></div>
+                <div class="color-info">
+                    <div class="color-name">Error Red</div>
+                    <div class="color-code">#dc2626</div>
+                    <div class="color-usage">Błędy, usuwanie</div>
+                </div>
+            </div>
+
+            <div class="color-sample">
+                <div class="color-box" style="background: #f59e0b;"></div>
+                <div class="color-info">
+                    <div class="color-name">Warning Orange</div>
+                    <div class="color-code">#f59e0b</div>
+                    <div class="color-usage">Ostrzeżenia, oczekujące</div>
+                </div>
+            </div>
+
+            <div class="button-demo">
+                <button class="demo-btn primary">Primary</button>
+                <button class="demo-btn success">Success</button>
+                <button class="demo-btn danger">Danger</button>
+            </div>
+        </div>
+
+        <!-- Dark Mode -->
+        <div class="demo-card dark-sim">
+            <h2>🌙 Tryb Ciemny (Dark Mode)</h2>
+
+            <div class="color-sample">
+                <div class="color-box" style="background: #0b1220;"></div>
+                <div class="color-info">
+                    <div class="color-name">Background Dark</div>
+                    <div class="color-code">#0b1220</div>
+                    <div class="color-usage">Główne tło</div>
+                </div>
+            </div>
+
+            <div class="color-sample">
+                <div class="color-box" style="background: #5c6bc0;"></div>
+                <div class="color-info">
+                    <div class="color-name">Primary Blue (lighter)</div>
+                    <div class="color-code">#5c6bc0</div>
+                    <div class="color-usage">Przyciski, akcenty</div>
+                </div>
+            </div>
+
+            <div class="color-sample">
+                <div class="color-box" style="background: #10b981;"></div>
+                <div class="color-info">
+                    <div class="color-name">Success Green</div>
+                    <div class="color-code">#10b981</div>
+                    <div class="color-usage">Sukces (bez zmian)</div>
+                </div>
+            </div>
+
+            <div class="color-sample">
+                <div class="color-box" style="background: #e5e7eb;"></div>
+                <div class="color-info">
+                    <div class="color-name">Text Light</div>
+                    <div class="color-code">#e5e7eb</div>
+                    <div class="color-usage">Główny tekst</div>
+                </div>
+            </div>
+
+            <div class="color-sample">
+                <div class="color-box" style="background: rgba(255, 255, 255, 0.1); border: 1px solid #fff;"></div>
+                <div class="color-info">
+                    <div class="color-name">Border Light</div>
+                    <div class="color-code">rgba(255,255,255,0.1)</div>
+                    <div class="color-usage">Ramki, separatory</div>
+                </div>
+            </div>
+
+            <div class="button-demo">
+                <button class="demo-btn primary">Primary</button>
+                <button class="demo-btn success">Success</button>
+                <button class="demo-btn danger">Danger</button>
+            </div>
+        </div>
+
+        <!-- High Contrast Mode -->
+        <div class="demo-card contrast-sim">
+            <h2>◐ Wysoki Kontrast (High Contrast)</h2>
+
+            <div class="color-sample">
+                <div class="color-box" style="background: #000000;"></div>
+                <div class="color-info">
+                    <div class="color-name">Background</div>
+                    <div class="color-code">#000000</div>
+                    <div class="color-usage">Czarne tło</div>
+                </div>
+            </div>
+
+            <div class="color-sample">
+                <div class="color-box" style="background: #ffffff;"></div>
+                <div class="color-info">
+                    <div class="color-name">Text & Borders</div>
+                    <div class="color-code">#ffffff</div>
+                    <div class="color-usage">Biały tekst, ramki 2px</div>
+                </div>
+            </div>
+
+            <div class="color-sample">
+                <div class="color-box" style="background: #fbbf24;"></div>
+                <div class="color-info">
+                    <div class="color-name">Links & Focus</div>
+                    <div class="color-code">#fbbf24</div>
+                    <div class="color-usage">Złote linki, focus</div>
+                </div>
+            </div>
+
+            <div class="color-sample">
+                <div class="color-box" style="background: #5c6bc0;"></div>
+                <div class="color-info">
+                    <div class="color-name">Primary Buttons</div>
+                    <div class="color-code">#5c6bc0</div>
+                    <div class="color-usage">Przyciski główne</div>
+                </div>
+            </div>
+
+            <div class="color-sample">
+                <div class="color-box" style="background: #10b981;"></div>
+                <div class="color-info">
+                    <div class="color-name">Success</div>
+                    <div class="color-code">#10b981</div>
+                    <div class="color-usage">Zielony z czarnym tekstem</div>
+                </div>
+            </div>
+
+            <div class="color-sample">
+                <div class="color-box" style="background: #60a5fa;"></div>
+                <div class="color-info">
+                    <div class="color-name">Amounts/Strong</div>
+                    <div class="color-code">#60a5fa</div>
+                    <div class="color-usage">Kwoty, ważne dane</div>
+                </div>
+            </div>
+
+            <div class="button-demo">
+                <button class="demo-btn primary">Primary</button>
+                <button class="demo-btn success">Success</button>
+                <button class="demo-btn danger">Danger</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="EsSplit/static/js/accessibility.js"></script>
+</body>
+
+</html>
