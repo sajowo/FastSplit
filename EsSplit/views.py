@@ -151,18 +151,46 @@ def index(request):
             .order_by('-date')[:8]
         )
 
+        # Historia: rachunki które są zakończone LUB w których użytkownik opłacił/odrzucił swój udział
+        history_bills_qs = Bill.objects.filter(
+            Q(creator=request.user) | Q(participants=request.user)
+        ).distinct()
+        
+        # Filtruj rachunki do historii:
+        # 1. Rachunki ze statusem PAID lub REJECTED (dla wszystkich)
+        # 2. Rachunki PENDING gdzie użytkownik opłacił swój udział (ale nie jest twórcą)
+        # 3. Rachunki PENDING gdzie użytkownik odrzucił swój udział (ale nie jest twórcą)
+        # Wykluczamy rachunki które są w todo_bills
+        history_bills_ids = set()
+        
+        for bill in history_bills_qs:
+            # Pomiń rachunki z todo_bills
+            if bill.id in [b.id for b in todo_bills]:
+                continue
+                
+            # Rachunki zakończone (PAID/REJECTED) - zawsze w historii
+            if bill.status in [Bill.Status.PAID, Bill.Status.REJECTED]:
+                history_bills_ids.add(bill.id)
+                continue
+            
+            # Rachunki PENDING - sprawdź czy użytkownik opłacił/odrzucił swój udział
+            if bill.status == Bill.Status.PENDING:
+                # Jeśli użytkownik jest twórcą, nie dodawaj do historii (będzie w my_waiting_bills)
+                if bill.creator == request.user:
+                    continue
+                    
+                # Sprawdź czy użytkownik ma udział w tym rachunku
+                try:
+                    share = bill.shares.get(user=request.user)
+                    # Jeśli opłacił lub odrzucił - dodaj do historii
+                    if share.paid or share.rejected:
+                        history_bills_ids.add(bill.id)
+                except BillShare.DoesNotExist:
+                    pass
+        
         history_bills = list(
             Bill.objects
-            .filter(Q(creator=request.user) | Q(participants=request.user))
-            .filter(
-                Q(status=Bill.Status.PAID)
-                | Q(status=Bill.Status.REJECTED)
-                | Q(shares__user=request.user, shares__paid=True)
-                | Q(shares__user=request.user, shares__rejected=True)
-            )
-            .exclude(Q(creator=request.user, status=Bill.Status.PENDING))
-            .exclude(id__in=[b.id for b in todo_bills])
-            .distinct()
+            .filter(id__in=history_bills_ids)
             .order_by('-date')[:8]
         )
 
